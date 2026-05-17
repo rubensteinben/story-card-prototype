@@ -584,7 +584,7 @@
             </div>
             <div id="art-col" style="flex:${cfg.artFlex}">
               <div class="art-wrapper">
-                <img class="art-image" src="${state.imageUrl}" alt="" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()}">
+                <img class="art-image" src="${state.imageUrl}" alt="" onerror="this.onerror=null;this.src='https://picsum.photos/seed/wapo/628/419'" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()}">
                 ${state.showOverlayButton ? `
                   <div class="art-overlay-btn">
                     <svg width="10" height="12" viewBox="0 0 10 12" fill="white" style="flex-shrink:0"><path d="M0 0 L10 6 L0 12 Z"/></svg>
@@ -687,6 +687,15 @@
     function buildPanel() {
       document.getElementById('panel').innerHTML = `
         <h1>Story Card</h1>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Import Article</div>
+          <div class="control-row" style="gap:6px;">
+            <input class="control-input" id="import-url" type="text" placeholder="Paste WaPo article URL…" style="flex:1;min-width:0;">
+            <button id="import-btn" style="flex-shrink:0;padding:0 12px;height:28px;background:#111;color:#fff;border:none;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;">Import</button>
+          </div>
+          <div id="import-status" style="font-size:11px;color:#888;margin-top:4px;min-height:14px;"></div>
+        </div>
 
         <div class="panel-section">
           <div class="panel-section-title">Layout</div>
@@ -937,6 +946,28 @@
       document.getElementById('grid-toggle').addEventListener('click', function () {
         state.showGrid = !state.showGrid;
         render();
+      });
+
+      document.getElementById('import-btn').addEventListener('click', async function () {
+        const url = document.getElementById('import-url').value.trim();
+        const status = document.getElementById('import-status');
+        if (!url) { status.textContent = 'Paste a URL first.'; return; }
+        status.textContent = 'Importing…';
+        try {
+          const res = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url));
+          const json = await res.json();
+          if (json.status !== 'success') throw new Error(json.message || 'Import failed');
+          const { title, description, image } = json.data;
+          if (title) { state.headline = title; document.getElementById('input-headline').value = title; }
+          if (description) { state.blurb = description; document.getElementById('input-blurb').value = description; }
+          if (image?.url) { state.imageUrl = image.url; }
+          render();
+          status.style.color = '#2a7a2a';
+          status.textContent = 'Imported.';
+        } catch (e) {
+          status.style.color = '#c00';
+          status.textContent = 'Error: ' + e.message;
+        }
       });
     }
 
