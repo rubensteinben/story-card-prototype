@@ -16,6 +16,6 @@ export default async function handler(req, res) {
       image: get('og:image'),
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: e.message, cause: e.cause?.message ?? String(e.cause ?? '') });
   }
 }
