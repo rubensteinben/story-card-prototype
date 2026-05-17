@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WaPo Story Card Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@300;400;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      display: flex;
+      font-family: 'Source Sans 3', sans-serif;
+      background: #f0f0f0;
+    }
+
+    /* Card area — left column */
+    #card-area {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 32px;
+      overflow-y: auto;
+      min-height: 100vh;
+    }
+
+    /* Properties panel — right column */
+    #panel {
+      flex: 0 0 320px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 20px;
+    }
+
+    #panel h1 {
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 24px;
+    }
+
+    /* Panel sections */
+    .panel-section {
+      border-top: 1px solid #333;
+      padding: 16px 0;
+    }
+
+    .panel-section-title {
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .panel-placeholder {
+      font-size: 12px;
+      color: #444;
+      font-style: italic;
+    }
+
+    /* Supporting headlines */
+    .supporting-headline {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 20px;
+      line-height: 22px;
+      color: #111111;
+    }
+
+    .h-rule {
+      width: 100%;
+      height: 1px;
+      background: rgba(0,0,0,0.1);
+      margin: 16px 0;
+      flex-shrink: 0;
+      border: none;
+    }
+
+    /* Phone preset buttons */
+    .preset-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .preset-btn {
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      border-radius: 3px;
+      color: #aaa;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 11px;
+      padding: 5px 8px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .preset-btn:hover {
+      border-color: #666;
+      color: #e0e0e0;
+    }
+
+    .preset-btn.active {
+      background: #3a3a3a;
+      border-color: #888;
+      color: #ffffff;
+    }
+
+    .preset-width-label {
+      font-size: 11px;
+      color: #555;
+      margin-top: 2px;
+    }
+
+    /* Panel controls */
+    .control-row {
+      margin-bottom: 12px;
+    }
+
+    .control-label {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .control-input {
+      width: 100%;
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      border-radius: 3px;
+      color: #e0e0e0;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 13px;
+      padding: 6px 8px;
+      resize: vertical;
+    }
+
+    .control-input:focus {
+      outline: none;
+      border-color: #666;
+    }
+
+    .control-btn {
+      background: #333;
+      color: #e0e0e0;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .control-btn:hover {
+      background: #444;
+    }
+
+    /* Grid overlay */
+    #grid-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: row;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .grid-col {
+      flex-shrink: 0;
+      width: 34px;
+      background: rgba(180, 160, 220, 0.22);
+    }
+
+    .grid-col-fluid {
+      flex: 1;
+      background: rgba(180, 160, 220, 0.22);
+    }
+
+    .grid-gutter {
+      flex-shrink: 0;
+      width: 32px;
+    }
+
+    .grid-margin {
+      flex-shrink: 0;
+      width: 16px;
+    }
+
+    /* Grid toggle button */
+    #grid-toggle {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.12);
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 11px;
+      color: #777;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      z-index: 100;
+    }
+
+    #grid-toggle:hover {
+      background: rgba(0, 0, 0, 0.2);
+      color: #444;
+    }
+
+    #grid-toggle.active {
+      background: rgba(0, 0, 0, 0.22);
+      color: #333;
+    }
+
+    /* Card */
+    #card {
+      background: #ffffff;
+      padding: 16px;
+      overflow: hidden;
+      position: relative;
+      /* width set dynamically by render() */
+    }
+
+    #card-inner {
+      display: flex;
+      /* flex-direction and gap set dynamically by render() */
+    }
+
+    /* text-col and art-col flex set dynamically by render() */
+
+    /* Image */
+    .art-image {
+      width: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Package label */
+    .package-label {
+      border-top: 1px solid #111111;
+      padding-top: 8px;
+      padding-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .package-label-text {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 20px;
+      color: #111111;
+    }
+
+    .package-label-chevron {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      font-size: 13px;
+      color: #111111;
+      line-height: 1;
+    }
+
+    /* Art wrapper + overlay button */
+    .art-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .art-overlay-btn {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: black;
+      border-radius: 9999px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 16px;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+
+    .overlay-label {
+      font-weight: 700;
+    }
+
+    .overlay-duration {
+      font-weight: 300;
+    }
+
+    /* Caption */
+    .caption {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 15px;
+      color: #595959;
+      margin-top: 4px;
+    }
+
+    /* Live ticker */
+    .ticker-container {
+      margin-top: 8px;
+    }
+
+    .ticker-live-header {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 900;
+      font-size: 12px;
+      line-height: 15px;
+      color: #ea0017;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .ticker-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .ticker-gutter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 9px;
+      align-self: stretch;
+      padding-top: 5px;
+    }
+
+    .ticker-dot {
+      width: 6px;
+      height: 6px;
+      background: #ea0017;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .ticker-line {
+      flex: 1;
+      width: 1px;
+      background: #ea0017;
+      margin-top: 4px;
+      min-height: 8px;
+    }
+
+    .ticker-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-bottom: 8px;
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 17.5px;
+    }
+
+    .ticker-content--last {
+      padding-bottom: 0;
+    }
+
+    .ticker-time {
+      color: #595959;
+    }
+
+    .ticker-text {
+      color: #111111;
+    }
+
+    /* Kicker label */
+    .kicker-label {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 17.5px;
+      color: #111111;
+      margin-bottom: 8px;
+    }
+
+    /* LIVE label */
+    .live-label {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 900;
+      font-size: 14px;
+      line-height: 14px;
+      color: #ea0017;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .live-label-chevron {
+      font-size: 16px;
+      line-height: 16px;
+    }
+
+    /* Headline */
+    .headline {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 26px;
+      line-height: 1.1;
+      color: #111111;
+      font-style: normal;
+    }
+
+    /* Blurb */
+    .blurb {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 20px;
+      color: #595959;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="card-area">
+    <!-- Card rendered by JS -->
+  </div>
+  <button id="grid-toggle">⊞ Grid</button>
+
+  <div id="panel">
+    <h1>Story Card</h1>
+    <!-- Controls rendered by JS -->
+  </div>
+
+  <script>
+    const state = {
+      headline: 'Lead headline goes here. The ideal length is between 50 and 100 characters.',
+      blurb: 'Lead blurb here this is the blurb text. Blurbs appear with the lead story only. Lead blurb here this is the blurb text. Blurbs appear with the lead story only.',
+      imageUrl: 'https://picsum.photos/seed/wapo/628/419',
+      caption: '(Demetrius Freeman/The Post)',
+      // Future properties — not yet wired
+      width: '15u',
+      mobilePresetWidth: 390,
+      leadPlus: 0,
+      showPackageLabel: false,
+      packageLabelText: 'Label Text',
+      showLive: false,
+      showKicker: false,
+      kickerSection: 'Analysis',
+      kickerAuthor: 'Jennifer Rubin',
+      showHeadline: true,
+      showBlurb: true,
+      showTicker: false,
+      tickerItems: [
+        { time: '2:47 p.m.', text: 'Harris leads Trump by six points in new post-debate poll, according to a Washington Post–ABC News survey...' },
+        { time: '2:31 p.m.', text: 'When Biden announced he would not seek reelection, his closest allies scrambled to understand what the decision...' },
+        { time: '2:18 p.m.', text: 'Senate Democrats are pushing for an emergency session to address the latest developments...' },
+      ],
+      aspectRatio: '3/2',
+      portrait: false,
+      showOverlayButton: false,
+      overlayButtonLabel: 'Play Video',
+      showOverlayDuration: true,
+      supportingHeadlines: ['', '', '', ''],
+      showGrid: false,
+    };
+
+    const widthConfig = {
+      '1u':  { cardWidth: null,    maxWidth: '767px', flexDir: 'column', gap: '12px', textFlex: '1 1 auto', artFlex: '1 1 auto', tileWidth: null, carouselTileWidth: null },
+      '10u': { cardWidth: '660px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 298px', artFlex: '0 0 298px', tileWidth: 188,  carouselTileWidth: 232 },
+      '12u': { cardWidth: '792px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 232px', artFlex: '0 0 496px', tileWidth: 232,  carouselTileWidth: 200 },
+      '15u': { cardWidth: '990px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 298px', artFlex: '0 0 628px', tileWidth: 298,  carouselTileWidth: 232 },
+    };
+
+    function syncPresets() {
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.width) === state.mobilePresetWidth);
+      });
+      const label = document.getElementById('preset-label');
+      if (label) label.textContent = `${state.mobilePresetWidth}px`;
+    }
+
+    function render() {
+      const cfg = widthConfig[state.width];
+      const cardStyle = state.width === '1u'
+        ? `width:${state.mobilePresetWidth}px`
+        : `width:${cfg.cardWidth}`;
+
+      const sh = (i) => state.supportingHeadlines[i] || 'Supporting headline text goes here lorem ipsum dolor sit amet';
+      const vDivider = `<div style="flex:0 0 32px;align-self:stretch;position:relative;"><div style="position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:1px;background:rgba(0,0,0,0.1)"></div></div>`;
+      const t1uCard = (item, borderRadius, isLast) => `
+        <div style="flex-shrink:0;padding:16px 20px;border:1px solid rgba(0,0,0,0.1);background:white;border-radius:${borderRadius};${!isLast ? 'margin-right:-1px;' : ''}display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div style="width:6px;height:6px;background:#ea0017;border-radius:50%;flex-shrink:0;"></div>
+            <p style="font-family:'Source Sans 3',sans-serif;font-weight:400;font-size:12px;line-height:15px;color:#ea0017;white-space:nowrap;">${item.time || '1:00 p.m.'}</p>
+          </div>
+          <p style="font-family:'Source Sans 3',sans-serif;font-weight:400;font-size:14px;line-height:17.5px;color:#111;width:208px;overflow:hidden;text-overflow:ellipsis;">${item.text || 'Update text goes here'}</p>
+        </div>
+      `;
+
+      document.getElementById('card-area').innerHTML = `
+        <div id="card" style="${cardStyle}">
+          ${state.showPackageLabel ? `
+            <div class="package-label">
+              <span class="package-label-text">${state.packageLabelText}</span>
+              <span class="package-label-chevron">›</span>
+            </div>
+          ` : ''}
+          <div id="card-inner" style="flex-direction:${cfg.flexDir};gap:${cfg.gap}">
+            <div id="text-col" style="flex:${cfg.textFlex}">
+              ${state.showKicker ? `<p class="kicker-label">${state.kickerSection}</p>` : ''}
+              ${state.showLive ? `<div class="live-label"><span>LIVE</span></div>` : ''}
+              ${state.showHeadline ? `<p class="headline">${state.headline}</p>` : ''}
+              ${state.showTicker && state.width !== '1u' && state.showBlurb ? `
+                <div class="ticker-container">
+                  <p class="ticker-live-header">LIVE</p>
+                  <div class="ticker-item">
+                    <div class="ticker-gutter">
+                      <div class="ticker-dot"></div>
+                      <div class="ticker-line"></div>
+                    </div>
+                    <div class="ticker-content">
+                      <p class="ticker-time">${state.tickerItems[0].time || '1:00 p.m.'}</p>
+                      <p class="ticker-text">${state.tickerItems[0].text || 'Update text goes here'}</p>
+                    </div>
+                  </div>
+                  <div class="ticker-item">
+                    <div class="ticker-gutter">
+                      <div class="ticker-dot"></div>
+                      <div class="ticker-line"></div>
+                    </div>
+                    <div class="ticker-content">
+                      <p class="ticker-time">${state.tickerItems[1].time || '1:00 p.m.'}</p>
+                      <p class="ticker-text">${state.tickerItems[1].text || 'Update text goes here'}</p>
+                    </div>
+                  </div>
+                  <div class="ticker-item">
+                    <div class="ticker-gutter">
+                      <div class="ticker-dot"></div>
+                    </div>
+                    <div class="ticker-content ticker-content--last">
+                      <p class="ticker-time">${state.tickerItems[2].time || '1:00 p.m.'}</p>
+                      <p class="ticker-text">${state.tickerItems[2].text || 'Update text goes here'}</p>
+                    </div>
+                  </div>
+                </div>
+              ` : (!state.showTicker && state.showBlurb ? `<p class="blurb">${state.blurb}</p>` : '')}
+              ${state.leadPlus >= 1 && state.leadPlus < 3 && (state.width === '12u' || state.width === '15u') ? `
+                <hr class="h-rule">
+                <p class="supporting-headline">${sh(0)}</p>
+              ` : ''}
+              ${state.leadPlus === 2 && (state.width === '12u' || state.width === '15u') ? `
+                <hr class="h-rule">
+                <p class="supporting-headline">${sh(1)}</p>
+              ` : ''}
+            </div>
+            <div id="art-col" style="flex:${cfg.artFlex}">
+              <div class="art-wrapper">
+                <img class="art-image" src="${state.imageUrl}" alt="" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()}">
+                ${state.showOverlayButton ? `
+                  <div class="art-overlay-btn">
+                    <svg width="10" height="12" viewBox="0 0 10 12" fill="white" style="flex-shrink:0"><path d="M0 0 L10 6 L0 12 Z"/></svg>
+                    <span class="overlay-label">${state.overlayButtonLabel}</span>${state.showOverlayDuration ? `<span class="overlay-duration"> 2:12</span>` : ''}
+                  </div>
+                ` : ''}
+              </div>
+              <p class="caption">${state.caption}</p>
+            </div>
+          </div>
+          ${state.showTicker && state.width === '1u' ? `
+            <div style="overflow-x:auto;padding-top:16px;">
+              <div style="display:flex;">
+                ${t1uCard(state.tickerItems[0], '6px 0 0 6px', false)}
+                ${t1uCard(state.tickerItems[1], '0', false)}
+                ${t1uCard(state.tickerItems[2], '0 6px 6px 0', true)}
+              </div>
+            </div>
+          ` : ''}
+          ${state.leadPlus >= 1 && state.width === '1u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(0)}</p>
+          ` : ''}
+          ${state.leadPlus >= 2 && state.width === '1u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(1)}</p>
+          ` : ''}
+          ${state.leadPlus === 3 && state.width === '1u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(2)}</p>
+          ` : ''}
+          ${state.leadPlus >= 4 && state.width === '1u' ? `
+            <hr class="h-rule">
+            <div style="display:flex;overflow-x:auto;">
+              <p class="supporting-headline" style="flex:0 0 ${Math.floor((state.mobilePresetWidth - 32) * 0.75)}px">${sh(2)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:0 0 ${Math.floor((state.mobilePresetWidth - 32) * 0.75)}px">${sh(3)}</p>
+            </div>
+          ` : ''}
+          ${state.leadPlus === 3 && (state.width === '12u' || state.width === '15u') ? `
+            <hr class="h-rule">
+            <div style="display:flex;align-items:flex-start;">
+              <p class="supporting-headline" style="flex:1">${sh(0)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:1">${sh(1)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:1">${sh(2)}</p>
+            </div>
+          ` : ''}
+          ${state.leadPlus === 1 && state.width === '10u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(0)}</p>
+          ` : ''}
+          ${state.leadPlus === 2 && state.width === '10u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(0)}</p>
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(1)}</p>
+          ` : ''}
+          ${state.leadPlus === 3 && state.width === '10u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(0)}</p>
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(1)}</p>
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(2)}</p>
+          ` : ''}
+          ${state.leadPlus >= 4 && state.width !== '1u' ? `
+            <hr class="h-rule">
+            <div style="display:flex;overflow-x:auto;align-items:flex-start;">
+              <p class="supporting-headline" style="flex:0 0 ${cfg.carouselTileWidth}px">${sh(0)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:0 0 ${cfg.carouselTileWidth}px">${sh(1)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:0 0 ${cfg.carouselTileWidth}px">${sh(2)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:0 0 ${cfg.carouselTileWidth}px">${sh(3)}</p>
+            </div>
+          ` : ''}
+          ${state.showGrid ? (() => {
+            const cols = { '1u': 0, '10u': 10, '12u': 12, '15u': 15 }[state.width];
+            if (cols === 0) {
+              return `<div id="grid-overlay"><div class="grid-margin"></div><div class="grid-col-fluid"></div><div class="grid-margin"></div></div>`;
+            }
+            let inner = '<div class="grid-margin"></div>';
+            for (let i = 0; i < cols; i++) {
+              inner += '<div class="grid-col"></div>';
+              if (i < cols - 1) inner += '<div class="grid-gutter"></div>';
+            }
+            inner += '<div class="grid-margin"></div>';
+            return `<div id="grid-overlay">${inner}</div>`;
+          })() : ''}
+        </div>
+      `;
+
+      const toggleBtn = document.getElementById('grid-toggle');
+      if (toggleBtn) toggleBtn.classList.toggle('active', state.showGrid);
+    }
+
+    function buildPanel() {
+      document.getElementById('panel').innerHTML = `
+        <h1>Story Card</h1>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Layout</div>
+          <div class="control-row">
+            <label class="control-label" for="input-width">Width</label>
+            <select class="control-input" id="input-width">
+              <option value="1u"  ${state.width === '1u'  ? 'selected' : ''}>1u</option>
+              <option value="10u" ${state.width === '10u' ? 'selected' : ''}>10u</option>
+              <option value="12u" ${state.width === '12u' ? 'selected' : ''}>12u</option>
+              <option value="15u" ${state.width === '15u' ? 'selected' : ''}>15u</option>
+            </select>
+          </div>
+          <div class="control-row">
+            <label class="control-label" for="input-lead-plus">Supporting headlines</label>
+            <select class="control-input" id="input-lead-plus">
+              <option value="0"  ${state.leadPlus === 0  ? 'selected' : ''}>0</option>
+              <option value="1"  ${state.leadPlus === 1  ? 'selected' : ''}>1</option>
+              <option value="2"  ${state.leadPlus === 2  ? 'selected' : ''}>2</option>
+              <option value="3"  ${state.leadPlus === 3  ? 'selected' : ''}>3</option>
+              <option value="4"  ${state.leadPlus === 4  ? 'selected' : ''}>4+</option>
+            </select>
+          </div>
+          <div id="preset-section" style="display:${state.width === '1u' ? 'block' : 'none'}">
+            <div class="preset-buttons">
+              <button class="preset-btn" data-width="320">320 SE</button>
+              <button class="preset-btn" data-width="375">375 14</button>
+              <button class="preset-btn" data-width="390">390 15P</button>
+              <button class="preset-btn" data-width="430">430 Plus</button>
+            </div>
+            <div class="preset-width-label" id="preset-label">${state.mobilePresetWidth}px</div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Package Label</div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-show-package-label" ${state.showPackageLabel ? 'checked' : ''}> Show label</label>
+          </div>
+          <div class="control-row" id="package-label-text-row" style="display:${state.showPackageLabel ? 'flex' : 'none'}">
+            <label class="control-label" for="input-package-label-text">Label text</label>
+            <input class="control-input" type="text" id="input-package-label-text" value="${state.packageLabelText}">
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Primary Text</div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-live" ${state.showLive ? 'checked' : ''}> LIVE label</label>
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-kicker" ${state.showKicker ? 'checked' : ''}> Kicker label</label>
+          </div>
+          <div class="control-row" id="kicker-text-row" style="display:${state.showKicker ? 'block' : 'none'}">
+            <label class="control-label" for="input-kicker-text">Kicker text</label>
+            <input class="control-input" type="text" id="input-kicker-text" value="${state.kickerSection}">
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-ticker" ${state.showTicker ? 'checked' : ''}> Live ticker</label>
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-show-headline" ${state.showHeadline ? 'checked' : ''}> Headline</label>
+            <textarea class="control-input" id="input-headline" rows="3">${state.headline}</textarea>
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-show-blurb" ${state.showBlurb ? 'checked' : ''}> Blurb</label>
+            <textarea class="control-input" id="input-blurb" rows="4">${state.blurb}</textarea>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Art</div>
+          <div class="control-row">
+            <button class="control-btn" id="btn-new-image">New image</button>
+          </div>
+          <div class="control-row">
+            <label class="control-label" for="input-aspect-ratio">Aspect ratio</label>
+            <select class="control-input" id="input-aspect-ratio">
+              <option value="3/2" ${state.aspectRatio === '3/2' ? 'selected' : ''}>3:2</option>
+              <option value="16/9" ${state.aspectRatio === '16/9' ? 'selected' : ''}>16:9</option>
+              <option value="1/1" ${state.aspectRatio === '1/1' ? 'selected' : ''}>1:1</option>
+            </select>
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-portrait" ${state.portrait ? 'checked' : ''}> Portrait</label>
+          </div>
+          <div class="control-row">
+            <label class="control-label" for="input-caption">Caption</label>
+            <input class="control-input" type="text" id="input-caption" value="${state.caption}">
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-show-overlay" ${state.showOverlayButton ? 'checked' : ''}> Overlay button</label>
+          </div>
+          <div class="control-row" id="overlay-fields" style="display:${state.showOverlayButton ? 'flex' : 'none'};flex-direction:column;gap:8px;">
+            <input class="control-input" type="text" id="input-overlay-label" placeholder="Button label" value="${state.overlayButtonLabel}">
+            <label class="control-label"><input type="checkbox" id="input-show-overlay-duration" ${state.showOverlayDuration ? 'checked' : ''}> Show duration</label>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Supporting Headlines</div>
+          <div class="control-row" id="sh-row-0" style="display:${state.leadPlus >= 1 ? 'flex' : 'none'}">
+            <label class="control-label" for="input-sh-0">Headline 1</label>
+            <textarea class="control-input" id="input-sh-0" rows="2">${state.supportingHeadlines[0]}</textarea>
+          </div>
+          <div class="control-row" id="sh-row-1" style="display:${state.leadPlus >= 2 ? 'flex' : 'none'}">
+            <label class="control-label" for="input-sh-1">Headline 2</label>
+            <textarea class="control-input" id="input-sh-1" rows="2">${state.supportingHeadlines[1]}</textarea>
+          </div>
+          <div class="control-row" id="sh-row-2" style="display:${state.leadPlus >= 3 ? 'flex' : 'none'}">
+            <label class="control-label" for="input-sh-2">Headline 3</label>
+            <textarea class="control-input" id="input-sh-2" rows="2">${state.supportingHeadlines[2]}</textarea>
+          </div>
+          <div class="control-row" id="sh-row-3" style="display:${state.leadPlus >= 4 ? 'flex' : 'none'}">
+            <label class="control-label" for="input-sh-3">Headline 4</label>
+            <textarea class="control-input" id="input-sh-3" rows="2">${state.supportingHeadlines[3]}</textarea>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('input-lead-plus').addEventListener('change', function () {
+        state.leadPlus = parseInt(this.value);
+        render();
+        document.getElementById('sh-row-0').style.display = state.leadPlus >= 1 ? 'flex' : 'none';
+        document.getElementById('sh-row-1').style.display = state.leadPlus >= 2 ? 'flex' : 'none';
+        document.getElementById('sh-row-2').style.display = state.leadPlus >= 3 ? 'flex' : 'none';
+        document.getElementById('sh-row-3').style.display = state.leadPlus >= 4 ? 'flex' : 'none';
+      });
+
+      document.getElementById('input-width').addEventListener('change', function () {
+        state.width = this.value;
+        render();
+        document.getElementById('preset-section').style.display = state.width === '1u' ? 'block' : 'none';
+        syncPresets();
+      });
+
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          state.mobilePresetWidth = parseInt(this.dataset.width);
+          render();
+          syncPresets();
+        });
+      });
+
+      document.getElementById('input-show-package-label').addEventListener('change', function () {
+        state.showPackageLabel = this.checked;
+        document.getElementById('package-label-text-row').style.display = this.checked ? 'flex' : 'none';
+        render();
+      });
+
+      document.getElementById('input-package-label-text').addEventListener('input', function () {
+        state.packageLabelText = this.value;
+        render();
+      });
+
+      document.getElementById('input-live').addEventListener('change', function () {
+        state.showLive = this.checked;
+        if (this.checked) {
+          state.showKicker = false;
+          document.getElementById('input-kicker').checked = false;
+          document.getElementById('kicker-text-row').style.display = 'none';
+        }
+        render();
+      });
+
+      document.getElementById('input-kicker').addEventListener('change', function () {
+        state.showKicker = this.checked;
+        document.getElementById('kicker-text-row').style.display = this.checked ? 'block' : 'none';
+        if (this.checked) {
+          state.showLive = false;
+          document.getElementById('input-live').checked = false;
+        }
+        render();
+      });
+
+      document.getElementById('input-kicker-text').addEventListener('input', function () {
+        state.kickerSection = this.value;
+        render();
+      });
+
+      document.getElementById('input-ticker').addEventListener('change', function () {
+        state.showTicker = this.checked;
+        render();
+      });
+
+      document.getElementById('input-show-headline').addEventListener('change', function () {
+        state.showHeadline = this.checked;
+        render();
+      });
+
+      document.getElementById('input-show-blurb').addEventListener('change', function () {
+        state.showBlurb = this.checked;
+        render();
+      });
+
+      document.getElementById('input-headline').addEventListener('input', function () {
+        state.headline = this.value;
+        render();
+      });
+
+      document.getElementById('input-blurb').addEventListener('input', function () {
+        state.blurb = this.value;
+        render();
+      });
+
+      document.getElementById('btn-new-image').addEventListener('click', function () {
+        state.imageUrl = `https://picsum.photos/seed/${Math.random().toString(36).slice(2)}/628/419`;
+        render();
+      });
+
+      document.getElementById('input-aspect-ratio').addEventListener('change', function () {
+        state.aspectRatio = this.value;
+        render();
+      });
+
+      document.getElementById('input-portrait').addEventListener('change', function () {
+        state.portrait = this.checked;
+        render();
+      });
+
+      document.getElementById('input-caption').addEventListener('input', function () {
+        state.caption = this.value;
+        render();
+      });
+
+      document.getElementById('input-show-overlay').addEventListener('change', function () {
+        state.showOverlayButton = this.checked;
+        document.getElementById('overlay-fields').style.display = this.checked ? 'flex' : 'none';
+        render();
+      });
+
+      document.getElementById('input-overlay-label').addEventListener('input', function () {
+        state.overlayButtonLabel = this.value;
+        render();
+      });
+
+      document.getElementById('input-show-overlay-duration').addEventListener('change', function () {
+        state.showOverlayDuration = this.checked;
+        render();
+      });
+
+      [0, 1, 2, 3].forEach(i => {
+        document.getElementById(`input-sh-${i}`).addEventListener('input', function () {
+          state.supportingHeadlines[i] = this.value;
+          render();
+        });
+      });
+
+      document.getElementById('grid-toggle').addEventListener('click', function () {
+        state.showGrid = !state.showGrid;
+        render();
+      });
+    }
+
+    render();
+    buildPanel();
+    syncPresets();
+  </script>
+
+</body>
+</html>
