@@ -1212,15 +1212,15 @@
           if (!keywords) throw new Error('No keywords extracted from headline');
           const query = 'site:washingtonpost.com ' + keywords;
           const rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en-US&gl=US&ceid=US:en';
-          const res = await fetch(rssUrl);
+          const res = await fetch('/api/rss?url=' + encodeURIComponent(rssUrl));
           if (!res.ok) throw new Error('RSS fetch failed (' + res.status + ')');
-          const xml = await res.text();
-          const doc = new DOMParser().parseFromString(xml, 'text/xml');
+          const json = await res.json();
+          if (json.error) throw new Error(json.error);
           const existing = new Set(
             [state.headline, ...state.supportingHeadlines].map(t => (t || '').trim().toLowerCase())
           );
-          const titles = Array.from(doc.querySelectorAll('item title'))
-            .map(el => el.textContent.replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim())
+          const titles = (json.titles || [])
+            .map(t => t.replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim())
             .filter(t => t && !existing.has(t.toLowerCase()))
             .slice(0, 4);
           if (titles.length === 0) throw new Error('No related articles found');
