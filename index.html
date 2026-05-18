@@ -1225,15 +1225,44 @@
         render();
       });
 
+      async function importShUrl(i, url, urlEl) {
+        const ta = document.getElementById('input-sh-' + i);
+        const orig = urlEl.style.borderColor;
+        urlEl.style.borderColor = '#555';
+        try {
+          const res = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url));
+          const json = await res.json();
+          if (json.status !== 'success') throw new Error('Import failed');
+          const title = json.data?.title;
+          if (title) {
+            state.supportingHeadlines[i] = title;
+            if (ta) ta.value = title;
+            render();
+          }
+          urlEl.style.borderColor = '#4a4';
+          setTimeout(() => { urlEl.style.borderColor = orig; }, 1200);
+        } catch (e) {
+          urlEl.style.borderColor = '#a44';
+          setTimeout(() => { urlEl.style.borderColor = orig; }, 1200);
+        }
+      }
+
       [0, 1, 2, 3].forEach(i => {
         document.getElementById(`input-sh-${i}`).addEventListener('input', function () {
           state.supportingHeadlines[i] = this.value;
           state.supportingUrls[i] = '';
           render();
         });
-        document.getElementById(`input-sh-url-${i}`).addEventListener('input', function () {
-          state.supportingUrls[i] = this.value.trim();
+        const urlEl = document.getElementById(`input-sh-url-${i}`);
+        let shUrlTimer = null;
+        urlEl.addEventListener('input', function () {
+          const val = this.value.trim();
+          state.supportingUrls[i] = val;
           render();
+          clearTimeout(shUrlTimer);
+          if (val.startsWith('http')) {
+            shUrlTimer = setTimeout(() => importShUrl(i, val, urlEl), 600);
+          }
         });
       });
 
