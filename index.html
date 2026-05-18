@@ -1052,21 +1052,45 @@
             <button id="suggest-related-btn" disabled style="width:100%;height:28px;background:transparent;color:#555;border:1px solid #333;border-radius:3px;font-size:12px;font-family:inherit;cursor:default;">Import an article first</button>
           </div>
           <div id="suggest-status" style="font-size:11px;color:#e07070;margin-bottom:6px;min-height:14px;"></div>
-          <div class="control-row" id="sh-row-0" style="display:${state.leadPlus >= 1 ? 'flex' : 'none'}">
-            <label class="control-label" for="input-sh-0">Headline 1</label>
-            <textarea class="control-input" id="input-sh-0" rows="2">${state.supportingHeadlines[0]}</textarea>
+          <div id="sh-row-0" style="display:${state.leadPlus >= 1 ? 'block' : 'none'}">
+            <div class="control-row">
+              <label class="control-label" for="input-sh-0">Headline 1</label>
+              <textarea class="control-input" id="input-sh-0" rows="2">${state.supportingHeadlines[0]}</textarea>
+            </div>
+            <div class="control-row">
+              <label class="control-label" for="input-sh-url-0">URL</label>
+              <input class="control-input" type="url" id="input-sh-url-0" placeholder="https://…" value="${state.supportingUrls[0] || ''}">
+            </div>
           </div>
-          <div class="control-row" id="sh-row-1" style="display:${state.leadPlus >= 2 ? 'flex' : 'none'}">
-            <label class="control-label" for="input-sh-1">Headline 2</label>
-            <textarea class="control-input" id="input-sh-1" rows="2">${state.supportingHeadlines[1]}</textarea>
+          <div id="sh-row-1" style="display:${state.leadPlus >= 2 ? 'block' : 'none'}">
+            <div class="control-row">
+              <label class="control-label" for="input-sh-1">Headline 2</label>
+              <textarea class="control-input" id="input-sh-1" rows="2">${state.supportingHeadlines[1]}</textarea>
+            </div>
+            <div class="control-row">
+              <label class="control-label" for="input-sh-url-1">URL</label>
+              <input class="control-input" type="url" id="input-sh-url-1" placeholder="https://…" value="${state.supportingUrls[1] || ''}">
+            </div>
           </div>
-          <div class="control-row" id="sh-row-2" style="display:${state.leadPlus >= 3 ? 'flex' : 'none'}">
-            <label class="control-label" for="input-sh-2">Headline 3</label>
-            <textarea class="control-input" id="input-sh-2" rows="2">${state.supportingHeadlines[2]}</textarea>
+          <div id="sh-row-2" style="display:${state.leadPlus >= 3 ? 'block' : 'none'}">
+            <div class="control-row">
+              <label class="control-label" for="input-sh-2">Headline 3</label>
+              <textarea class="control-input" id="input-sh-2" rows="2">${state.supportingHeadlines[2]}</textarea>
+            </div>
+            <div class="control-row">
+              <label class="control-label" for="input-sh-url-2">URL</label>
+              <input class="control-input" type="url" id="input-sh-url-2" placeholder="https://…" value="${state.supportingUrls[2] || ''}">
+            </div>
           </div>
-          <div class="control-row" id="sh-row-3" style="display:${state.leadPlus >= 4 ? 'flex' : 'none'}">
-            <label class="control-label" for="input-sh-3">Headline 4</label>
-            <textarea class="control-input" id="input-sh-3" rows="2">${state.supportingHeadlines[3]}</textarea>
+          <div id="sh-row-3" style="display:${state.leadPlus >= 4 ? 'block' : 'none'}">
+            <div class="control-row">
+              <label class="control-label" for="input-sh-3">Headline 4</label>
+              <textarea class="control-input" id="input-sh-3" rows="2">${state.supportingHeadlines[3]}</textarea>
+            </div>
+            <div class="control-row">
+              <label class="control-label" for="input-sh-url-3">URL</label>
+              <input class="control-input" type="url" id="input-sh-url-3" placeholder="https://…" value="${state.supportingUrls[3] || ''}">
+            </div>
           </div>
         </div>
 
@@ -1207,6 +1231,10 @@
           state.supportingUrls[i] = '';
           render();
         });
+        document.getElementById(`input-sh-url-${i}`).addEventListener('input', function () {
+          state.supportingUrls[i] = this.value.trim();
+          render();
+        });
       });
 
       document.getElementById('suggest-related-btn').addEventListener('click', async function () {
@@ -1252,6 +1280,8 @@
             state.supportingUrls[i] = link;
             const ta = document.getElementById('input-sh-' + i);
             if (ta) ta.value = title;
+            const urlInput = document.getElementById('input-sh-url-' + i);
+            if (urlInput) urlInput.value = link;
           });
           const newLeadPlus = Math.min(items.length, 4);
           state.leadPlus = newLeadPlus;
