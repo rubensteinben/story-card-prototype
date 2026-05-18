@@ -1477,8 +1477,13 @@ const { title, description, image, caption } = json.data;
     syncPresets();
     const tsEl = document.getElementById('deploy-timestamp');
     if (tsEl) {
-      const d = new Date(document.lastModified);
-      tsEl.textContent = 'Deployed ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        tsEl.style.color = '#666';
+        tsEl.textContent = '⬡ Local';
+      } else {
+        const d = new Date(document.lastModified);
+        tsEl.textContent = 'Deployed ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      }
     }
   </script>
 
