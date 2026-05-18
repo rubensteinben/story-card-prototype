@@ -628,6 +628,7 @@
       supportingHeadlines: ['', '', '', ''],
       showGrid: false,
       lastImportedSection: null,
+      articleUrl: '',
     };
 
     const defaultState = JSON.parse(JSON.stringify(state));
@@ -752,7 +753,7 @@
             <div id="text-col" style="flex:${cfg.textFlex}">
               ${state.showKicker ? `<p class="kicker-label">${state.kickerSection}</p>` : ''}
               ${state.showLive ? `<div class="live-label"><span>LIVE</span></div>` : ''}
-              ${state.showHeadline ? `<p class="headline">${state.headline}</p>` : ''}
+              ${state.showHeadline ? `${state.articleUrl ? `<a href="${state.articleUrl}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:block;">` : ''}<p class="headline">${state.headline}</p>${state.articleUrl ? `</a>` : ''}` : ''}
               ${state.showTicker && state.width !== '1u' && state.showBlurb ? `
                 <div class="ticker-container">
                   <p class="ticker-live-header">LIVE</p>
@@ -798,13 +799,15 @@
             </div>
             <div id="art-col" style="flex:${cfg.artFlex}">
               <div class="art-wrapper">
-                <img class="art-image" src="${state.imageUrl}" alt="" onerror="this.onerror=null;this.src='https://picsum.photos/seed/wapo/628/419'" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()}">
+                ${state.articleUrl ? `<a href="${state.articleUrl}" target="_blank" rel="noopener" style="display:block;line-height:0;">` : ''}
+                <img class="art-image" src="${state.imageUrl}" alt="" onerror="this.onerror=null;this.src='https://picsum.photos/seed/wapo/628/419'" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()};${state.articleUrl ? 'cursor:pointer;' : ''}">
                 ${state.showOverlayButton ? `
                   <div class="art-overlay-btn">
                     <svg width="10" height="12" viewBox="0 0 10 12" fill="white" style="flex-shrink:0"><path d="M0 0 L10 6 L0 12 Z"/></svg>
                     <span class="overlay-label">${state.overlayButtonLabel}</span>${state.showOverlayDuration ? `<span class="overlay-duration"> 2:12</span>` : ''}
                   </div>
                 ` : ''}
+                ${state.articleUrl ? `</a>` : ''}
               </div>
               <p class="caption">${state.caption}</p>
             </div>
@@ -1278,6 +1281,7 @@ const { title, description, image, caption } = json.data;
           if (title) { state.headline = title; document.getElementById('input-headline').value = title; }
           if (description) { state.blurb = description; document.getElementById('input-blurb').value = description; }
           if (caption) { state.caption = caption; document.getElementById('input-caption').value = caption; }
+          state.articleUrl = url;
           state.lastImportedSection = getWaPoSection(url);
           syncSuggestBtn();
           render();
