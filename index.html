@@ -1043,6 +1043,7 @@
           <div class="control-row" style="margin-bottom:4px;">
             <button id="suggest-related-btn" disabled style="width:100%;height:28px;background:transparent;color:#555;border:1px solid #333;border-radius:3px;font-size:12px;font-family:inherit;cursor:default;">Import an article first</button>
           </div>
+          <div id="suggest-status" style="font-size:11px;color:#e07070;margin-bottom:6px;min-height:14px;"></div>
           <div class="control-row" id="sh-row-0" style="display:${state.leadPlus >= 1 ? 'flex' : 'none'}">
             <label class="control-label" for="input-sh-0">Headline 1</label>
             <textarea class="control-input" id="input-sh-0" rows="2">${state.supportingHeadlines[0]}</textarea>
@@ -1201,22 +1202,25 @@
 
       document.getElementById('suggest-related-btn').addEventListener('click', async function () {
         const btn = this;
+        const statusEl = document.getElementById('suggest-status');
         if (!state.lastImportedSection) return;
         btn.disabled = true;
+        if (statusEl) statusEl.textContent = '';
         btn.innerHTML = '<span class="import-spinner"></span>Finding related…';
         try {
           const keywords = getHeadlineKeywords(state.headline);
           if (!keywords) throw new Error('No keywords extracted from headline');
           const query = 'site:washingtonpost.com ' + keywords;
           const rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en-US&gl=US&ceid=US:en';
-          const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
-          const json = await res.json();
-          if (json.status !== 'ok') throw new Error('Could not fetch related articles');
+          const res = await fetch(rssUrl);
+          if (!res.ok) throw new Error('RSS fetch failed (' + res.status + ')');
+          const xml = await res.text();
+          const doc = new DOMParser().parseFromString(xml, 'text/xml');
           const existing = new Set(
             [state.headline, ...state.supportingHeadlines].map(t => (t || '').trim().toLowerCase())
           );
-          const titles = (json.items || [])
-            .map(item => (item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim())
+          const titles = Array.from(doc.querySelectorAll('item title'))
+            .map(el => el.textContent.replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim())
             .filter(t => t && !existing.has(t.toLowerCase()))
             .slice(0, 4);
           if (titles.length === 0) throw new Error('No related articles found');
@@ -1238,6 +1242,7 @@
         } catch (e) {
           btn.disabled = false;
           btn.innerHTML = 'Suggest related articles';
+          if (statusEl) { statusEl.style.color = '#e07070'; statusEl.textContent = e.message; }
         }
       });
 
