@@ -624,6 +624,34 @@
       transition: opacity 0.3s;
       z-index: 1000;
     }
+    .editable-wrap {
+      position: relative;
+    }
+    .edit-pencil {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(0,0,0,0.13);
+      border-radius: 3px;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      padding: 0;
+      z-index: 5;
+      color: #555;
+    }
+    .editable-wrap:hover .edit-pencil {
+      opacity: 1;
+    }
+
     @keyframes spin { to { transform: rotate(360deg); } }
     .import-spinner {
       display: inline-block;
@@ -693,6 +721,81 @@
     // Transient import state — not part of serializable state, never written to hash
     let importingText = false;
     let importingImage = false;
+
+    // Inline editing
+    const editUndoStack = [];
+
+    function attachInlineEditors() {
+      document.querySelectorAll('.edit-pencil').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const wrap = this.closest('.editable-wrap');
+          const field = wrap.dataset.field;
+          const textEl = wrap.querySelector(field === 'headline' ? '.headline' : '.blurb');
+          if (!textEl || textEl.contentEditable === 'true') return;
+          const prevValue = state[field] || '';
+          btn.style.opacity = '0';
+          btn.style.pointerEvents = 'none';
+          textEl.contentEditable = 'true';
+          textEl.style.outline = 'none';
+          textEl.style.borderBottom = '1.5px solid rgba(0,0,0,0.25)';
+          textEl.style.paddingBottom = '1px';
+          // Remove href so clicks inside the editable don't navigate; render() restores it
+          const link = wrap.querySelector('a[href]');
+          if (link) link.removeAttribute('href');
+          textEl.focus();
+          const range = document.createRange();
+          range.selectNodeContents(textEl);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          let done = false;
+          function save() {
+            if (done) return;
+            done = true;
+            const newVal = textEl.textContent.trim();
+            textEl.contentEditable = 'false';
+            textEl.style.borderBottom = '';
+            textEl.style.paddingBottom = '';
+            if (newVal !== prevValue) {
+              editUndoStack.push({ field, prevValue });
+              state[field] = newVal;
+              if (field === 'headline') { const el = document.getElementById('input-headline'); if (el) el.value = newVal; }
+              if (field === 'blurb') { const el = document.getElementById('input-blurb'); if (el) el.value = newVal; }
+            }
+            render();
+          }
+          function cancel() {
+            if (done) return;
+            done = true;
+            textEl.contentEditable = 'false';
+            textEl.style.borderBottom = '';
+            textEl.style.paddingBottom = '';
+            render();
+          }
+          textEl.addEventListener('keydown', function onKey(e) {
+            if (e.key === 'Enter') { e.preventDefault(); textEl.removeEventListener('keydown', onKey); textEl.removeEventListener('blur', onBlur); save(); }
+            else if (e.key === 'Escape') { textEl.removeEventListener('keydown', onKey); textEl.removeEventListener('blur', onBlur); cancel(); }
+          });
+          textEl.addEventListener('blur', function onBlur() { textEl.removeEventListener('blur', onBlur); if (!done) save(); });
+        });
+      });
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        if (document.querySelector('[contenteditable="true"]')) return; // let browser handle native undo while editing
+        if (editUndoStack.length === 0) return;
+        e.preventDefault();
+        const { field, prevValue } = editUndoStack.pop();
+        state[field] = prevValue;
+        if (field === 'headline') { const el = document.getElementById('input-headline'); if (el) el.value = prevValue; }
+        if (field === 'blurb') { const el = document.getElementById('input-blurb'); if (el) el.value = prevValue; }
+        render();
+      }
+    });
 
     const widthConfig = {
       '1u':  { cardWidth: null,    maxWidth: '767px', flexDir: 'column', gap: '12px', textFlex: '1 1 auto', artFlex: '1 1 auto', tileWidth: null, carouselTileWidth: null },
@@ -839,7 +942,7 @@
             <div id="text-col" style="flex:${cfg.textFlex}">
               ${state.showKicker ? `<p class="kicker-label">${state.kickerSection}</p>` : ''}
               ${state.showLive ? `<div class="live-label"><span>LIVE</span></div>` : ''}
-              ${state.showHeadline ? (importingText ? `<div class="card-skeleton" style="height:26px;margin-bottom:5px;"></div><div class="card-skeleton" style="height:26px;width:68%;"></div>` : `${state.articleUrl ? `<a href="${state.articleUrl}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:block;">` : ''}<p class="headline">${state.headline}</p>${state.articleUrl ? `</a>` : ''}`) : ''}
+              ${state.showHeadline ? (importingText ? `<div class="card-skeleton" style="height:26px;margin-bottom:5px;"></div><div class="card-skeleton" style="height:26px;width:68%;"></div>` : `<div class="editable-wrap" data-field="headline"><button class="edit-pencil" title="Edit headline">✎</button>${state.articleUrl ? `<a href="${state.articleUrl}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:block;">` : ''}<p class="headline">${state.headline}</p>${state.articleUrl ? `</a>` : ''}</div>`) : ''}
               ${importingText && state.showBlurb ? `<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px;"><div class="card-skeleton" style="height:15px;"></div><div class="card-skeleton" style="height:15px;"></div><div class="card-skeleton" style="height:15px;width:60%;"></div></div>` : state.showTicker && state.width !== '1u' && state.showBlurb ? `
                 <div class="ticker-container">
                   <p class="ticker-live-header">LIVE</p>
@@ -873,7 +976,7 @@
                     </div>
                   </div>
                 </div>
-              ` : (!state.showTicker && state.showBlurb ? `<p class="blurb">${state.blurb}</p>` : '')}
+              ` : (!state.showTicker && state.showBlurb ? `<div class="editable-wrap" data-field="blurb"><button class="edit-pencil" title="Edit blurb">✎</button><p class="blurb">${state.blurb}</p></div>` : '')}
               ${state.leadPlus >= 1 && state.leadPlus < 3 && (state.width === '12u' || state.width === '15u') ? `
                 <hr class="h-rule">
                 <p class="supporting-headline">${sh(0)}</p>
@@ -1006,6 +1109,7 @@
       if (toggleBtn) toggleBtn.classList.toggle('active', state.showGrid);
 
       stateToHash();
+      attachInlineEditors();
     }
 
     function buildPanel() {
