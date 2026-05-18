@@ -676,27 +676,42 @@
         .join(' ');
     }
 
-    function syncSuggestBtn() {
-      const btn = document.getElementById('suggest-related-btn');
-      if (!btn) return;
-      const imported = !!state.lastImportedSection;
-      if (imported) {
-        btn.textContent = 'Suggest related articles';
-        btn.disabled = false;
-        btn.style.background = '#fff';
-        btn.style.color = '#111';
-        btn.style.borderColor = '#555';
-        btn.style.fontWeight = '600';
-        btn.style.cursor = 'pointer';
-      } else {
-        btn.textContent = 'Import an article first';
-        btn.disabled = true;
-        btn.style.background = 'transparent';
-        btn.style.color = '#555';
-        btn.style.borderColor = '#333';
-        btn.style.fontWeight = 'normal';
-        btn.style.cursor = 'default';
-      }
+    async function fetchRelatedArticles() {
+      if (!state.lastImportedSection) return;
+      try {
+        const keywords = getHeadlineKeywords(state.headline);
+        if (!keywords) return;
+        const query = 'site:washingtonpost.com ' + keywords;
+        const rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en-US&gl=US&ceid=US:en';
+        let rawItems = null;
+        try {
+          const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
+          const j = await r.json().catch(() => ({}));
+          if (r.ok && j.status === 'ok' && j.items?.length) {
+            rawItems = j.items.map(item => ({ title: item.title || '', link: item.link || '' }));
+          }
+        } catch (_) {}
+        if (!rawItems) {
+          const r2 = await fetch('/api/rss?url=' + encodeURIComponent(rssUrl));
+          const j2 = await r2.json().catch(() => ({}));
+          if (!r2.ok || j2.error) return;
+          rawItems = j2.items || [];
+        }
+        const existing = new Set([state.headline].map(t => (t || '').trim().toLowerCase()));
+        const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter|latest from the post)[:\s,]?/i;
+        const items = rawItems
+          .map(item => ({ title: (item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim(), link: item.link || '' }))
+          .filter(({ title }) => title && !existing.has(title.toLowerCase()) && !NON_ARTICLE.test(title))
+          .slice(0, 4);
+        items.forEach(({ title, link }, i) => {
+          state.supportingHeadlines[i] = title;
+          state.supportingUrls[i] = link;
+          const ta = document.getElementById('input-sh-' + i);
+          if (ta) ta.value = title;
+          const urlInput = document.getElementById('input-sh-url-' + i);
+          if (urlInput) urlInput.value = link;
+        });
+      } catch (_) {}
     }
 
     function getWaPoSection(url) {
@@ -1059,10 +1074,7 @@
 
         <div class="panel-section">
           <div class="panel-section-title">Supporting Headlines</div>
-          <div class="control-row" style="margin-bottom:4px;">
-            <button id="suggest-related-btn" disabled style="width:100%;height:28px;background:transparent;color:#555;border:1px solid #333;border-radius:3px;font-size:12px;font-family:inherit;cursor:default;">Import an article first</button>
-          </div>
-          <div id="suggest-status" style="font-size:11px;color:#e07070;margin-bottom:6px;min-height:14px;"></div>
+
           <div id="sh-row-0" style="display:${state.leadPlus >= 1 ? 'block' : 'none'}">
             <div class="control-row">
               <label class="control-label" for="input-sh-0">Headline 1</label>
@@ -1315,68 +1327,6 @@
         });
       });
 
-      document.getElementById('suggest-related-btn').addEventListener('click', async function () {
-        const btn = this;
-        const statusEl = document.getElementById('suggest-status');
-        if (!state.lastImportedSection) return;
-        btn.disabled = true;
-        if (statusEl) statusEl.textContent = '';
-        btn.innerHTML = '<span class="import-spinner"></span>Finding related…';
-        try {
-          const keywords = getHeadlineKeywords(state.headline);
-          if (!keywords) throw new Error('No keywords extracted from headline');
-          const query = 'site:washingtonpost.com ' + keywords;
-          const rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en-US&gl=US&ceid=US:en';
-
-          // Try rss2json first; fall back to our own Vercel proxy
-          let rawItems = null;
-          try {
-            const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
-            const j = await r.json().catch(() => ({}));
-            if (r.ok && j.status === 'ok' && j.items?.length) {
-              rawItems = j.items.map(item => ({ title: item.title || '', link: item.link || '' }));
-            }
-          } catch (_) {}
-          if (!rawItems) {
-            const r2 = await fetch('/api/rss?url=' + encodeURIComponent(rssUrl));
-            const j2 = await r2.json().catch(() => ({}));
-            if (!r2.ok || j2.error) throw new Error(j2.error || 'Could not fetch related articles');
-            rawItems = j2.items || [];
-          }
-
-          const existing = new Set(
-            [state.headline, ...state.supportingHeadlines].map(t => (t || '').trim().toLowerCase())
-          );
-          const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter|latest from the post)[:\s,]?/i;
-          const items = rawItems
-            .map(item => ({ title: (item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim(), link: item.link || '' }))
-            .filter(({ title }) => title && !existing.has(title.toLowerCase()) && !NON_ARTICLE.test(title))
-            .slice(0, 4);
-          if (items.length === 0) throw new Error('No related articles found');
-          items.forEach(({ title, link }, i) => {
-            state.supportingHeadlines[i] = title;
-            state.supportingUrls[i] = link;
-            const ta = document.getElementById('input-sh-' + i);
-            if (ta) ta.value = title;
-            const urlInput = document.getElementById('input-sh-url-' + i);
-            if (urlInput) urlInput.value = link;
-          });
-          const newLeadPlus = Math.min(items.length, 4);
-          state.leadPlus = newLeadPlus;
-          document.getElementById('input-lead-plus').value = newLeadPlus;
-          for (let i = 0; i < 4; i++) {
-            const row = document.getElementById('sh-row-' + i);
-            if (row) row.style.display = state.leadPlus >= (i + 1) ? 'flex' : 'none';
-          }
-          render();
-          btn.disabled = false;
-          btn.innerHTML = 'Suggest related articles';
-        } catch (e) {
-          btn.disabled = false;
-          btn.innerHTML = 'Suggest related articles';
-          if (statusEl) { statusEl.style.color = '#e07070'; statusEl.textContent = e.message; }
-        }
-      });
 
       document.getElementById('grid-toggle').addEventListener('click', function () {
         state.showGrid = !state.showGrid;
@@ -1411,8 +1361,8 @@ const { title, description, image, caption } = json.data;
           if (caption) { state.caption = caption; document.getElementById('input-caption').value = caption; }
           state.articleUrl = url;
           state.lastImportedSection = getWaPoSection(url);
-          syncSuggestBtn();
           render();
+          fetchRelatedArticles();
           if (image?.url) {
             const proxied = 'https://wsrv.nl/?url=' + encodeURIComponent(image.url);
             status.style.color = '#5cb85c';
@@ -1447,7 +1397,6 @@ const { title, description, image, caption } = json.data;
     render();
     buildPanel();
     syncPresets();
-    syncSuggestBtn();
   </script>
 
   <script>
