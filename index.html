@@ -1006,13 +1006,15 @@
 
         <div class="panel-section">
           <div class="panel-section-title">Import Article</div>
+          <div class="control-row" style="margin-bottom:6px;">
+            <input class="control-input" id="import-url" type="text" placeholder="Paste WaPo article URL…">
+          </div>
           <div class="control-row" style="display:flex;align-items:center;gap:6px;">
-            <input class="control-input" id="import-url" type="text" placeholder="Paste WaPo article URL…" style="flex:1;min-width:0;">
+            <button id="import-btn" style="flex-shrink:0;padding:0 12px;height:28px;background:#fff;color:#111;border:1px solid #555;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Import</button>
             <div class="recents-wrap">
-              <button id="recents-btn" style="flex-shrink:0;padding:0 10px;height:28px;background:transparent;color:#aaa;border:1px solid #444;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;">Recent ▾</button>
+              <button id="recents-btn" style="padding:0 10px;height:28px;background:transparent;color:#aaa;border:1px solid #444;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;">Recent ▾</button>
               <div class="recents-dropdown" id="recents-dropdown"></div>
             </div>
-            <button id="import-btn" style="flex-shrink:0;padding:0 12px;height:28px;background:#fff;color:#111;border:1px solid #555;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Import</button>
           </div>
           <div id="import-status" style="font-size:11px;color:#888;margin-top:4px;min-height:14px;"></div>
         </div>
