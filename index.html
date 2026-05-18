@@ -1215,16 +1215,16 @@
           if (!keywords) throw new Error('No keywords extracted from headline');
           const query = 'site:washingtonpost.com ' + keywords;
           const rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en-US&gl=US&ceid=US:en';
-          const res = await fetch('/api/rss?url=' + encodeURIComponent(rssUrl));
+          const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
           if (!res.ok) throw new Error('RSS fetch failed (' + res.status + ')');
           const json = await res.json();
-          if (json.error) throw new Error(json.error);
+          if (json.status !== 'ok') throw new Error(json.message || 'rss2json error');
           const existing = new Set(
             [state.headline, ...state.supportingHeadlines].map(t => (t || '').trim().toLowerCase())
           );
           const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter|latest from the post)[:\s,]?/i;
-          const titles = (json.titles || [])
-            .map(t => t.replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim())
+          const titles = (json.items || [])
+            .map(item => (item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim())
             .filter(t => t && !existing.has(t.toLowerCase()) && !NON_ARTICLE.test(t))
             .slice(0, 4);
           if (titles.length === 0) throw new Error('No related articles found');
