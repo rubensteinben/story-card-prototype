@@ -61,6 +61,43 @@
       padding: 16px 0;
     }
 
+    .recents-wrap {
+      position: relative;
+    }
+    .recents-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      width: 280px;
+      background: #1e1e1e;
+      border: 1px solid #444;
+      border-radius: 4px;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+    .recents-dropdown.open { display: block; }
+    .recents-item {
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #ccc;
+      cursor: pointer;
+      border-bottom: 1px solid #2a2a2a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+    .recents-item:last-child { border-bottom: none; }
+    .recents-item:hover { background: #2a2a2a; color: #fff; }
+    .recents-empty {
+      padding: 10px;
+      font-size: 12px;
+      color: #555;
+      text-align: center;
+    }
+
     .panel-section-title {
       font-family: 'Source Sans 3', sans-serif;
       font-size: 11px;
@@ -970,6 +1007,10 @@
           <div class="panel-section-title">Import Article</div>
           <div class="control-row" style="gap:6px;">
             <input class="control-input" id="import-url" type="text" placeholder="Paste WaPo article URL…" style="flex:1;min-width:0;">
+            <div class="recents-wrap">
+              <button id="recents-btn" style="flex-shrink:0;padding:0 10px;height:28px;background:transparent;color:#aaa;border:1px solid #444;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;">Recent ▾</button>
+              <div class="recents-dropdown" id="recents-dropdown"></div>
+            </div>
             <button id="import-btn" style="flex-shrink:0;padding:0 12px;height:28px;background:#fff;color:#111;border:1px solid #555;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Import</button>
           </div>
           <div id="import-status" style="font-size:11px;color:#888;margin-top:4px;min-height:14px;"></div>
@@ -1342,6 +1383,43 @@
         });
       });
 
+      function getRecentImports() {
+        try { return JSON.parse(localStorage.getItem('sc-recents') || '[]'); } catch (_) { return []; }
+      }
+      function addRecentImport(url, headline) {
+        const list = getRecentImports().filter(r => r.url !== url);
+        list.unshift({ url, headline });
+        localStorage.setItem('sc-recents', JSON.stringify(list.slice(0, 8)));
+        renderRecentsDropdown();
+      }
+      function renderRecentsDropdown() {
+        const dd = document.getElementById('recents-dropdown');
+        if (!dd) return;
+        const list = getRecentImports();
+        if (list.length === 0) {
+          dd.innerHTML = '<div class="recents-empty">No recent imports</div>';
+        } else {
+          dd.innerHTML = list.map((r, i) =>
+            `<div class="recents-item" data-i="${i}" title="${r.url}">${r.headline}</div>`
+          ).join('');
+          dd.querySelectorAll('.recents-item').forEach(el => {
+            el.addEventListener('click', function () {
+              document.getElementById('import-url').value = getRecentImports()[+this.dataset.i].url;
+              dd.classList.remove('open');
+            });
+          });
+        }
+      }
+      document.getElementById('recents-btn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        const dd = document.getElementById('recents-dropdown');
+        renderRecentsDropdown();
+        dd.classList.toggle('open');
+      });
+      document.addEventListener('click', function () {
+        document.getElementById('recents-dropdown')?.classList.remove('open');
+      });
+
       document.getElementById('import-btn').addEventListener('click', async function () {
         const btn = this;
         const url = document.getElementById('import-url').value.trim();
@@ -1362,6 +1440,7 @@ const { title, description, image, caption } = json.data;
           if (caption) { state.caption = caption; document.getElementById('input-caption').value = caption; }
           state.articleUrl = url;
           state.lastImportedSection = getWaPoSection(url);
+          if (title) addRecentImport(url, title);
           render();
           fetchRelatedArticles();
           if (image?.url) {
