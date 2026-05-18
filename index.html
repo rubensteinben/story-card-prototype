@@ -1221,15 +1221,28 @@
           if (!keywords) throw new Error('No keywords extracted from headline');
           const query = 'site:washingtonpost.com ' + keywords;
           const rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en-US&gl=US&ceid=US:en';
-          const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
-          if (!res.ok) throw new Error('RSS fetch failed (' + res.status + ')');
-          const json = await res.json();
-          if (json.status !== 'ok') throw new Error(json.message || 'rss2json error');
+
+          // Try rss2json first; fall back to our own Vercel proxy
+          let rawItems = null;
+          try {
+            const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
+            const j = await r.json().catch(() => ({}));
+            if (r.ok && j.status === 'ok' && j.items?.length) {
+              rawItems = j.items.map(item => ({ title: item.title || '', link: item.link || '' }));
+            }
+          } catch (_) {}
+          if (!rawItems) {
+            const r2 = await fetch('/api/rss?url=' + encodeURIComponent(rssUrl));
+            const j2 = await r2.json().catch(() => ({}));
+            if (!r2.ok || j2.error) throw new Error(j2.error || 'Could not fetch related articles');
+            rawItems = j2.items || [];
+          }
+
           const existing = new Set(
             [state.headline, ...state.supportingHeadlines].map(t => (t || '').trim().toLowerCase())
           );
           const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter|latest from the post)[:\s,]?/i;
-          const items = (json.items || [])
+          const items = rawItems
             .map(item => ({ title: (item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim(), link: item.link || '' }))
             .filter(({ title }) => title && !existing.has(title.toLowerCase()) && !NON_ARTICLE.test(title))
             .slice(0, 4);
