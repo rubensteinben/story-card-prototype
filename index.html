@@ -446,6 +446,88 @@
       color: #595959;
       margin-top: 8px;
     }
+    /* iPhone frame */
+    .iphone-frame {
+      display: inline-flex;
+      flex-direction: column;
+      background: #1c1c1e;
+      border-radius: 54px;
+      padding: 14px;
+      box-shadow: 0 0 0 1px #3a3a3c, 0 40px 80px rgba(0,0,0,0.4);
+    }
+    .iphone-screen {
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border-radius: 40px;
+      overflow: hidden;
+      position: relative;
+    }
+    .iphone-island {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 34px;
+      background: #1c1c1e;
+      border-radius: 20px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .iphone-statusbar {
+      height: 59px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 28px 10px;
+      flex-shrink: 0;
+    }
+    .iphone-statusbar-time {
+      font-family: -apple-system, 'Helvetica Neue', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      line-height: 18px;
+      color: #111;
+    }
+    .iphone-statusbar-icons {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .iphone-home {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .iphone-home::after {
+      content: '';
+      width: 34%;
+      height: 5px;
+      background: #111;
+      border-radius: 3px;
+      opacity: 0.3;
+    }
+    .iphone-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .import-spinner {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border: 2px solid rgba(0,0,0,0.15);
+      border-top-color: #111;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
   </style>
 </head>
 <body>
@@ -469,6 +551,7 @@
       // Future properties — not yet wired
       width: '15u',
       mobilePresetWidth: 390,
+      phoneClip: true,
       leadPlus: 0,
       showPackageLabel: false,
       packageLabelText: 'Label Text',
@@ -493,12 +576,21 @@
       showGrid: false,
     };
 
+    const defaultState = JSON.parse(JSON.stringify(state));
+
     const widthConfig = {
       '1u':  { cardWidth: null,    maxWidth: '767px', flexDir: 'column', gap: '12px', textFlex: '1 1 auto', artFlex: '1 1 auto', tileWidth: null, carouselTileWidth: null },
       '10u': { cardWidth: '660px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 298px', artFlex: '0 0 298px', tileWidth: 188,  carouselTileWidth: 232 },
       '12u': { cardWidth: '792px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 232px', artFlex: '0 0 496px', tileWidth: 232,  carouselTileWidth: 200 },
       '15u': { cardWidth: '990px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 298px', artFlex: '0 0 628px', tileWidth: 298,  carouselTileWidth: 232 },
     };
+
+    function restoreDefaults() {
+      Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
+      render();
+      buildPanel();
+      syncPresets();
+    }
 
     function syncPresets() {
       document.querySelectorAll('.preset-btn').forEach(btn => {
@@ -507,6 +599,8 @@
       const label = document.getElementById('preset-label');
       if (label) label.textContent = `${state.mobilePresetWidth}px`;
     }
+
+    const deviceHeights = { 320: 568, 375: 812, 390: 844, 430: 932 };
 
     function stateToHash() {
       try {
@@ -540,7 +634,7 @@
         </div>
       `;
 
-      document.getElementById('card-area').innerHTML = `
+      const cardHTML = `
         <div id="card" style="${cardStyle}">
           ${state.showPackageLabel ? `
             <div class="package-label">
@@ -694,6 +788,25 @@
         </div>
       `;
 
+      const screenHeight = deviceHeights[state.mobilePresetWidth] || 844;
+      document.getElementById('card-area').innerHTML = state.width === '1u' ? `
+        <div class="iphone-frame">
+          <div class="iphone-screen" style="${state.phoneClip ? `height:${screenHeight}px` : ''}">
+            <div class="iphone-island"></div>
+            <div class="iphone-statusbar">
+              <span class="iphone-statusbar-time">9:41</span>
+              <div class="iphone-statusbar-icons">
+                <svg width="17" height="12" viewBox="0 0 17 12" fill="#111"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="#111" stroke-linecap="round"><circle cx="8" cy="11.5" r="1" fill="#111" stroke="none"/><path d="M4.8 8.2a4.5 4.5 0 0 1 6.4 0" stroke-width="1.5"/><path d="M1.5 4.8a9 9 0 0 1 13 0" stroke-width="1.5"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="20.5" height="10.5" rx="3.25" stroke="#111" stroke-width="1.5" stroke-opacity="0.4"/><rect x="2.5" y="2.5" width="15" height="7" rx="1.5" fill="#111"/><path d="M22.5 4.5v3" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-opacity="0.4"/></svg>
+              </div>
+            </div>
+            <div class="iphone-scroll-area">${cardHTML}</div>
+            <div class="iphone-home"></div>
+          </div>
+        </div>
+      ` : cardHTML;
+
       const toggleBtn = document.getElementById('grid-toggle');
       if (toggleBtn) toggleBtn.classList.toggle('active', state.showGrid);
 
@@ -708,7 +821,7 @@
           <div class="panel-section-title">Import Article</div>
           <div class="control-row" style="gap:6px;">
             <input class="control-input" id="import-url" type="text" placeholder="Paste WaPo article URL…" style="flex:1;min-width:0;">
-            <button id="import-btn" style="flex-shrink:0;padding:0 12px;height:28px;background:#111;color:#fff;border:none;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;">Import</button>
+            <button id="import-btn" style="flex-shrink:0;padding:0 12px;height:28px;background:#fff;color:#111;border:1px solid #555;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Import</button>
           </div>
           <div id="import-status" style="font-size:11px;color:#888;margin-top:4px;min-height:14px;"></div>
           <button id="copy-link-btn" style="margin-top:8px;width:100%;padding:0;height:28px;background:transparent;color:#aaa;border:1px solid #444;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;">Copy link</button>
@@ -719,7 +832,7 @@
           <div class="control-row">
             <label class="control-label" for="input-width">Width</label>
             <select class="control-input" id="input-width">
-              <option value="1u"  ${state.width === '1u'  ? 'selected' : ''}>1u</option>
+              <option value="1u"  ${state.width === '1u'  ? 'selected' : ''}>1u (mobile)</option>
               <option value="10u" ${state.width === '10u' ? 'selected' : ''}>10u</option>
               <option value="12u" ${state.width === '12u' ? 'selected' : ''}>12u</option>
               <option value="15u" ${state.width === '15u' ? 'selected' : ''}>15u</option>
@@ -743,6 +856,9 @@
               <button class="preset-btn" data-width="430">430 Plus</button>
             </div>
             <div class="preset-width-label" id="preset-label">${state.mobilePresetWidth}px</div>
+            <div class="control-row" style="margin-top:8px;">
+              <label class="control-label"><input type="checkbox" id="input-phone-clip" ${state.phoneClip ? 'checked' : ''}> Clip to phone height</label>
+            </div>
           </div>
         </div>
 
@@ -830,6 +946,10 @@
             <textarea class="control-input" id="input-sh-3" rows="2">${state.supportingHeadlines[3]}</textarea>
           </div>
         </div>
+
+        <div class="panel-section" style="border-top:1px solid #333;padding-top:16px;">
+          <button onclick="restoreDefaults()" style="width:100%;height:28px;background:transparent;color:#888;border:1px solid #444;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;">Restore defaults</button>
+        </div>
       `;
 
       document.getElementById('input-lead-plus').addEventListener('change', function () {
@@ -846,6 +966,11 @@
         render();
         document.getElementById('preset-section').style.display = state.width === '1u' ? 'block' : 'none';
         syncPresets();
+      });
+
+      document.getElementById('input-phone-clip').addEventListener('change', function () {
+        state.phoneClip = this.checked;
+        render();
       });
 
       document.querySelectorAll('.preset-btn').forEach(btn => {
@@ -980,10 +1105,15 @@
       });
 
       document.getElementById('import-btn').addEventListener('click', async function () {
+        const btn = this;
         const url = document.getElementById('import-url').value.trim();
         const status = document.getElementById('import-status');
         if (!url) { status.textContent = 'Paste a URL first.'; return; }
-        status.textContent = 'Importing…';
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="import-spinner"></span>Importing…';
+        status.textContent = '';
+
         try {
           const res = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url));
           const json = await res.json();
@@ -991,13 +1121,33 @@
           const { title, description, image } = json.data;
           if (title) { state.headline = title; document.getElementById('input-headline').value = title; }
           if (description) { state.blurb = description; document.getElementById('input-blurb').value = description; }
-          if (image?.url) { state.imageUrl = image.url; }
           render();
-          status.style.color = '#2a7a2a';
-          status.textContent = 'Imported.';
+          if (image?.url) {
+            const proxied = 'https://wsrv.nl/?url=' + encodeURIComponent(image.url);
+            status.style.color = '#2a7a2a';
+            status.textContent = 'Imported. Loading image…';
+            const img = new Image();
+            img.onload = function () {
+              state.imageUrl = proxied;
+              render();
+              const s = document.getElementById('import-status');
+              if (s) { s.textContent = 'Imported.'; }
+            };
+            img.onerror = function () {
+              const s = document.getElementById('import-status');
+              if (s) { s.textContent = 'Imported. (Image unavailable)'; }
+            };
+            img.src = proxied;
+          } else {
+            status.style.color = '#2a7a2a';
+            status.textContent = 'Imported.';
+          }
         } catch (e) {
           status.style.color = '#c00';
           status.textContent = 'Error: ' + e.message;
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = 'Import';
         }
       });
     }
