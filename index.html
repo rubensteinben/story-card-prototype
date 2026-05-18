@@ -1248,7 +1248,13 @@
         const setStatus = (msg, color) => { if (statusEl) { statusEl.textContent = msg; statusEl.style.color = color; } };
         // Immediately clear old headline and show skeleton
         state.supportingHeadlines[i] = '';
-        if (ta) { ta.value = ''; ta.classList.add('sh-skeleton'); }
+        if (ta) {
+          ta.value = '';
+          ta.style.background = 'linear-gradient(90deg, #2a2a2a 25%, #3d3d3d 50%, #2a2a2a 75%)';
+          ta.style.backgroundSize = '200% 100%';
+          ta.style.animation = 'sh-skeleton-pulse 1.2s ease-in-out infinite';
+          ta.style.color = 'transparent';
+        }
         render();
         setStatus('Fetching…', '#aaa');
         try {
@@ -1256,7 +1262,15 @@
           const json = await res.json();
           if (json.status !== 'success') throw new Error('Import failed');
           const title = json.data?.title;
-          if (ta) ta.classList.remove('sh-skeleton');
+          const clearSkeleton = () => {
+            if (ta) {
+              ta.style.background = '';
+              ta.style.backgroundSize = '';
+              ta.style.animation = '';
+              ta.style.color = '';
+            }
+          };
+          clearSkeleton();
           if (title) {
             state.supportingHeadlines[i] = title;
             if (ta) ta.value = title;
@@ -1267,7 +1281,12 @@
           }
           setTimeout(() => setStatus('', ''), 2500);
         } catch (e) {
-          if (ta) ta.classList.remove('sh-skeleton');
+          if (ta) {
+            ta.style.background = '';
+            ta.style.backgroundSize = '';
+            ta.style.animation = '';
+            ta.style.color = '';
+          }
           setStatus('Failed — check URL.', '#e07070');
           setTimeout(() => setStatus('', ''), 2500);
         }
