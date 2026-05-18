@@ -63,6 +63,7 @@
 
     .recents-wrap {
       position: relative;
+      flex-shrink: 0;
     }
     .recents-dropdown {
       display: none;
@@ -1005,7 +1006,7 @@
 
         <div class="panel-section">
           <div class="panel-section-title">Import Article</div>
-          <div class="control-row" style="gap:6px;">
+          <div class="control-row" style="display:flex;align-items:center;gap:6px;">
             <input class="control-input" id="import-url" type="text" placeholder="Paste WaPo article URL…" style="flex:1;min-width:0;">
             <div class="recents-wrap">
               <button id="recents-btn" style="flex-shrink:0;padding:0 10px;height:28px;background:transparent;color:#aaa;border:1px solid #444;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;">Recent ▾</button>
