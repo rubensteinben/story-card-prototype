@@ -682,7 +682,7 @@
         const keywords = getHeadlineKeywords(state.headline);
         if (!keywords) return;
         const query = 'site:washingtonpost.com ' + keywords;
-        const rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query);
+        const rssUrl = 'https://www.bing.com/news/search?q=' + encodeURIComponent(query) + '&format=rss';
         let rawItems = null;
         try {
           const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
