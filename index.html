@@ -189,6 +189,19 @@
       0%   { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
+
+    @keyframes card-skeleton-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .card-skeleton {
+      background: linear-gradient(90deg, #efefef 25%, #e6e6e6 50%, #efefef 75%);
+      background-size: 200% 100%;
+      animation: card-skeleton-shimmer 2.2s ease-in-out infinite;
+      display: block;
+      border-radius: 2px;
+    }
+
     .sh-skeleton {
       background: linear-gradient(90deg, #2a2a2a 25%, #3d3d3d 50%, #2a2a2a 75%) !important;
       background-size: 200% 100% !important;
@@ -677,6 +690,10 @@
 
     const defaultState = JSON.parse(JSON.stringify(state));
 
+    // Transient import state — not part of serializable state, never written to hash
+    let importingText = false;
+    let importingImage = false;
+
     const widthConfig = {
       '1u':  { cardWidth: null,    maxWidth: '767px', flexDir: 'column', gap: '12px', textFlex: '1 1 auto', artFlex: '1 1 auto', tileWidth: null, carouselTileWidth: null },
       '10u': { cardWidth: '660px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 298px', artFlex: '0 0 298px', tileWidth: 188,  carouselTileWidth: 232 },
@@ -822,8 +839,8 @@
             <div id="text-col" style="flex:${cfg.textFlex}">
               ${state.showKicker ? `<p class="kicker-label">${state.kickerSection}</p>` : ''}
               ${state.showLive ? `<div class="live-label"><span>LIVE</span></div>` : ''}
-              ${state.showHeadline ? `${state.articleUrl ? `<a href="${state.articleUrl}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:block;">` : ''}<p class="headline">${state.headline}</p>${state.articleUrl ? `</a>` : ''}` : ''}
-              ${state.showTicker && state.width !== '1u' && state.showBlurb ? `
+              ${state.showHeadline ? (importingText ? `<div class="card-skeleton" style="height:26px;margin-bottom:5px;"></div><div class="card-skeleton" style="height:26px;width:68%;"></div>` : `${state.articleUrl ? `<a href="${state.articleUrl}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:block;">` : ''}<p class="headline">${state.headline}</p>${state.articleUrl ? `</a>` : ''}`) : ''}
+              ${importingText && state.showBlurb ? `<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px;"><div class="card-skeleton" style="height:15px;"></div><div class="card-skeleton" style="height:15px;"></div><div class="card-skeleton" style="height:15px;width:60%;"></div></div>` : state.showTicker && state.width !== '1u' && state.showBlurb ? `
                 <div class="ticker-container">
                   <p class="ticker-live-header">LIVE</p>
                   <div class="ticker-item">
@@ -869,7 +886,7 @@
             <div id="art-col" style="flex:${cfg.artFlex}">
               <div class="art-wrapper">
                 ${state.articleUrl ? `<a href="${state.articleUrl}" target="_blank" rel="noopener" style="display:block;line-height:0;">` : ''}
-                <img class="art-image" src="${state.imageUrl}" alt="" onerror="this.onerror=null;this.src='https://picsum.photos/seed/wapo/628/419'" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()};${state.articleUrl ? 'cursor:pointer;' : ''}">
+                ${importingImage ? `<div class="card-skeleton art-image" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()};"></div>` : `<img class="art-image" src="${state.imageUrl}" alt="" onerror="this.onerror=null;this.src='https://picsum.photos/seed/wapo/628/419'" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()};${state.articleUrl ? 'cursor:pointer;' : ''}">`}
                 ${state.showOverlayButton ? `
                   <div class="art-overlay-btn">
                     <svg width="10" height="12" viewBox="0 0 10 12" fill="white" style="flex-shrink:0"><path d="M0 0 L10 6 L0 12 Z"/></svg>
@@ -1432,41 +1449,50 @@
         btn.disabled = true;
         btn.innerHTML = '<span class="import-spinner"></span>Importing…';
         status.textContent = '';
+        importingText = true;
+        importingImage = true;
+        render();
 
         try {
           const res = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url) + '&data.caption.selector=' + encodeURIComponent('[data-testid="lede-art-caption"]') + '&data.caption.type=text');
           const json = await res.json();
           if (json.status !== 'success') throw new Error(json.message || 'Import failed');
-const { title, description, image, caption } = json.data;
+          const { title, description, image, caption } = json.data;
           if (title) { state.headline = title; document.getElementById('input-headline').value = title; }
           if (description) { state.blurb = description; document.getElementById('input-blurb').value = description; }
           if (caption) { state.caption = caption; document.getElementById('input-caption').value = caption; }
           state.articleUrl = url;
           state.lastImportedSection = getWaPoSection(url);
           if (title) addRecentImport(url, title);
+          // Text is ready — reveal it immediately, image skeleton stays
+          importingText = false;
           render();
           fetchRelatedArticles();
           if (image?.url) {
             const proxied = 'https://wsrv.nl/?url=' + encodeURIComponent(image.url);
             status.style.color = '#5cb85c';
-            status.textContent = 'Imported. Loading image…';
+            status.textContent = 'Imported.';
             const img = new Image();
             img.onload = function () {
               state.imageUrl = proxied;
+              importingImage = false;
               render();
-              const s = document.getElementById('import-status');
-              if (s) { s.textContent = 'Imported.'; }
             };
             img.onerror = function () {
-              const s = document.getElementById('import-status');
-              if (s) { s.textContent = 'Imported. (Image unavailable)'; }
+              importingImage = false;
+              render();
             };
             img.src = proxied;
           } else {
+            importingImage = false;
+            render();
             status.style.color = '#5cb85c';
             status.textContent = 'Imported.';
           }
         } catch (e) {
+          importingText = false;
+          importingImage = false;
+          render();
           status.style.color = '#c00';
           status.textContent = 'Error: ' + e.message;
         } finally {
