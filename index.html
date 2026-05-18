@@ -711,20 +711,18 @@
         if (!keywords) return;
         const query = 'site:washingtonpost.com ' + keywords;
         const rssUrl = 'https://www.bing.com/news/search?q=' + encodeURIComponent(query) + '&format=rss';
-        let rawItems = null;
-        try {
-          const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
-          const j = await r.json().catch(() => ({}));
-          if (r.ok && j.status === 'ok' && j.items?.length) {
-            rawItems = j.items.map(item => ({ title: item.title || '', link: item.link || '' }));
-          }
-        } catch (_) {}
-        if (!rawItems) {
-          const r2 = await fetch('/api/rss?url=' + encodeURIComponent(rssUrl));
-          const j2 = await r2.json().catch(() => ({}));
-          if (!r2.ok || j2.error) return;
-          rawItems = j2.items || [];
-        }
+
+        // Race both sources in parallel — take whichever returns items first
+        const tryRss2json = fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl))
+          .then(r => r.json()).then(j => (j.status === 'ok' && j.items?.length)
+            ? j.items.map(item => ({ title: item.title || '', link: item.link || '' }))
+            : null).catch(() => null);
+        const tryProxy = fetch('/api/rss?url=' + encodeURIComponent(rssUrl))
+          .then(r => r.json()).then(j => (j.items?.length ? j.items : null)).catch(() => null);
+
+        const results = await Promise.all([tryRss2json, tryProxy]);
+        const rawItems = results[0] || results[1];
+        if (!rawItems) return;
         const existing = new Set([state.headline].map(t => (t || '').trim().toLowerCase()));
         const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter|latest from the post)[:\s,]?/i;
         const items = rawItems
