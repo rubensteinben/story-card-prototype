@@ -1115,12 +1115,13 @@
         status.textContent = '';
 
         try {
-          const res = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url));
+          const res = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url) + '&data.caption.selector=' + encodeURIComponent('[data-testid="lede-art-caption"]') + '&data.caption.type=text');
           const json = await res.json();
           if (json.status !== 'success') throw new Error(json.message || 'Import failed');
-          const { title, description, image } = json.data;
+const { title, description, image, caption } = json.data;
           if (title) { state.headline = title; document.getElementById('input-headline').value = title; }
           if (description) { state.blurb = description; document.getElementById('input-blurb').value = description; }
+          if (caption) { state.caption = caption; document.getElementById('input-caption').value = caption; }
           render();
           if (image?.url) {
             const proxied = 'https://wsrv.nl/?url=' + encodeURIComponent(image.url);
