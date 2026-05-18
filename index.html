@@ -716,6 +716,7 @@
           const urlInput = document.getElementById('input-sh-url-' + i);
           if (urlInput) urlInput.value = link;
         });
+        if (items.length > 0) render();
       } catch (e) { console.log('[suggest] outer error:', e.message); }
     }
 
