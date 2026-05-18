@@ -1,5 +1,10 @@
+function decodeEntities(s) {
+  return s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'");
+}
+
 export default async function handler(req, res) {
-  const { url } = req.query;
+  const { url, domain } = req.query;
   if (!url) return res.status(400).json({ error: 'Missing url parameter' });
   try {
     const response = await fetch(url, {
@@ -13,18 +18,21 @@ export default async function handler(req, res) {
     });
     if (!response.ok) throw new Error('Upstream fetch failed: ' + response.status);
     const xml = await response.text();
-    // Extract title + link pairs from each <item>
     const items = [];
     const itemRe = /<item>([\s\S]*?)<\/item>/g;
     let itemMatch;
     while ((itemMatch = itemRe.exec(xml)) !== null) {
       const block = itemMatch[1];
-      const titleMatch = block.match(/<title[^>]*>([\s\S]*?)<\/title>/);
-      const linkMatch = block.match(/<link[^>]*>([\s\S]*?)<\/link>/) ||
-                        block.match(/<link\s+href="([^"]+)"/);
-      const title = titleMatch ? titleMatch[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/, '$1').trim() : '';
-      const link = linkMatch ? linkMatch[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/, '$1').trim() : '';
-      if (title) items.push({ title, link });
+      const extract = (tag) => {
+        const m = block.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+        return m ? decodeEntities(m[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/, '$1').trim()) : '';
+      };
+      const title = extract('title');
+      const link = extract('link') || (block.match(/<link\s+href="([^"]+)"/) || [])[1] || '';
+      const itemDomain = extract('News:Domain') || extract('domain') || '';
+      // Filter by domain if requested
+      if (domain && itemDomain && !itemDomain.toLowerCase().includes(domain.toLowerCase())) continue;
+      if (title) items.push({ title, link, domain: itemDomain });
     }
     res.json({ items });
   } catch (e) {

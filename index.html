@@ -712,12 +712,16 @@
         const query = 'site:washingtonpost.com ' + keywords;
         const rssUrl = 'https://www.bing.com/news/search?q=' + encodeURIComponent(query) + '&format=rss';
 
+        const decodeEntities = s => s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+
         // Race both sources in parallel — take whichever returns items first
         const tryRss2json = fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl))
-          .then(r => r.json()).then(j => (j.status === 'ok' && j.items?.length)
-            ? j.items.map(item => ({ title: item.title || '', link: item.link || '' }))
-            : null).catch(() => null);
-        const tryProxy = fetch('/api/rss?url=' + encodeURIComponent(rssUrl))
+          .then(r => r.json()).then(j => {
+            if (j.status !== 'ok' || !j.items?.length) return null;
+            const filtered = j.items.filter(item => !item.link || item.link.includes('washingtonpost.com') || (item.source?.name || '').toLowerCase().includes('washington post'));
+            return filtered.length ? filtered.map(item => ({ title: decodeEntities(item.title || ''), link: item.link || '' })) : null;
+          }).catch(() => null);
+        const tryProxy = fetch('/api/rss?url=' + encodeURIComponent(rssUrl) + '&domain=washingtonpost.com')
           .then(r => r.json()).then(j => (j.items?.length ? j.items : null)).catch(() => null);
 
         const results = await Promise.all([tryRss2json, tryProxy]);
