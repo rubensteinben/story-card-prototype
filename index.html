@@ -718,17 +718,19 @@
           ? state.lastImportedSection : 'national';
         const wapoRssUrl = 'https://feeds.washingtonpost.com/rss/' + section;
 
+        console.log('[suggest] section:', section, 'feed:', wapoRssUrl);
+
         // Primary: WaPo native RSS via Vercel proxy (real WaPo URLs + titles)
         // Fallback: rss2json with same feed
         const tryProxy = fetch('/api/rss?url=' + encodeURIComponent(wapoRssUrl))
-          .then(r => r.json()).then(j => (j.items?.length ? j.items : null)).catch(() => null);
+          .then(r => r.json()).then(j => { console.log('[suggest] proxy items:', j.items?.length, j.error||''); return j.items?.length ? j.items : null; }).catch(e => { console.log('[suggest] proxy err:', e.message); return null; });
         const tryRss2json = fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(wapoRssUrl))
-          .then(r => r.json()).then(j => (j.status === 'ok' && j.items?.length)
-            ? j.items.map(i => ({ title: i.title || '', link: i.link || '' })) : null).catch(() => null);
+          .then(r => r.json()).then(j => { console.log('[suggest] rss2json status:', j.status, 'items:', j.items?.length, j.message||''); return (j.status === 'ok' && j.items?.length) ? j.items.map(i => ({ title: i.title || '', link: i.link || '' })) : null; }).catch(e => { console.log('[suggest] rss2json err:', e.message); return null; });
 
         const results = await Promise.all([tryProxy, tryRss2json]);
+        console.log('[suggest] proxy result:', !!results[0], 'rss2json result:', !!results[1]);
         const rawItems = results[0] || results[1];
-        if (!rawItems) return;
+        if (!rawItems) { console.log('[suggest] both sources failed'); return; }
         const existing = new Set([state.headline].map(t => (t || '').trim().toLowerCase()));
         const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter|latest from the post)[:\s,]?/i;
         const decodeEntities = s => s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
