@@ -626,6 +626,7 @@
       overlayButtonLabel: 'Play Video',
       showOverlayDuration: true,
       supportingHeadlines: ['', '', '', ''],
+      supportingUrls: ['', '', '', ''],
       showGrid: false,
       lastImportedSection: null,
       articleUrl: '',
@@ -729,7 +730,11 @@
         ? `width:${state.mobilePresetWidth}px`
         : `width:${cfg.cardWidth}`;
 
-      const sh = (i) => state.supportingHeadlines[i] || 'Supporting headline text goes here lorem ipsum dolor sit amet';
+      const sh = (i) => {
+        const text = state.supportingHeadlines[i] || 'Supporting headline text goes here lorem ipsum dolor sit amet';
+        const url = state.supportingUrls && state.supportingUrls[i];
+        return url ? `<a href="${url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">${text}</a>` : text;
+      };
       const vDivider = `<div style="flex:0 0 32px;align-self:stretch;position:relative;"><div style="position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:1px;background:rgba(0,0,0,0.1)"></div></div>`;
       const t1uCard = (item, borderRadius, isLast) => `
         <div style="flex-shrink:0;padding:16px 20px;border:1px solid rgba(0,0,0,0.1);background:white;border-radius:${borderRadius};${!isLast ? 'margin-right:-1px;' : ''}display:flex;flex-direction:column;gap:8px;">
@@ -1199,6 +1204,7 @@
       [0, 1, 2, 3].forEach(i => {
         document.getElementById(`input-sh-${i}`).addEventListener('input', function () {
           state.supportingHeadlines[i] = this.value;
+          state.supportingUrls[i] = '';
           render();
         });
       });
@@ -1223,13 +1229,14 @@
             [state.headline, ...state.supportingHeadlines].map(t => (t || '').trim().toLowerCase())
           );
           const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter|latest from the post)[:\s,]?/i;
-          const titles = (json.items || [])
-            .map(item => (item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim())
-            .filter(t => t && !existing.has(t.toLowerCase()) && !NON_ARTICLE.test(t))
+          const items = (json.items || [])
+            .map(item => ({ title: (item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim(), link: item.link || '' }))
+            .filter(({ title }) => title && !existing.has(title.toLowerCase()) && !NON_ARTICLE.test(title))
             .slice(0, 4);
-          if (titles.length === 0) throw new Error('No related articles found');
-          titles.forEach((title, i) => {
+          if (items.length === 0) throw new Error('No related articles found');
+          items.forEach(({ title, link }, i) => {
             state.supportingHeadlines[i] = title;
+            state.supportingUrls[i] = link;
             const ta = document.getElementById('input-sh-' + i);
             if (ta) ta.value = title;
           });
