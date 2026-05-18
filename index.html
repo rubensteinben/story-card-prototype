@@ -677,9 +677,10 @@
     }
 
     async function fetchRelatedArticles() {
-      if (!state.lastImportedSection) return;
+      if (!state.lastImportedSection) { console.log('[suggest] no section, skipping'); return; }
       try {
         const keywords = getHeadlineKeywords(state.headline);
+        console.log('[suggest] keywords:', keywords);
         if (!keywords) return;
         const query = 'site:washingtonpost.com ' + keywords;
         const rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en-US&gl=US&ceid=US:en';
@@ -687,13 +688,16 @@
         try {
           const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
           const j = await r.json().catch(() => ({}));
+          console.log('[suggest] rss2json status:', r.status, j.status, 'items:', j.items?.length);
           if (r.ok && j.status === 'ok' && j.items?.length) {
             rawItems = j.items.map(item => ({ title: item.title || '', link: item.link || '' }));
           }
-        } catch (_) {}
+        } catch (e) { console.log('[suggest] rss2json error:', e.message); }
         if (!rawItems) {
+          console.log('[suggest] falling back to /api/rss');
           const r2 = await fetch('/api/rss?url=' + encodeURIComponent(rssUrl));
           const j2 = await r2.json().catch(() => ({}));
+          console.log('[suggest] /api/rss status:', r2.status, j2.error || 'ok', 'items:', j2.items?.length);
           if (!r2.ok || j2.error) return;
           rawItems = j2.items || [];
         }
@@ -703,6 +707,7 @@
           .map(item => ({ title: (item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim(), link: item.link || '' }))
           .filter(({ title }) => title && !existing.has(title.toLowerCase()) && !NON_ARTICLE.test(title))
           .slice(0, 4);
+        console.log('[suggest] final items:', items.length);
         items.forEach(({ title, link }, i) => {
           state.supportingHeadlines[i] = title;
           state.supportingUrls[i] = link;
@@ -711,7 +716,7 @@
           const urlInput = document.getElementById('input-sh-url-' + i);
           if (urlInput) urlInput.value = link;
         });
-      } catch (_) {}
+      } catch (e) { console.log('[suggest] outer error:', e.message); }
     }
 
     function getWaPoSection(url) {
