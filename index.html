@@ -704,33 +704,36 @@
         .join(' ');
     }
 
+    // Known WaPo RSS section slugs
+    const WAPO_SECTIONS = new Set([
+      'politics','national','world','business','sports','entertainment',
+      'technology','lifestyle','local','opinions','opinion','health',
+      'science','climate','education','immigration','economy','investigations',
+    ]);
+
     async function fetchRelatedArticles() {
       if (!state.lastImportedSection) return;
       try {
-        const keywords = getHeadlineKeywords(state.headline);
-        if (!keywords) return;
-        const query = 'site:washingtonpost.com ' + keywords;
-        const rssUrl = 'https://www.bing.com/news/search?q=' + encodeURIComponent(query) + '&format=rss';
+        const section = WAPO_SECTIONS.has(state.lastImportedSection)
+          ? state.lastImportedSection : 'national';
+        const wapoRssUrl = 'https://feeds.washingtonpost.com/rss/' + section;
 
-        const decodeEntities = s => s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-
-        // Race both sources in parallel — take whichever returns items first
-        const tryRss2json = fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl))
-          .then(r => r.json()).then(j => {
-            if (j.status !== 'ok' || !j.items?.length) return null;
-            const filtered = j.items.filter(item => !item.link || item.link.includes('washingtonpost.com') || (item.source?.name || '').toLowerCase().includes('washington post'));
-            return filtered.length ? filtered.map(item => ({ title: decodeEntities(item.title || ''), link: item.link || '' })) : null;
-          }).catch(() => null);
-        const tryProxy = fetch('/api/rss?url=' + encodeURIComponent(rssUrl) + '&domain=washingtonpost.com')
+        // Primary: WaPo native RSS via Vercel proxy (real WaPo URLs + titles)
+        // Fallback: rss2json with same feed
+        const tryProxy = fetch('/api/rss?url=' + encodeURIComponent(wapoRssUrl))
           .then(r => r.json()).then(j => (j.items?.length ? j.items : null)).catch(() => null);
+        const tryRss2json = fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(wapoRssUrl))
+          .then(r => r.json()).then(j => (j.status === 'ok' && j.items?.length)
+            ? j.items.map(i => ({ title: i.title || '', link: i.link || '' })) : null).catch(() => null);
 
-        const results = await Promise.all([tryRss2json, tryProxy]);
+        const results = await Promise.all([tryProxy, tryRss2json]);
         const rawItems = results[0] || results[1];
         if (!rawItems) return;
         const existing = new Set([state.headline].map(t => (t || '').trim().toLowerCase()));
         const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter|latest from the post)[:\s,]?/i;
+        const decodeEntities = s => s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
         const items = rawItems
-          .map(item => ({ title: (item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim(), link: item.link || '' }))
+          .map(item => ({ title: decodeEntities((item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim()), link: item.link || '' }))
           .filter(({ title }) => title && !existing.has(title.toLowerCase()) && !NON_ARTICLE.test(title))
           .slice(0, 4);
         items.forEach(({ title, link }, i) => {
