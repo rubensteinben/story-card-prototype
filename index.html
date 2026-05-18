@@ -1032,9 +1032,7 @@
 
         <div class="panel-section">
           <div class="panel-section-title">Art</div>
-          <div class="control-row">
-            <button class="control-btn" id="btn-new-image">New image</button>
-          </div>
+
           <div class="control-row">
             <label class="control-label" for="input-aspect-ratio">Aspect ratio</label>
             <select class="control-input" id="input-aspect-ratio">
@@ -1206,10 +1204,6 @@
         render();
       });
 
-      document.getElementById('btn-new-image').addEventListener('click', function () {
-        state.imageUrl = `https://picsum.photos/seed/${Math.random().toString(36).slice(2)}/628/419`;
-        render();
-      });
 
       document.getElementById('input-aspect-ratio').addEventListener('change', function () {
         state.aspectRatio = this.value;
