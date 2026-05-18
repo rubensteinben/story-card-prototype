@@ -508,6 +508,20 @@
       if (label) label.textContent = `${state.mobilePresetWidth}px`;
     }
 
+    function stateToHash() {
+      try {
+        history.replaceState(null, '', '#' + btoa(encodeURIComponent(JSON.stringify(state))));
+      } catch (e) { /* ignore */ }
+    }
+
+    function hashToState() {
+      const hash = window.location.hash.slice(1);
+      if (!hash) return;
+      try {
+        Object.assign(state, JSON.parse(decodeURIComponent(atob(hash))));
+      } catch (e) { /* invalid hash — ignore, use defaults */ }
+    }
+
     function render() {
       const cfg = widthConfig[state.width];
       const cardStyle = state.width === '1u'
@@ -682,6 +696,8 @@
 
       const toggleBtn = document.getElementById('grid-toggle');
       if (toggleBtn) toggleBtn.classList.toggle('active', state.showGrid);
+
+      stateToHash();
     }
 
     function buildPanel() {
@@ -695,6 +711,7 @@
             <button id="import-btn" style="flex-shrink:0;padding:0 12px;height:28px;background:#111;color:#fff;border:none;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;">Import</button>
           </div>
           <div id="import-status" style="font-size:11px;color:#888;margin-top:4px;min-height:14px;"></div>
+          <button id="copy-link-btn" style="margin-top:8px;width:100%;padding:0;height:28px;background:transparent;color:#aaa;border:1px solid #444;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;">Copy link</button>
         </div>
 
         <div class="panel-section">
@@ -948,6 +965,20 @@
         render();
       });
 
+      document.getElementById('copy-link-btn').addEventListener('click', function () {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+          const btn = document.getElementById('copy-link-btn');
+          btn.textContent = 'Copied!';
+          btn.style.color = '#2a7a2a';
+          btn.style.borderColor = '#2a7a2a';
+          setTimeout(() => {
+            btn.textContent = 'Copy link';
+            btn.style.color = '#aaa';
+            btn.style.borderColor = '#444';
+          }, 2000);
+        });
+      });
+
       document.getElementById('import-btn').addEventListener('click', async function () {
         const url = document.getElementById('import-url').value.trim();
         const status = document.getElementById('import-status');
@@ -971,9 +1002,25 @@
       });
     }
 
+    hashToState();
     render();
     buildPanel();
     syncPresets();
+  </script>
+
+  <script>
+    // Dev live-reload: polls for file changes and reloads when detected
+    (function () {
+      let lastModified = '';
+      setInterval(async function () {
+        try {
+          const res = await fetch(window.location.pathname, { method: 'HEAD', cache: 'no-cache' });
+          const mod = res.headers.get('last-modified');
+          if (mod && lastModified && mod !== lastModified) { location.reload(); }
+          if (mod) lastModified = mod;
+        } catch (e) {}
+      }, 1000);
+    })();
   </script>
 
 </body>
