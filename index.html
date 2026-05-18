@@ -1403,6 +1403,9 @@
               dd.classList.remove('open');
               const btn = document.getElementById('recents-btn');
               if (btn) btn.textContent = 'Recent ▾';
+              const status = document.getElementById('import-status');
+              if (status) { status.textContent = ''; status.style.color = ''; }
+              document.getElementById('import-btn').click();
             });
           });
         }
