@@ -627,6 +627,7 @@
       showOverlayDuration: true,
       supportingHeadlines: ['', '', '', ''],
       showGrid: false,
+      lastImportedSection: null,
     };
 
     const defaultState = JSON.parse(JSON.stringify(state));
@@ -637,6 +638,58 @@
       '12u': { cardWidth: '792px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 232px', artFlex: '0 0 496px', tileWidth: 232,  carouselTileWidth: 200 },
       '15u': { cardWidth: '990px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 298px', artFlex: '0 0 628px', tileWidth: 298,  carouselTileWidth: 232 },
     };
+
+    const STOP_WORDS = new Set([
+      'a','an','the','and','or','but','in','on','at','to','for','of','with',
+      'by','from','is','are','was','were','be','been','has','have','had',
+      'it','its','this','that','these','those','as','up','out','into','than',
+      'about','after','before','over','under','between','through','during',
+      'what','who','how','when','where','why','which','will','would','could',
+      'should','may','might','can','do','did','does','not','no','new','says',
+      'say','said','his','her','their','they','he','she','we','us','you','i',
+      'more','than','just','also','back','now','then','so','if','all','one',
+      'two','three','four','five','six','seven','eight','nine','ten',
+    ]);
+
+    function getHeadlineKeywords(headline) {
+      return headline
+        .replace(/[^a-z0-9\s]/gi, ' ')
+        .split(/\s+/)
+        .map(w => w.toLowerCase())
+        .filter(w => w.length > 2 && !STOP_WORDS.has(w))
+        .slice(0, 6)
+        .join(' ');
+    }
+
+    function syncSuggestBtn() {
+      const btn = document.getElementById('suggest-related-btn');
+      if (!btn) return;
+      const imported = !!state.lastImportedSection;
+      if (imported) {
+        btn.textContent = 'Suggest related articles';
+        btn.disabled = false;
+        btn.style.background = '#fff';
+        btn.style.color = '#111';
+        btn.style.borderColor = '#555';
+        btn.style.fontWeight = '600';
+        btn.style.cursor = 'pointer';
+      } else {
+        btn.textContent = 'Import an article first';
+        btn.disabled = true;
+        btn.style.background = 'transparent';
+        btn.style.color = '#555';
+        btn.style.borderColor = '#333';
+        btn.style.fontWeight = 'normal';
+        btn.style.cursor = 'default';
+      }
+    }
+
+    function getWaPoSection(url) {
+      try {
+        const path = new URL(url).pathname;
+        return path.split('/').filter(Boolean)[0] || null;
+      } catch (e) { return null; }
+    }
 
     function restoreDefaults() {
       Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
@@ -987,6 +1040,9 @@
 
         <div class="panel-section">
           <div class="panel-section-title">Supporting Headlines</div>
+          <div class="control-row" style="margin-bottom:4px;">
+            <button id="suggest-related-btn" disabled style="width:100%;height:28px;background:transparent;color:#555;border:1px solid #333;border-radius:3px;font-size:12px;font-family:inherit;cursor:default;">Import an article first</button>
+          </div>
           <div class="control-row" id="sh-row-0" style="display:${state.leadPlus >= 1 ? 'flex' : 'none'}">
             <label class="control-label" for="input-sh-0">Headline 1</label>
             <textarea class="control-input" id="input-sh-0" rows="2">${state.supportingHeadlines[0]}</textarea>
@@ -1143,6 +1199,48 @@
         });
       });
 
+      document.getElementById('suggest-related-btn').addEventListener('click', async function () {
+        const btn = this;
+        if (!state.lastImportedSection) return;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="import-spinner"></span>Finding related…';
+        try {
+          const keywords = getHeadlineKeywords(state.headline);
+          if (!keywords) throw new Error('No keywords extracted from headline');
+          const query = 'site:washingtonpost.com ' + keywords;
+          const rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en-US&gl=US&ceid=US:en';
+          const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl));
+          const json = await res.json();
+          if (json.status !== 'ok') throw new Error('Could not fetch related articles');
+          const existing = new Set(
+            [state.headline, ...state.supportingHeadlines].map(t => (t || '').trim().toLowerCase())
+          );
+          const titles = (json.items || [])
+            .map(item => (item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim())
+            .filter(t => t && !existing.has(t.toLowerCase()))
+            .slice(0, 4);
+          if (titles.length === 0) throw new Error('No related articles found');
+          titles.forEach((title, i) => {
+            state.supportingHeadlines[i] = title;
+            const ta = document.getElementById('input-sh-' + i);
+            if (ta) ta.value = title;
+          });
+          const newLeadPlus = Math.min(titles.length, 4);
+          state.leadPlus = newLeadPlus;
+          document.getElementById('input-lead-plus').value = newLeadPlus;
+          for (let i = 0; i < 4; i++) {
+            const row = document.getElementById('sh-row-' + i);
+            if (row) row.style.display = state.leadPlus >= (i + 1) ? 'flex' : 'none';
+          }
+          render();
+          btn.disabled = false;
+          btn.innerHTML = 'Suggest related articles';
+        } catch (e) {
+          btn.disabled = false;
+          btn.innerHTML = 'Suggest related articles';
+        }
+      });
+
       document.getElementById('grid-toggle').addEventListener('click', function () {
         state.showGrid = !state.showGrid;
         render();
@@ -1174,10 +1272,12 @@ const { title, description, image, caption } = json.data;
           if (title) { state.headline = title; document.getElementById('input-headline').value = title; }
           if (description) { state.blurb = description; document.getElementById('input-blurb').value = description; }
           if (caption) { state.caption = caption; document.getElementById('input-caption').value = caption; }
+          state.lastImportedSection = getWaPoSection(url);
+          syncSuggestBtn();
           render();
           if (image?.url) {
             const proxied = 'https://wsrv.nl/?url=' + encodeURIComponent(image.url);
-            status.style.color = '#2a7a2a';
+            status.style.color = '#5cb85c';
             status.textContent = 'Imported. Loading image…';
             const img = new Image();
             img.onload = function () {
@@ -1192,7 +1292,7 @@ const { title, description, image, caption } = json.data;
             };
             img.src = proxied;
           } else {
-            status.style.color = '#2a7a2a';
+            status.style.color = '#5cb85c';
             status.textContent = 'Imported.';
           }
         } catch (e) {
@@ -1209,6 +1309,7 @@ const { title, description, image, caption } = json.data;
     render();
     buildPanel();
     syncPresets();
+    syncSuggestBtn();
   </script>
 
   <script>
