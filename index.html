@@ -492,6 +492,16 @@
       font-style: normal;
     }
     .headline:hover { color: #888; }
+    .headline[contenteditable="true"],
+    .blurb[contenteditable="true"] {
+      color: #111111;
+      background: rgba(66, 130, 240, 0.06);
+      border-radius: 2px;
+    }
+    .caption[contenteditable="true"] {
+      background: rgba(66, 130, 240, 0.06);
+      border-radius: 2px;
+    }
 
     /* Blurb */
     .blurb {
@@ -732,7 +742,7 @@
           e.stopPropagation();
           const wrap = this.closest('.editable-wrap');
           const field = wrap.dataset.field;
-          const textEl = wrap.querySelector(field === 'headline' ? '.headline' : '.blurb');
+          const textEl = wrap.querySelector(field === 'headline' ? '.headline' : field === 'blurb' ? '.blurb' : '.caption');
           if (!textEl || textEl.contentEditable === 'true') return;
           const prevValue = state[field] || '';
           btn.style.opacity = '0';
@@ -764,6 +774,7 @@
               state[field] = newVal;
               if (field === 'headline') { const el = document.getElementById('input-headline'); if (el) el.value = newVal; }
               if (field === 'blurb') { const el = document.getElementById('input-blurb'); if (el) el.value = newVal; }
+              if (field === 'caption') { const el = document.getElementById('input-caption'); if (el) el.value = newVal; }
             }
             render();
           }
@@ -793,6 +804,7 @@
         state[field] = prevValue;
         if (field === 'headline') { const el = document.getElementById('input-headline'); if (el) el.value = prevValue; }
         if (field === 'blurb') { const el = document.getElementById('input-blurb'); if (el) el.value = prevValue; }
+        if (field === 'caption') { const el = document.getElementById('input-caption'); if (el) el.value = prevValue; }
         render();
       }
     });
@@ -998,7 +1010,7 @@
                 ` : ''}
                 ${state.articleUrl ? `</a>` : ''}
               </div>
-              <p class="caption">${state.caption}</p>
+              <div class="editable-wrap" data-field="caption"><button class="edit-pencil" title="Edit caption">✎</button><p class="caption">${state.caption}</p></div>
             </div>
           </div>
           ${state.showTicker && state.width === '1u' ? `
