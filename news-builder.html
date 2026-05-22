@@ -1172,7 +1172,7 @@
       border-radius: 2px;
     }
 
-    /* Blurb */
+    /* Summary */
     .blurb {
       font-family: 'Source Sans 3', sans-serif;
       font-weight: 400;
@@ -2694,7 +2694,7 @@
     ─────────────────────────────────────────────────────────────────── */
     const state = {
       headline: 'Lead headline goes here. The ideal length is between 50 and 100 characters.',
-      blurb: 'Lead blurb here this is the blurb text. Blurbs appear with the lead story only. Lead blurb here this is the blurb text. Blurbs appear with the lead story only.',
+      blurb: 'Lead summary text goes here. The summary appears with the lead story only.',
       imageUrl: 'https://picsum.photos/seed/wapo/628/419',
       caption: '(Demetrius Freeman/The Post)',
       // Future properties — not yet wired
@@ -2970,7 +2970,7 @@
                     </div>
                   </div>
                 </div>
-              ` : (!state.showTicker && state.showBlurb ? `<div class="editable-wrap" data-field="blurb"><button class="edit-pencil" title="Edit blurb">✎</button><p class="blurb">${state.blurb}</p></div>` : '')}
+              ` : (!state.showTicker && state.showBlurb ? `<div class="editable-wrap" data-field="blurb"><button class="edit-pencil" title="Edit summary">✎</button><p class="blurb">${state.blurb}</p></div>` : '')}
               ${state.leadPlus >= 1 && state.leadPlus < 3 && (state.width === '12u' || state.width === '15u') ? `
                 <hr class="h-rule">
                 <p class="supporting-headline">${sh(0)}</p>
@@ -3174,7 +3174,7 @@
             <textarea class="control-input" id="input-headline" rows="3">${state.headline}</textarea>
           </div>
           <div class="control-row">
-            <label class="control-label"><input type="checkbox" id="input-show-blurb" ${state.showBlurb ? 'checked' : ''}> Blurb</label>
+            <label class="control-label"><input type="checkbox" id="input-show-blurb" ${state.showBlurb ? 'checked' : ''}> Summary</label>
             <textarea class="control-input" id="input-blurb" rows="4">${state.blurb}</textarea>
           </div>
         </div>
