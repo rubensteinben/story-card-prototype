@@ -37,8 +37,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px 16px 80px;
-      gap: 32px;
+      padding: 40px 0 80px;
+      gap: 24px;
     }
 
     #status {
@@ -571,11 +571,9 @@
 
       const container = document.getElementById('page-container');
       container.innerHTML = '';
+      container.style.gap = effectiveWidth === '1u' ? '16px' : '24px';
 
-      const mobilePx = Math.min(
-        _pageData.mobile_preview_width || 390,
-        window.innerWidth - 32          // never overflow the viewport (16px each side)
-      );
+      const mobilePx = window.innerWidth; // fluid — full viewport width
 
       (_pageData.cards || []).forEach(card => {
         Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
@@ -590,6 +588,15 @@
 
         _renderTarget = wrapper;
         render();
+
+        // For mobile, use CSS viewport units so the card always fits regardless
+        // of any JS measurement timing issues
+        if (effectiveWidth === '1u') {
+          wrapper.style.width = '100vw';
+          wrapper.style.overflow = 'hidden';
+          const cardEl = wrapper.firstElementChild;
+          if (cardEl) cardEl.style.width = '100%';
+        }
       });
 
       _renderTarget = null;
