@@ -37,7 +37,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px 24px 80px;
+      padding: 40px 16px 80px;
       gap: 32px;
     }
 
@@ -550,11 +550,10 @@
     const WIDTH_ORDER   = ['15u', '12u', '10u', '1u'];
     const WIDTH_MIN_VW  = { '15u': 1040, '12u': 840, '10u': 710, '1u': 0 };
 
-    function getEffectiveWidth(pageMaxWidth) {
+    function getEffectiveWidth() {
       const vw = window.innerWidth;
-      // Start at the page's configured width and step down until one fits
-      const startIdx = WIDTH_ORDER.indexOf(pageMaxWidth || '15u');
-      for (let i = startIdx; i < WIDTH_ORDER.length; i++) {
+      // Always step down from the largest width — page.html is fully responsive
+      for (let i = 0; i < WIDTH_ORDER.length; i++) {
         if (vw >= WIDTH_MIN_VW[WIDTH_ORDER[i]]) return WIDTH_ORDER[i];
       }
       return '1u';
@@ -566,7 +565,7 @@
     function renderPage() {
       if (!_pageData) return;
 
-      const effectiveWidth = getEffectiveWidth(_pageData.width);
+      const effectiveWidth = getEffectiveWidth();
       if (effectiveWidth === _lastEffectiveWidth) return;  // no change, skip
       _lastEffectiveWidth = effectiveWidth;
 
@@ -575,7 +574,7 @@
 
       const mobilePx = Math.min(
         _pageData.mobile_preview_width || 390,
-        window.innerWidth - 48          // never overflow the viewport
+        window.innerWidth - 32          // never overflow the viewport (16px each side)
       );
 
       (_pageData.cards || []).forEach(card => {
