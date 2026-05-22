@@ -2149,13 +2149,23 @@
             setTimeout(() => droppedEl.classList.remove('accordion-item-dropped'), 2000);
           }
 
-          // Scroll preview to dropped card and highlight it
+          // Scroll preview to dropped card and highlight it after scroll lands
           const previewEl = document.querySelector('.card-wrapper.selected, .phone-card-slot.selected')
             || document.querySelector(`.card-wrapper[data-index="${movedToIndex}"], .phone-card-slot[data-index="${movedToIndex}"]`);
           if (previewEl) {
             previewEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            previewEl.classList.add('card-drop-highlight');
-            setTimeout(() => previewEl.classList.remove('card-drop-highlight'), 2000);
+            let highlighted = false;
+            const doHighlight = () => {
+              if (highlighted) return;
+              highlighted = true;
+              previewEl.classList.add('card-drop-highlight');
+              setTimeout(() => previewEl.classList.remove('card-drop-highlight'), 2000);
+            };
+            const obs = new IntersectionObserver((entries) => {
+              if (entries[0].intersectionRatio >= 0.8) { obs.disconnect(); doHighlight(); }
+            }, { threshold: 0.8 });
+            obs.observe(previewEl);
+            setTimeout(() => { obs.disconnect(); doHighlight(); }, 2500); // fallback
           }
 
           // Clear transforms and release the flip lock after animation completes
