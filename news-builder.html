@@ -1525,7 +1525,7 @@
         if (appState.session) {
           await openPageBySlug(sharePageSlug); // authenticated: load the page directly
         } else {
-          showView('editor'); // guest: Phase E will wire this up properly
+          showView('login'); // not authenticated — require sign in first
         }
         return;
       }
