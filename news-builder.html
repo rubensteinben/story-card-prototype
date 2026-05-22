@@ -1,0 +1,3558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>News Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: #ebebeb;
+      color: #111111;
+      min-height: 100vh;
+    }
+
+    /* ── View containers ── */
+    .view { display: none; min-height: 100vh; }
+    .view.active { display: flex; }
+
+    /* ── Login view ── */
+    #view-login {
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-card {
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 40px;
+      width: 360px;
+    }
+
+    .login-card h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 6px;
+    }
+
+    .login-card p {
+      font-size: 13px;
+      color: #777;
+      margin-bottom: 28px;
+    }
+
+    .login-field {
+      margin-bottom: 14px;
+    }
+
+    .login-field label {
+      display: block;
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .login-field input {
+      width: 100%;
+      height: 38px;
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      color: #111;
+      font-family: inherit;
+      font-size: 14px;
+      padding: 0 12px;
+      outline: none;
+    }
+
+    .login-field input:focus { border-color: #999; }
+
+    #login-btn {
+      width: 100%;
+      height: 40px;
+      margin-top: 8px;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #login-btn:hover { background: #333; }
+    #login-btn:disabled { background: #ccc; color: #999; cursor: not-allowed; }
+
+    #login-error {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #cc3333;
+      min-height: 18px;
+      text-align: center;
+    }
+
+    /* ── List view ── */
+    #view-list {
+      flex-direction: column;
+    }
+
+    .list-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 24px;
+      height: 52px;
+      background: #111;
+      border-bottom: none;
+    }
+
+    .list-header h1 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      flex: 1;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .btn-primary {
+      height: 32px;
+      padding: 0 14px;
+      background: #fff;
+      color: #111;
+      border: none;
+      border-radius: 2px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-primary:hover { background: #e8e8e8; }
+
+    .btn-ghost {
+      height: 32px;
+      padding: 0 14px;
+      background: transparent;
+      color: rgba(255,255,255,0.6);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 2px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,0.7); }
+
+    .list-identity {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: rgba(255,255,255,0.55);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    .list-identity .material-symbols-outlined {
+      font-size: 22px;
+      font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+    }
+
+    .list-toolbar {
+      padding: 16px 24px 0;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    #pages-grid {
+      padding: 12px 24px 24px;
+    }
+
+    .pages-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      border: 1px solid #c8c8c8;
+    }
+
+    .pages-table th {
+      text-align: left;
+      padding: 11px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #fff;
+      background: #333;
+      border-bottom: none;
+    }
+
+    .pages-table td {
+      padding: 13px 16px;
+      border-bottom: 1px solid #e8e8e8;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .pages-table tbody tr:last-child td { border-bottom: none; }
+    .pages-table tbody tr { cursor: pointer; }
+    .pages-table tbody tr:nth-child(even) td { background: #f9f9f9; }
+    .pages-table tbody tr:hover td { background: #eef0ff !important; }
+
+    .page-row-name {
+      font-weight: 700;
+      color: #111 !important;
+      font-size: 14px !important;
+    }
+
+    .page-row-delete-btn {
+      height: 26px;
+      padding: 0 10px;
+      background: transparent;
+      color: #888;
+      border: 1px solid #ccc;
+      border-radius: 2px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+    }
+
+    .page-row-delete-btn:hover { color: #cc3333; border-color: #cc3333; background: #fff5f5; }
+
+    .page-row-dup-btn {
+      height: 26px;
+      padding: 0 10px;
+      background: transparent;
+      color: #888;
+      border: 1px solid #ccc;
+      border-radius: 2px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      margin-right: 6px;
+    }
+    .page-row-dup-btn:hover { color: #111; border-color: #888; background: #f4f4f4; }
+
+    .page-row-preview-btn {
+      display: inline-flex;
+      align-items: center;
+      height: 26px;
+      padding: 0 10px;
+      background: transparent;
+      color: #888;
+      border: 1px solid #ccc;
+      border-radius: 2px;
+      text-decoration: none;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+    .page-row-preview-btn:hover { color: #111; border-color: #888; background: #f4f4f4; }
+
+    .pages-table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+    .pages-table th.sortable:hover { background: #444; }
+    .pages-table th.sortable .sort-arrow { display: inline-block; margin-left: 5px; opacity: 0.4; font-size: 10px; }
+    .pages-table th.sortable.active { background: #111; }
+    .pages-table th.sortable.active .sort-arrow { opacity: 1; }
+
+    @keyframes newRowHighlight {
+      0%, 75% { background: #eef0ff; }
+      100%     { background: transparent; }
+    }
+    .pages-table tbody tr.page-row-new td { animation: newRowHighlight 3.5s ease forwards; }
+
+    .list-empty {
+      padding: 60px 0;
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+      background: #fff;
+      border: 1px solid #c8c8c8;
+    }
+
+    /* ── Editor view ── */
+    #view-editor {
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .editor-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      height: 52px;
+      background: #111;
+      border-bottom: none;
+      flex-shrink: 0;
+    }
+
+    .editor-page-name {
+      background: transparent;
+      border: none;
+      border-bottom: 1.5px solid transparent;
+      border-radius: 3px;
+      padding: 2px 6px;
+      margin: 0 -6px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      color: #fff;
+      letter-spacing: 0.02em;
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .editor-page-name:hover { background: rgba(255,255,255,0.08); }
+    .editor-page-name:focus {
+      outline: none;
+      cursor: text;
+      flex: none;
+      width: 450px;
+      background: #fff;
+      color: #111;
+      border-bottom-color: transparent;
+      border-radius: 3px;
+    }
+    .save-status {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      white-space: nowrap;
+    }
+    .save-status.saving { color: rgba(255,255,255,0.5); }
+    .save-status.saved  { color: #5ecfa0; }
+    .save-status.error  { color: #f07070; }
+
+    .preview-btn {
+      flex-shrink: 0;
+      height: 28px;
+      padding: 0 12px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 3px;
+      color: rgba(255,255,255,0.7);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .preview-btn:hover {
+      border-color: rgba(255,255,255,0.6);
+      color: #fff;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .width-selector,
+    .mobile-width-selector {
+      display: flex;
+      gap: 1px;
+      background: #c4c4c4;
+      border: 1px solid #b0b0b0;
+      border-radius: 3px;
+      padding: 2px;
+    }
+
+    .width-btn,
+    .mobile-width-btn {
+      height: 26px;
+      padding: 0 10px;
+      background: transparent;
+      color: #555;
+      border: none;
+      border-radius: 2px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .width-btn:hover,
+    .mobile-width-btn:hover { color: #111; }
+
+    .width-btn.active,
+    .mobile-width-btn.active { background: #111; color: #fff; }
+
+    .phone-frame-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #555;
+      cursor: pointer;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .phone-frame-label input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: #111;
+    }
+
+    .editor-body {
+      position: relative;
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .editor-left {
+      flex: 1;
+      overflow-y: auto;
+      background: #d8d8d8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 24px 32px;
+      scroll-padding-bottom: 60px;
+    }
+
+    .preview-toolbar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    #canvas-controls {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .canvas-ctrl-btn {
+      height: 22px;
+      padding: 0 8px;
+      background: rgba(0, 0, 0, 0.32);
+      border: none;
+      border-radius: 3px;
+      color: rgba(255, 255, 255, 0.55);
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .canvas-ctrl-btn:hover { background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.85); }
+    .canvas-ctrl-btn.active { background: rgba(85, 102, 255, 0.8); color: #fff; }
+
+    #card-area {
+      position: relative;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .card-area-placeholder {
+      color: #bbb;
+      font-size: 16px;
+      padding-top: 60px;
+    }
+
+    @keyframes previewCardGlow {
+      0%, 25% { box-shadow: 0 0 0 4px rgba(200, 160, 0, 0.9), 0 0 28px rgba(200, 160, 0, 0.45); }
+      100%     { box-shadow: 0 0 0 4px rgba(200, 160, 0, 0); }
+    }
+    .card-wrapper.card-drop-highlight,
+    .phone-card-slot.card-drop-highlight {
+      animation: previewCardGlow 2s ease forwards;
+    }
+
+    .card-wrapper {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .card-wrapper.selected {
+      outline: 2px solid #5566ff;
+      outline-offset: 4px;
+      border-radius: 2px;
+    }
+
+    .phone-card-slot {
+      position: relative;
+    }
+
+    .phone-card-slot + .phone-card-slot {
+      border-top: 4px solid #d0d0d0;
+    }
+
+    .phone-card-slot.selected::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 0 3px #5566ff;
+      pointer-events: none;
+      z-index: 200;
+    }
+
+    .card-select-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      cursor: pointer;
+    }
+
+    .card-select-overlay:hover::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(85, 102, 255, 0.04);
+      border: 2px solid rgba(85, 102, 255, 0.25);
+      pointer-events: none;
+    }
+
+    .editor-right {
+      width: 300px;
+      flex-shrink: 0;
+      border-left: 2px solid #222;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .stack-section {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stack-header {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      height: 40px;
+      border-bottom: 1px solid #e0e0e0;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      background: #f4f4f4;
+      z-index: 10;
+    }
+
+    .stack-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      flex: 1;
+    }
+
+    .stack-header .btn-primary {
+      background: #111;
+      color: #fff;
+      border-radius: 2px;
+    }
+
+    .stack-header .btn-primary:hover { background: #333; }
+
+    #card-stack-list {
+      padding: 10px 0 20px;
+    }
+
+    /* ── Accordion ── */
+    .accordion-item {
+      margin: 0 8px 12px;
+      border: 1.5px solid #999;
+      border-radius: 2px;
+      background: #e8e8e8;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.13);
+      cursor: grab;
+      user-select: none;
+    }
+
+    .accordion-item:active { cursor: grabbing; }
+    .accordion-item.dragging { opacity: 0.35; }
+
+    @keyframes newCardHighlight {
+      0%, 72% { background: #ffe066; border-color: #c8a000; box-shadow: 0 2px 10px rgba(200,160,0,0.4); }
+      100%     { background: #e8e8e8; border-color: #999;   box-shadow: 0 2px 6px rgba(0,0,0,0.13); }
+    }
+    .accordion-item.accordion-item-new { animation: newCardHighlight 3.5s ease forwards; }
+    .accordion-item.accordion-item-dropped { animation: newCardHighlight 2s ease forwards; }
+
+    .accordion-item.open {
+      border-color: #5566ff;
+      border-left: 4px solid #5566ff;
+      background: #e8e8e8;
+      box-shadow: 0 2px 8px rgba(85,102,255,0.18);
+    }
+
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 10px 12px 8px;
+    }
+
+    .accordion-header:hover { background: rgba(0,0,0,0.06); }
+    .accordion-item.open > .accordion-header {
+      background: #dde0ff;
+      border-bottom: 1.5px solid #b8bcf0;
+    }
+
+    .accordion-body-wrap {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 250ms ease;
+    }
+
+    .accordion-item.open > .accordion-body-wrap {
+      grid-template-rows: 1fr;
+    }
+
+    .accordion-body-inner {
+      overflow: hidden;
+    }
+
+    .accordion-item.dragging { opacity: 0.35; }
+
+    .drop-indicator {
+      height: 36px;
+      margin: 0 8px;
+      pointer-events: none;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .drop-indicator::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #5566ff;
+      flex-shrink: 0;
+      box-shadow: 0 0 5px rgba(85,102,255,0.5);
+    }
+
+    .drop-indicator::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: #5566ff;
+      box-shadow: 0 0 6px rgba(85,102,255,0.4);
+    }
+
+    .drag-handle {
+      color: #666;
+      font-size: 15px;
+      flex-shrink: 0;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .stack-item-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stack-item-actions {
+      display: flex;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .stack-action-btn {
+      width: 26px;
+      height: 26px;
+      background: rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.12);
+      color: #555;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stack-action-btn:hover { background: rgba(0,0,0,0.16); color: #111; border-color: rgba(0,0,0,0.25); }
+    .stack-action-btn.remove:hover { color: #cc3333; border-color: #cc3333; background: #fff0f0; }
+    .stack-action-btn .material-symbols-outlined {
+      font-size: 16px;
+      line-height: 1;
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+    }
+
+    #card-controls-section {
+      padding: 0 16px 24px;
+    }
+
+    /* ── Admin view ── */
+    #view-admin {
+      flex-direction: column;
+    }
+
+    .admin-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      color: #bbb;
+      font-size: 18px;
+    }
+
+    /* ── Story Card Engine CSS ───────────────────────────────────────── */
+    .panel-section {
+      border-top: 1px solid #e8e8e8;
+      padding: 16px 0;
+    }
+
+    .recents-wrap {
+      flex-shrink: 0;
+    }
+    .recents-list {
+      display: none;
+      margin-top: 8px;
+    }
+    .recents-list.open { display: block; }
+    .recents-item {
+      padding: 6px 0;
+      font-size: 12px;
+      color: #555;
+      cursor: pointer;
+      border-bottom: 1px solid #ebebeb;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+    .recents-item:last-child { border-bottom: none; }
+    .recents-item:hover { color: #111; }
+    .recents-item::before { content: '↳ '; color: #bbb; }
+    .recents-empty {
+      padding: 6px 0;
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .panel-section-title {
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 12px;
+    }
+
+    .panel-placeholder {
+      font-size: 12px;
+      color: #aaa;
+      font-style: italic;
+    }
+
+    /* Supporting headlines */
+    .supporting-headline {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 20px;
+      line-height: 22px;
+      color: #111111;
+    }
+    /* .supporting-headline:hover suppressed in admin — keep for page.html */
+
+    .h-rule {
+      width: 100%;
+      height: 1px;
+      background: rgba(0,0,0,0.1);
+      margin: 16px 0;
+      flex-shrink: 0;
+      border: none;
+    }
+
+    /* Phone preset buttons */
+    .preset-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .preset-btn {
+      background: #f0f0f0;
+      border: 1px solid #e0e0e0;
+      border-radius: 3px;
+      color: #777;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 11px;
+      padding: 5px 8px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .preset-btn:hover {
+      border-color: #999;
+      color: #111;
+    }
+
+    .preset-btn.active {
+      background: #111;
+      border-color: #111;
+      color: #ffffff;
+    }
+
+    .preset-width-label {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 2px;
+    }
+
+    /* Panel controls */
+    .control-row {
+      margin-bottom: 12px;
+    }
+
+    .control-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .control-input {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      color: #111;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 13px;
+      padding: 6px 8px;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    @keyframes sh-skeleton-pulse {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    @keyframes card-skeleton-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .card-skeleton {
+      background: linear-gradient(90deg, #efefef 25%, #e6e6e6 50%, #efefef 75%);
+      background-size: 200% 100%;
+      animation: card-skeleton-shimmer 2.2s ease-in-out infinite;
+      display: block;
+      border-radius: 2px;
+    }
+
+    .sh-skeleton {
+      background: linear-gradient(90deg, #ebebeb 25%, #f5f5f5 50%, #ebebeb 75%) !important;
+      background-size: 200% 100% !important;
+      animation: sh-skeleton-pulse 1.2s ease-in-out infinite !important;
+      color: transparent !important;
+      border-color: #e0e0e0 !important;
+      pointer-events: none;
+    }
+
+    .control-input:focus {
+      outline: none;
+      border-color: #555;
+    }
+
+    .control-btn {
+      background: #f0f0f0;
+      color: #555;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .control-btn:hover {
+      background: #e0e0e0;
+    }
+
+    /* Grid overlay */
+    #page-grid-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 500;
+    }
+
+    .page-grid-inner {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: row;
+    }
+
+    .grid-col {
+      flex-shrink: 0;
+      width: 34px;
+      background: rgba(180, 160, 220, 0.22);
+    }
+
+    .grid-col-fluid {
+      flex: 1;
+      background: rgba(180, 160, 220, 0.22);
+    }
+
+    .grid-gutter {
+      flex-shrink: 0;
+      width: 32px;
+    }
+
+    .grid-margin {
+      flex-shrink: 0;
+      width: 16px;
+    }
+
+
+    /* Card */
+    #card {
+      background: #ffffff;
+      padding: 16px;
+      overflow: hidden;
+      position: relative;
+      /* width set dynamically by render() */
+    }
+
+    #card-inner {
+      display: flex;
+      /* flex-direction and gap set dynamically by render() */
+    }
+
+    /* text-col and art-col flex set dynamically by render() */
+
+    /* Image */
+    .art-image {
+      width: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Package label */
+    .package-label {
+      border-top: 1px solid #111111;
+      padding-top: 8px;
+      padding-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .package-label-text {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 20px;
+      color: #111111;
+    }
+
+    .package-label-chevron {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      font-size: 13px;
+      color: #111111;
+      line-height: 1;
+    }
+
+    /* Art wrapper + overlay button */
+    .art-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .art-overlay-btn {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: black;
+      border-radius: 9999px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 16px;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+
+    .overlay-label {
+      font-weight: 700;
+    }
+
+    .overlay-duration {
+      font-weight: 300;
+    }
+
+    /* Caption */
+    .caption {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 15px;
+      color: #595959;
+      margin-top: 4px;
+    }
+
+    /* Live ticker */
+    .ticker-container {
+      margin-top: 8px;
+    }
+
+    .ticker-live-header {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 900;
+      font-size: 12px;
+      line-height: 15px;
+      color: #ea0017;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .ticker-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .ticker-gutter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 9px;
+      align-self: stretch;
+      padding-top: 5px;
+    }
+
+    .ticker-dot {
+      width: 6px;
+      height: 6px;
+      background: #ea0017;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .ticker-line {
+      flex: 1;
+      width: 1px;
+      background: #ea0017;
+      margin-top: 4px;
+      min-height: 8px;
+    }
+
+    .ticker-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-bottom: 8px;
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 17.5px;
+    }
+
+    .ticker-content--last {
+      padding-bottom: 0;
+    }
+
+    .ticker-time {
+      color: #595959;
+    }
+
+    .ticker-text {
+      color: #111111;
+    }
+
+    /* Kicker label */
+    .kicker-label {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 17.5px;
+      color: #111111;
+      margin-bottom: 8px;
+    }
+
+    /* LIVE label */
+    .live-label {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 900;
+      font-size: 14px;
+      line-height: 14px;
+      color: #ea0017;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .live-label-chevron {
+      font-size: 16px;
+      line-height: 16px;
+    }
+
+    /* Headline */
+    .headline {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 26px;
+      line-height: 1.1;
+      color: #111111;
+      font-style: normal;
+    }
+    /* .headline:hover suppressed in admin — keep for page.html */
+    .headline[contenteditable="true"],
+    .blurb[contenteditable="true"] {
+      color: #111111;
+      background: rgba(66, 130, 240, 0.06);
+      border-radius: 2px;
+    }
+    .caption[contenteditable="true"] {
+      background: rgba(66, 130, 240, 0.06);
+      border-radius: 2px;
+    }
+
+    /* Blurb */
+    .blurb {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 20px;
+      color: #595959;
+      margin-top: 8px;
+    }
+    /* iPhone frame */
+    .iphone-frame {
+      display: inline-flex;
+      flex-direction: column;
+      background: #1c1c1e;
+      border-radius: 54px;
+      padding: 14px;
+      box-shadow: 0 0 0 1px #3a3a3c, 0 40px 80px rgba(0,0,0,0.4);
+    }
+    .iphone-screen {
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border-radius: 40px;
+      overflow: hidden;
+      position: relative;
+    }
+    .iphone-island {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 34px;
+      background: #1c1c1e;
+      border-radius: 20px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .iphone-statusbar {
+      height: 59px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 28px 10px;
+      flex-shrink: 0;
+    }
+    .iphone-statusbar-time {
+      font-family: -apple-system, 'Helvetica Neue', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      line-height: 18px;
+      color: #111;
+    }
+    .iphone-statusbar-icons {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .iphone-home {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .iphone-home::after {
+      content: '';
+      width: 34%;
+      height: 5px;
+      background: #111;
+      border-radius: 3px;
+      opacity: 0.3;
+    }
+    .iphone-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .editable-wrap {
+      position: relative;
+    }
+    .edit-pencil {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(0,0,0,0.13);
+      border-radius: 3px;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      padding: 0;
+      z-index: 5;
+      color: #555;
+    }
+    .editable-wrap:hover .edit-pencil {
+      opacity: 1;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .import-spinner {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border: 2px solid rgba(0,0,0,0.15);
+      border-top-color: #111;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    /* ── Dark mode ──────────────────────────────────────── */
+    @keyframes newCardHighlightDark {
+      0%, 72% { background: #3a2e00; border-color: #6b5200; box-shadow: 0 2px 10px rgba(200,160,0,0.15); }
+      100%     { background: #252525; border-color: #3a3a3a; box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+    }
+    body.dark-mode .accordion-item.accordion-item-new,
+    body.dark-mode .accordion-item.accordion-item-dropped {
+      animation-name: newCardHighlightDark;
+    }
+
+    body.dark-mode .editor-left {
+      background: #1a1a1a;
+    }
+    body.dark-mode .card-area-placeholder {
+      color: #444;
+    }
+    /* Toolbar in dark mode */
+    body.dark-mode .width-selector,
+    body.dark-mode .mobile-width-selector {
+      background: #333;
+      border-color: #222;
+    }
+    body.dark-mode .width-btn,
+    body.dark-mode .mobile-width-btn {
+      color: #888;
+    }
+    body.dark-mode .width-btn:hover,
+    body.dark-mode .mobile-width-btn:hover { color: #eee; }
+    body.dark-mode .width-btn.active,
+    body.dark-mode .mobile-width-btn.active { background: #fff; color: #111; }
+    body.dark-mode .phone-frame-label { color: #666; }
+    /* Canvas control buttons in dark mode */
+    body.dark-mode .canvas-ctrl-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.4);
+    }
+    body.dark-mode .canvas-ctrl-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+      color: rgba(255, 255, 255, 0.85);
+    }
+    body.dark-mode .canvas-ctrl-btn.active {
+      background: rgba(85, 102, 255, 0.8);
+      color: #fff;
+    }
+    /* Right panel */
+    body.dark-mode .editor-right {
+      background: #1e1e1e;
+      border-left-color: #111;
+    }
+    body.dark-mode .stack-header {
+      background: #252525;
+      border-bottom-color: #333;
+    }
+    body.dark-mode .stack-title { color: #666; }
+    body.dark-mode .stack-item-label { color: #d0d0d0; }
+    body.dark-mode .drag-handle { color: #555; }
+    body.dark-mode .stack-action-btn {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.1);
+      color: #777;
+    }
+    body.dark-mode .stack-action-btn:hover {
+      background: rgba(255,255,255,0.14);
+      border-color: rgba(255,255,255,0.25);
+      color: #ddd;
+    }
+    body.dark-mode .accordion-item {
+      background: #252525;
+      border-color: #3a3a3a;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    body.dark-mode .accordion-item.open {
+      background: #252525;
+      border-color: #5566ff;
+    }
+    body.dark-mode .accordion-item.open > .accordion-header {
+      background: rgba(85, 102, 255, 0.15);
+      border-bottom-color: rgba(85, 102, 255, 0.3);
+    }
+    body.dark-mode .accordion-header:hover { background: rgba(255,255,255,0.04); }
+    body.dark-mode .panel-section { border-top-color: #2a2a2a; }
+    body.dark-mode .panel-section-title { color: #555; }
+    body.dark-mode .control-label { color: #666; }
+    body.dark-mode .control-input {
+      background: #2a2a2a;
+      border-color: #3a3a3a;
+      color: #d0d0d0;
+    }
+    body.dark-mode .control-input:focus { border-color: #666; }
+    body.dark-mode .control-btn {
+      background: #2a2a2a;
+      border-color: #3a3a3a;
+      color: #888;
+    }
+    body.dark-mode .control-btn:hover { background: #333; }
+    body.dark-mode .preset-btn {
+      background: #252525;
+      border-color: #383838;
+      color: #777;
+    }
+    body.dark-mode .preset-btn:hover { border-color: #666; color: #ccc; }
+    body.dark-mode .preset-btn.active { background: #eee; border-color: #eee; color: #111; }
+    body.dark-mode .preset-width-label { color: #555; }
+    body.dark-mode .recents-item { color: #666; border-bottom-color: #2a2a2a; }
+    body.dark-mode .recents-item:hover { color: #ccc; }
+    body.dark-mode .recents-item::before { color: #444; }
+    body.dark-mode .recents-empty { color: #555; }
+    body.dark-mode .panel-placeholder { color: #555; }
+    /* Card render */
+    body.dark-mode #card { background: #111111; }
+    body.dark-mode .headline { color: #f0f0f0; }
+    body.dark-mode .headline[contenteditable="true"],
+    body.dark-mode .blurb[contenteditable="true"] {
+      color: #f0f0f0;
+      background: rgba(66, 130, 240, 0.1);
+    }
+    body.dark-mode .blurb { color: #aaaaaa; }
+    body.dark-mode .caption { color: #666; }
+    body.dark-mode .supporting-headline { color: #e8e8e8; }
+    body.dark-mode .h-rule { background: rgba(255,255,255,0.1); }
+    body.dark-mode .package-label { border-top-color: rgba(255,255,255,0.15); }
+    body.dark-mode .package-label-text,
+    body.dark-mode .package-label-chevron { color: #e8e8e8; }
+    body.dark-mode .kicker-label { color: #e8e8e8; }
+    body.dark-mode .ticker-text { color: #e0e0e0; }
+    body.dark-mode .ticker-time { color: #666; }
+    body.dark-mode .iphone-screen { background: #111111; }
+    body.dark-mode .iphone-home { background: #111111; }
+    body.dark-mode .iphone-home::after { background: #e0e0e0; }
+    body.dark-mode .iphone-statusbar-time { color: #e0e0e0; }
+    body.dark-mode .iphone-statusbar-icons svg { fill: #e0e0e0; }
+  </style>
+</head>
+<body>
+
+  <!-- Login view -->
+  <div id="view-login" class="view">
+    <div class="login-card">
+      <h1>News Builder</h1>
+      <p>Sign in to continue</p>
+      <div class="login-field">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="login-field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button id="login-btn">Sign In</button>
+      <div id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- List view -->
+  <div id="view-list" class="view">
+    <div class="list-header">
+      <h1>News Builder</h1>
+      <div class="list-identity" id="list-identity"></div>
+      <button class="btn-ghost" id="logout-btn">Sign Out</button>
+    </div>
+    <div class="list-toolbar">
+      <button class="btn-primary" id="new-page-btn">+ New Page</button>
+    </div>
+    <div id="pages-grid"></div>
+  </div>
+
+  <!-- Editor view -->
+  <div id="view-editor" class="view">
+    <div class="editor-header">
+      <button class="btn-ghost" id="back-btn">← Back</button>
+      <input id="editor-page-name" class="editor-page-name" type="text" spellcheck="false">
+      <span id="save-status" class="save-status"></span>
+      <a id="preview-btn" class="preview-btn" target="_blank">Preview ↗</a>
+    </div>
+    <div class="editor-body">
+      <div id="canvas-controls">
+        <button id="grid-toggle" class="canvas-ctrl-btn" title="Toggle column grid">Grid</button>
+        <button id="dark-toggle" class="canvas-ctrl-btn" title="Toggle dark mode">Dark</button>
+      </div>
+      <div class="editor-left">
+        <div class="preview-toolbar">
+          <div class="width-selector" id="width-selector"></div>
+          <div class="mobile-width-selector" id="mobile-width-selector"></div>
+          <div id="phone-frame-control" style="display:none;"></div>
+        </div>
+        <div id="card-area">
+          <div class="card-area-placeholder">Add a card to get started</div>
+        </div>
+      </div>
+      <div class="editor-right" id="panel">
+        <div class="stack-section">
+          <div class="stack-header">
+            <span class="stack-title">Cards</span>
+            <button class="btn-primary" id="add-card-btn" style="height:26px;font-size:12px;padding:0 12px;">+ Add</button>
+          </div>
+          <div id="card-stack-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin view (placeholder) -->
+  <div id="view-admin" class="view">
+    <div class="admin-placeholder">Admin panel coming in Phase G</div>
+  </div>
+
+  <script>
+    const SUPABASE_URL  = 'https://lfwlzfdjwtnnhtejnlbn.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxmd2x6ZmRqd3Rubmh0ZWpubGJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDc4ODksImV4cCI6MjA5NDc4Mzg4OX0.jgr7Ipd3KBwE8IwX5uW8j9mtKt1yp3YPHMeNUmzVuF8';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const appState = {
+      session: null,
+      pages: [],
+      currentPage: null,
+      selectedCardIndex: null,
+      dirty: false,
+    };
+
+    const listSort = { column: 'updated_at', direction: 'desc' };
+
+    function showView(name) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + name).classList.add('active');
+    }
+
+    async function routeView() {
+      const params = new URLSearchParams(window.location.search);
+      const sharePageSlug = params.get('page');
+      if (sharePageSlug) {
+        if (appState.session) {
+          await openPageBySlug(sharePageSlug); // authenticated: load the page directly
+        } else {
+          showView('editor'); // guest: Phase E will wire this up properly
+        }
+        return;
+      }
+      if (!appState.session) {
+        showView('login');
+        return;
+      }
+      showView('list');
+      loadPages();
+      const user = appState.session?.user;
+      const displayName = user?.user_metadata?.full_name || user?.email || '';
+      const identityEl = document.getElementById('list-identity');
+      if (identityEl && displayName) {
+        identityEl.innerHTML = `<span class="material-symbols-outlined">account_circle</span><span>${escapeHtml(displayName)}</span>`;
+      }
+    }
+
+    // ── Page list ──────────────────────────────────────
+
+    async function loadPages() {
+      const { data: pages, error } = await sb
+        .from('pages')
+        .select('id, name, slug, cards, width, mobile_preview_width, created_at, updated_at, owner_id')
+        .order('updated_at', { ascending: false });
+      if (error) { console.error('loadPages:', error.message); return; }
+
+      // Fetch display names for all owners
+      const ownerIds = [...new Set((pages || []).map(p => p.owner_id).filter(Boolean))];
+      let profileMap = {};
+      if (ownerIds.length > 0) {
+        const { data: profiles } = await sb.from('profiles').select('id, full_name').in('id', ownerIds);
+        (profiles || []).forEach(p => { profileMap[p.id] = p.full_name; });
+      }
+
+      appState.pages = (pages || []).map(p => ({ ...p, ownerName: profileMap[p.owner_id] || null }));
+      renderPageList();
+
+      // Update identity display with real name from profiles
+      const userId = appState.session?.user?.id;
+      const fullName = profileMap[userId] || appState.session?.user?.user_metadata?.full_name || appState.session?.user?.email || '';
+      const identityEl = document.getElementById('list-identity');
+      if (identityEl && fullName) {
+        identityEl.innerHTML = `<span class="material-symbols-outlined">account_circle</span><span>${escapeHtml(fullName)}</span>`;
+      }
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      return `${date}, ${time}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function slugify(name) {
+      return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'page';
+    }
+
+    function sortedPages() {
+      const { column, direction } = listSort;
+      const mult = direction === 'asc' ? 1 : -1;
+      return [...appState.pages].sort((a, b) => {
+        let av = a[column] || '';
+        let bv = b[column] || '';
+        // Date columns: compare as timestamps
+        if (column === 'created_at' || column === 'updated_at') {
+          return (new Date(av) - new Date(bv)) * mult;
+        }
+        // String columns: case-insensitive
+        return av.toLowerCase().localeCompare(bv.toLowerCase()) * mult;
+      });
+    }
+
+    function renderPageList() {
+      const grid = document.getElementById('pages-grid');
+      if (appState.pages.length === 0) {
+        grid.innerHTML = '<div class="list-empty">No pages yet. Click <strong>+ New Page</strong> to create your first one.</div>';
+        return;
+      }
+      const userId = appState.session?.user?.id;
+
+      const columns = [
+        { label: 'Name',          key: 'name'       },
+        { label: 'Created',       key: 'created_at' },
+        { label: 'Last Modified', key: 'updated_at' },
+        { label: 'Owner',         key: 'ownerName'  },
+      ];
+
+      const headerCells = columns.map(({ label, key }) => {
+        const isActive = listSort.column === key;
+        const arrow = isActive ? (listSort.direction === 'asc' ? '↑' : '↓') : '↕';
+        return `<th class="sortable${isActive ? ' active' : ''}" data-col="${key}">${label}<span class="sort-arrow">${arrow}</span></th>`;
+      }).join('') + '<th></th>';
+
+      const rows = sortedPages().map(page => {
+        const isOwner = userId === page.owner_id;
+        const ownerDisplay = escapeHtml(page.ownerName || '—');
+        return `
+          <tr data-slug="${escapeHtml(page.slug)}" data-id="${page.id}">
+            <td class="page-row-name">${escapeHtml(page.name)}</td>
+            <td>${formatDate(page.created_at)}</td>
+            <td>${formatDate(page.updated_at)}</td>
+            <td>${ownerDisplay}</td>
+            <td>
+              <a class="page-row-preview-btn" href="page.html?page=${escapeHtml(page.slug)}" target="_blank" title="Preview page">Preview ↗</a>
+              ${isOwner ? `<button class="page-row-dup-btn" data-slug="${escapeHtml(page.slug)}" data-name="${escapeHtml(page.name)}">Duplicate</button>` : ''}
+              ${isOwner ? `<button class="page-row-delete-btn" data-id="${page.id}">Delete</button>` : ''}
+            </td>
+          </tr>`;
+      }).join('');
+
+      // FLIP — record positions before DOM update
+      const beforeTops = {};
+      grid.querySelectorAll('tbody tr[data-slug]').forEach(row => {
+        beforeTops[row.dataset.slug] = row.getBoundingClientRect().top;
+      });
+
+      grid.innerHTML = `
+        <table class="pages-table">
+          <thead><tr>${headerCells}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      // FLIP — animate rows from where they were to where they are now
+      grid.querySelectorAll('tbody tr[data-slug]').forEach(row => {
+        const slug = row.dataset.slug;
+        if (beforeTops[slug] === undefined) return;
+        const delta = beforeTops[slug] - row.getBoundingClientRect().top;
+        if (Math.abs(delta) < 1) return;
+        row.style.transition = 'none';
+        row.style.transform = `translateY(${delta}px)`;
+        row.offsetHeight; // force reflow
+        row.style.transition = 'transform 280ms ease';
+        row.style.transform = 'translateY(0)';
+      });
+
+      grid.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.dataset.col;
+          if (listSort.column === col) {
+            listSort.direction = listSort.direction === 'asc' ? 'desc' : 'asc';
+          } else {
+            listSort.column = col;
+            listSort.direction = 'asc';
+          }
+          renderPageList();
+        });
+      });
+
+      grid.querySelectorAll('tbody tr').forEach(row => {
+        row.addEventListener('click', e => {
+          if (e.target.closest('.page-row-delete-btn') || e.target.closest('.page-row-preview-btn') || e.target.closest('.page-row-dup-btn')) return;
+          openPageBySlug(row.dataset.slug);
+        });
+      });
+
+      grid.querySelectorAll('.page-row-delete-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          deletePage(btn.dataset.id);
+        });
+      });
+
+      grid.querySelectorAll('.page-row-dup-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          duplicatePage(btn.dataset.slug, btn.dataset.name);
+        });
+      });
+    }
+
+    async function createNewPage() {
+      const name = prompt('Page name:');
+      if (!name || !name.trim()) return;
+      const slug = slugify(name.trim());
+      // Check if slug is already taken
+      const { data: existing } = await sb.from('pages').select('id').eq('slug', slug).maybeSingle();
+      if (existing) {
+        alert(`A page with the URL "?page=${slug}" already exists. Please choose a different name.`);
+        return;
+      }
+      const { data, error } = await sb
+        .from('pages')
+        .insert({ name: name.trim(), slug, cards: [], owner_id: appState.session.user.id, width: '15u', mobile_preview_width: 390 })
+        .select()
+        .single();
+      if (error) { alert('Could not create page: ' + error.message); return; }
+      await loadPages();
+      const newRow = document.querySelector(`#pages-grid tbody tr[data-slug="${slug}"]`);
+      if (newRow) newRow.classList.add('page-row-new');
+    }
+
+    async function duplicatePage(sourceSlug, sourceName) {
+      const defaultName = `${sourceName} – Copy`;
+      const name = prompt('Name for the duplicate:', defaultName);
+      if (!name || !name.trim()) return;
+
+      const slug = slugify(name.trim());
+      const { data: existing } = await sb.from('pages').select('id').eq('slug', slug).maybeSingle();
+      if (existing) {
+        alert(`A page with the URL "?page=${slug}" already exists. Please choose a different name.`);
+        return;
+      }
+
+      // Fetch full source page (cards etc.)
+      const { data: source, error: fetchErr } = await sb.from('pages').select('*').eq('slug', sourceSlug).single();
+      if (fetchErr || !source) { alert('Could not load source page.'); return; }
+
+      const { data, error } = await sb
+        .from('pages')
+        .insert({
+          name:                name.trim(),
+          slug,
+          cards:               source.cards || [],
+          width:               source.width || '15u',
+          mobile_preview_width: source.mobile_preview_width || 390,
+          owner_id:            appState.session.user.id,
+        })
+        .select()
+        .single();
+      if (error) { alert('Could not duplicate page: ' + error.message); return; }
+
+      await loadPages();
+      const newRow = document.querySelector(`#pages-grid tbody tr[data-slug="${slug}"]`);
+      if (newRow) newRow.classList.add('page-row-new');
+    }
+
+    async function deletePage(id) {
+      if (!confirm('Delete this page? This cannot be undone.')) return;
+      const { error } = await sb.from('pages').delete().eq('id', id);
+      if (error) { alert('Could not delete: ' + error.message); return; }
+      appState.pages = appState.pages.filter(p => p.id !== id);
+      renderPageList();
+    }
+
+    async function openPageBySlug(slug) {
+      const { data, error } = await sb.from('pages').select('*').eq('slug', slug).single();
+      if (error || !data) { alert('Page not found.'); return; }
+      openPage(data);
+    }
+
+    // ── Undo stack ─────────────────────────────────────
+    const _undoStack = [];
+    const _undoMax = 50;
+    let _saveTimer = null;
+
+    function pushUndo() {
+      if (!appState.currentPage) return;
+      _undoStack.push(JSON.parse(JSON.stringify(appState.currentPage)));
+      if (_undoStack.length > _undoMax) _undoStack.shift();
+    }
+
+    function scheduleSave() {
+      appState.dirty = true;
+      setSaveStatus('saving');
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(savePage, 1500);
+    }
+
+    function setSaveStatus(status) {
+      const el = document.getElementById('save-status');
+      if (!el) return;
+      if (status === 'saving') {
+        el.textContent = 'Saving…';
+        el.className = 'save-status saving';
+      } else if (status === 'saved') {
+        el.textContent = 'Saved';
+        el.className = 'save-status saved';
+        setTimeout(() => { el.textContent = ''; el.className = 'save-status'; }, 2000);
+      } else if (status === 'error') {
+        el.textContent = 'Save failed';
+        el.className = 'save-status error';
+      } else {
+        el.textContent = '';
+        el.className = 'save-status';
+      }
+    }
+
+    async function savePage() {
+      if (!appState.session || !appState.currentPage) return;
+      const { id, name, cards, width, mobilePreviewWidth, showPhoneFrame } = appState.currentPage;
+      const { error } = await sb.from('pages').update({
+        name,
+        cards,
+        width,
+        mobile_preview_width: mobilePreviewWidth,
+        show_phone_frame: showPhoneFrame,
+      }).eq('id', id);
+      if (error) {
+        console.error('Save failed:', error);
+        setSaveStatus('error');
+      } else {
+        appState.dirty = false;
+        setSaveStatus('saved');
+      }
+    }
+
+    // ── Undo keyboard handler ──────────────────────────
+    document.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        const active = document.activeElement;
+        // Let text inputs handle their own undo (Phase E engine will use this)
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+        if (!appState.currentPage || _undoStack.length === 0) return;
+        e.preventDefault();
+        const prev = _undoStack.pop();
+        const prevIdx = appState.selectedCardIndex;
+        appState.currentPage = prev;
+        appState.selectedCardIndex = (prevIdx !== null && prevIdx < prev.cards.length) ? prevIdx : null;
+        scheduleSave();
+        renderEditorHeader();
+        renderCardStack();
+        renderAllCards();
+        if (appState.selectedCardIndex === null) clearCardEditor();
+      }
+    });
+
+    function openPage(page) {
+      _undoStack.length = 0;
+      clearTimeout(_saveTimer);
+      _saveTimer = null;
+      const cachedWidth = localStorage.getItem('nb-width-' + page.slug);
+      const cachedMw    = localStorage.getItem('nb-mw-'    + page.slug);
+      appState.currentPage = {
+        ...page,
+        cards: page.cards || [],
+        width: cachedWidth || page.width || '15u',
+        mobilePreviewWidth: cachedMw ? Number(cachedMw) : (page.mobile_preview_width || 390),
+        showPhoneFrame: page.show_phone_frame !== false,
+        showGrid: false,
+      };
+      appState.selectedCardIndex = null;
+      appState.dirty = false;
+      history.pushState({ pageSlug: page.slug }, '', `?page=${page.slug}`);
+      showView('editor');
+      renderEditorHeader();
+      renderCardStack();
+      clearCardEditor();
+    }
+
+    // ── Editor header ──────────────────────────────────
+
+    function renderEditorHeader() {
+      const page = appState.currentPage;
+      document.getElementById('editor-page-name').value = page.name;
+      document.getElementById('preview-btn').href = `page.html?page=${page.slug}`;
+
+      const widths = [
+        { value: '1u',  label: 'Mobile'  },
+        { value: '10u', label: 'Tablet'  },
+        { value: '12u', label: 'Laptop'  },
+        { value: '15u', label: 'Desktop' },
+      ];
+      const wSel = document.getElementById('width-selector');
+      wSel.innerHTML = widths.map(({ value, label }) =>
+        `<button class="width-btn${page.width === value ? ' active' : ''}" data-width="${value}">${label}</button>`
+      ).join('');
+      wSel.querySelectorAll('.width-btn').forEach(btn =>
+        btn.addEventListener('click', () => setPageWidth(btn.dataset.width)));
+
+      const mobilePxs = [320, 375, 390, 430];
+      const mSel = document.getElementById('mobile-width-selector');
+      mSel.innerHTML = mobilePxs.map(px =>
+        `<button class="mobile-width-btn${page.mobilePreviewWidth === px ? ' active' : ''}" data-px="${px}">${px}</button>`
+      ).join('');
+      mSel.querySelectorAll('.mobile-width-btn').forEach(btn =>
+        btn.addEventListener('click', () => setMobilePreviewWidth(Number(btn.dataset.px))));
+      mSel.style.display = page.width === '1u' ? 'flex' : 'none';
+
+      const pfCtrl = document.getElementById('phone-frame-control');
+      pfCtrl.innerHTML = `<label class="phone-frame-label"><input type="checkbox" id="phone-frame-toggle"${page.showPhoneFrame ? ' checked' : ''}> Phone frame</label>`;
+      pfCtrl.style.display = page.width === '1u' ? 'block' : 'none';
+      const frameChk = document.getElementById('phone-frame-toggle');
+      if (frameChk) frameChk.addEventListener('change', () => setShowPhoneFrame(frameChk.checked));
+    }
+
+    function setPageWidth(width) {
+      pushUndo();
+      appState.currentPage.width = width;
+      localStorage.setItem('nb-width-' + appState.currentPage.slug, width);
+      scheduleSave();
+      renderEditorHeader();
+      renderAllCards();
+    }
+
+    function setMobilePreviewWidth(px) {
+      pushUndo();
+      appState.currentPage.mobilePreviewWidth = px;
+      localStorage.setItem('nb-mw-' + appState.currentPage.slug, String(px));
+      scheduleSave();
+      renderEditorHeader();
+      renderAllCards();
+    }
+
+    function setShowPhoneFrame(val) {
+      pushUndo();
+      appState.currentPage.showPhoneFrame = val;
+      scheduleSave();
+      renderEditorHeader();
+      renderAllCards();
+    }
+
+    // ── Card stack ─────────────────────────────────────
+
+    let _dragSrcIdx = null;
+    let _dropTargetIdx = null;
+    let _dropBefore = true;
+    let _flipInProgress = false;
+    const _dropIndicator = document.createElement('div');
+    _dropIndicator.className = 'drop-indicator';
+
+    function renderCardStack() {
+      const list = document.getElementById('card-stack-list');
+      const cards = appState.currentPage?.cards || [];
+      if (cards.length === 0) {
+        list.innerHTML = '<div style="padding:16px 14px;font-size:13px;color:#555;">No cards yet.</div>';
+        return;
+      }
+
+      list.innerHTML = cards.map((card, i) => {
+        const isOpen = i === appState.selectedCardIndex;
+        const label = card.headline || card.headlinePlus || 'Untitled card';
+        return `
+          <div class="accordion-item${isOpen ? ' open' : ''}" data-index="${i}" draggable="true">
+            <div class="accordion-header">
+              <span class="drag-handle">⠿</span>
+              <span class="stack-item-label" title="${escapeHtml(label)}">${escapeHtml(label)}</span>
+              <div class="stack-item-actions">
+                <button class="stack-action-btn" data-action="dup" data-index="${i}" title="Duplicate"><span class="material-symbols-outlined">content_copy</span></button>
+                <button class="stack-action-btn remove" data-action="remove" data-index="${i}" title="Remove"><span class="material-symbols-outlined">delete</span></button>
+              </div>
+            </div>
+            <div class="accordion-body-wrap">
+              <div class="accordion-body-inner">
+                ${isOpen ? '<div id="card-controls-section"></div>' : ''}
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+
+      // Header click — select card or toggle open/close
+      list.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', e => {
+          if (e.target.closest('.stack-action-btn') || e.target.closest('.accordion-close-btn')) return;
+          const item  = header.closest('.accordion-item');
+          const index = Number(item.dataset.index);
+          if (appState.selectedCardIndex === index && item.classList.contains('open')) {
+            clearCardEditor();
+          } else {
+            selectCard(index);
+          }
+        });
+      });
+
+      // Action buttons
+      list.querySelectorAll('.stack-action-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const idx = Number(btn.dataset.index);
+          if (btn.dataset.action === 'dup') duplicateCard(idx);
+          else if (btn.dataset.action === 'remove') removeCard(idx);
+        });
+      });
+
+      // Drag to reorder
+      list.querySelectorAll('.accordion-item').forEach(item => {
+        item.addEventListener('dragstart', e => {
+          if (e.target.closest('.accordion-body-inner')) { e.preventDefault(); return; }
+          if (item.classList.contains('open')) {
+            // Use just the header as the drag ghost — compact and representative
+            const header = item.querySelector('.accordion-header');
+            if (header) {
+              e.dataTransfer.setDragImage(header, e.offsetX, Math.min(e.offsetY, header.offsetHeight - 1));
+            }
+            // Skip the CSS transition so the list snaps shut instantly
+            const bodyWrap = item.querySelector('.accordion-body-wrap');
+            if (bodyWrap) { bodyWrap.style.transition = 'none'; bodyWrap.style.gridTemplateRows = '0fr'; }
+            item.classList.remove('open');
+            appState.selectedCardIndex = null;
+          }
+          _dragSrcIdx = Number(item.dataset.index);
+          e.dataTransfer.effectAllowed = 'move';
+          setTimeout(() => item.classList.add('dragging'), 0);
+        });
+        item.addEventListener('dragend', () => {
+          item.classList.remove('dragging');
+          _dropIndicator.remove();
+          if (!_flipInProgress) {
+            list.querySelectorAll('.accordion-item').forEach(el => {
+              el.style.transition = '';
+              el.style.transform = '';
+            });
+          }
+          _dragSrcIdx = null; _dropTargetIdx = null;
+        });
+        item.addEventListener('dragover', e => {
+          if (_dragSrcIdx === null) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          const rect = item.getBoundingClientRect();
+          const newTargetIdx = Number(item.dataset.index);
+          const newDropBefore = e.clientY < rect.top + rect.height / 2;
+          // Only animate if insertion point actually changed
+          if (newTargetIdx === _dropTargetIdx && newDropBefore === _dropBefore) return;
+          _dropTargetIdx = newTargetIdx;
+          _dropBefore = newDropBefore;
+          // FLIP: record positions before moving indicator
+          const allItems = [...list.querySelectorAll('.accordion-item')];
+          const beforeTops = allItems.map(el => el.getBoundingClientRect().top);
+          // Move indicator
+          list.insertBefore(_dropIndicator, _dropBefore ? item : item.nextSibling);
+          // Apply inverted transforms
+          allItems.forEach((el, i) => {
+            if (el.classList.contains('dragging')) return;
+            const diff = beforeTops[i] - el.getBoundingClientRect().top;
+            if (Math.abs(diff) < 1) return;
+            el.style.transition = 'none';
+            el.style.transform = `translateY(${diff}px)`;
+          });
+          // Force reflow, then animate to natural positions
+          list.offsetHeight;
+          allItems.forEach(el => {
+            if (el.classList.contains('dragging') || !el.style.transform) return;
+            el.style.transition = 'transform 200ms ease';
+            el.style.transform = 'translateY(0)';
+          });
+        });
+      });
+
+      list.addEventListener('dragover', e => e.preventDefault());
+      list.addEventListener('dragleave', e => {
+        if (!list.contains(e.relatedTarget)) {
+          _dropIndicator.remove();
+          list.querySelectorAll('.accordion-item').forEach(el => {
+            el.style.transition = '';
+            el.style.transform = '';
+          });
+          _dropTargetIdx = null;
+        }
+      });
+      list.addEventListener('drop', e => {
+        e.preventDefault();
+        _dropIndicator.remove();
+        if (_dragSrcIdx === null || _dropTargetIdx === null) return;
+        let insertAt = _dropBefore ? _dropTargetIdx : _dropTargetIdx + 1;
+        if (_dragSrcIdx < insertAt) insertAt--;
+        if (insertAt === _dragSrcIdx) { _dragSrcIdx = null; _dropTargetIdx = null; return; }
+        const cards = appState.currentPage.cards;
+        const selectedCard = appState.selectedCardIndex !== null ? cards[appState.selectedCardIndex] : null;
+
+        // Clear any ongoing dragover transforms before recording positions
+        list.querySelectorAll('.accordion-item').forEach(el => {
+          el.style.transition = 'none';
+          el.style.transform = '';
+        });
+        list.offsetHeight;
+
+        // FLIP — First: record each card's current Y position keyed by card object
+        const oldTops = new Map();
+        list.querySelectorAll('.accordion-item').forEach((el, i) => {
+          oldTops.set(cards[i], el.getBoundingClientRect().top);
+        });
+
+        // Reorder data
+        pushUndo();
+        const [moved] = cards.splice(_dragSrcIdx, 1);
+        cards.splice(insertAt, 0, moved);
+        if (selectedCard) appState.selectedCardIndex = cards.indexOf(selectedCard);
+        scheduleSave();
+        _dragSrcIdx = null; _dropTargetIdx = null;
+        const movedToIndex = insertAt;
+        const dropY = e.clientY; // mouse position at moment of release
+
+        // FLIP — Last: rebuild DOM at new positions
+        renderCardStack();
+        renderAllCards();
+        if (appState.selectedCardIndex !== null) { buildPanel(); syncPresets(); }
+
+        // FLIP — Invert + Play
+        _flipInProgress = true;
+        requestAnimationFrame(() => {
+          const newEls = list.querySelectorAll('.accordion-item');
+          const diffs = [];
+          newEls.forEach((el, i) => {
+            // Dragged card starts from mouse release point; others from their natural old positions
+            const oldTop = i === movedToIndex ? dropY : oldTops.get(cards[i]);
+            const diff = oldTop !== undefined ? oldTop - el.getBoundingClientRect().top : 0;
+            diffs.push(diff);
+            if (Math.abs(diff) >= 1) {
+              el.style.transition = 'none';
+              el.style.transform = `translateY(${diff}px)`;
+            }
+          });
+          // Force reflow to commit inverted positions, then animate to natural positions
+          list.offsetHeight;
+          newEls.forEach((el, i) => {
+            if (Math.abs(diffs[i]) >= 1) {
+              el.style.transition = 'transform 620ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+              el.style.transform = 'translateY(0)';
+            }
+          });
+
+          // Yellow highlight fires immediately — card glows as it slides into position
+          const droppedEl = newEls[movedToIndex];
+          if (droppedEl) {
+            droppedEl.classList.add('accordion-item-dropped');
+            setTimeout(() => droppedEl.classList.remove('accordion-item-dropped'), 2000);
+          }
+
+          // Scroll preview to dropped card and highlight it
+          const previewEl = document.querySelector('.card-wrapper.selected, .phone-card-slot.selected')
+            || document.querySelector(`.card-wrapper[data-index="${movedToIndex}"], .phone-card-slot[data-index="${movedToIndex}"]`);
+          if (previewEl) {
+            previewEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            previewEl.classList.add('card-drop-highlight');
+            setTimeout(() => previewEl.classList.remove('card-drop-highlight'), 2000);
+          }
+
+          // Clear transforms and release the flip lock after animation completes
+          setTimeout(() => {
+            newEls.forEach(el => { el.style.transition = ''; el.style.transform = ''; });
+            _flipInProgress = false;
+          }, 640);
+        });
+      });
+    }
+
+    function addCard() {
+      pushUndo();
+
+      // Record existing card positions before DOM change
+      const list = document.getElementById('card-stack-list');
+      const beforeTops = [...list.querySelectorAll('.accordion-item')].map(el => el.getBoundingClientRect().top);
+
+      // Insert new card at top with a unique random image
+      const seed = Math.random().toString(36).slice(2, 9);
+      appState.currentPage.cards.unshift({ imageUrl: `https://picsum.photos/seed/${seed}/628/419` });
+
+      // Shift selected index down so the currently open card stays open
+      if (appState.selectedCardIndex !== null) {
+        appState.selectedCardIndex += 1;
+      }
+
+      scheduleSave();
+      renderAllCards();
+      renderCardStack();
+
+      // FLIP: animate existing cards sliding down to their new positions
+      const allItems = [...list.querySelectorAll('.accordion-item')];
+      allItems.forEach((el, i) => {
+        if (i === 0) return; // new card — skip FLIP, just highlight
+        const oldTop = beforeTops[i - 1];
+        if (oldTop === undefined) return;
+        const delta = oldTop - el.getBoundingClientRect().top;
+        if (Math.abs(delta) < 1) return;
+        el.style.transition = 'none';
+        el.style.transform = `translateY(${delta}px)`;
+        el.offsetHeight; // force reflow
+        el.style.transition = 'transform 350ms ease';
+        el.style.transform = 'translateY(0)';
+      });
+
+      // Highlight the new card for 3 seconds
+      if (allItems[0]) allItems[0].classList.add('accordion-item-new');
+    }
+
+    function moveCard(index, direction) {
+      const cards = appState.currentPage.cards;
+      const target = index + direction;
+      if (target < 0 || target >= cards.length) return;
+      pushUndo();
+      [cards[index], cards[target]] = [cards[target], cards[index]];
+      if (appState.selectedCardIndex === index) appState.selectedCardIndex = target;
+      else if (appState.selectedCardIndex === target) appState.selectedCardIndex = index;
+      scheduleSave();
+      renderCardStack();
+    }
+
+    function duplicateCard(index) {
+      pushUndo();
+      const cards    = appState.currentPage.cards;
+      const list     = document.getElementById('card-stack-list');
+      const cardArea = document.getElementById('card-area');
+      const newIndex = index + 1;
+
+      // ── 1. Snapshot positions of items that will shift down ───────
+      const oldAccordionTops = new Map();
+      if (list) {
+        list.querySelectorAll('.accordion-item').forEach(el => {
+          const i = Number(el.dataset.index);
+          if (i > index) oldAccordionTops.set(i, el.getBoundingClientRect().top);
+        });
+      }
+      const oldPreviewTops = new Map();
+      if (cardArea) {
+        cardArea.querySelectorAll('.card-wrapper[data-index], .phone-card-slot[data-index]').forEach(el => {
+          const i = Number(el.dataset.index);
+          if (i > index) oldPreviewTops.set(i, el.getBoundingClientRect().top);
+        });
+      }
+
+      // ── 2. Mutate state, rebuild DOM ──────────────────────────────
+      const copy = JSON.parse(JSON.stringify(cards[index]));
+      cards.splice(newIndex, 0, copy);
+      scheduleSave();
+      if (appState.selectedCardIndex !== null && appState.selectedCardIndex > index) {
+        appState.selectedCardIndex++;
+      }
+      renderAllCards();
+      renderCardStack();
+      if (appState.selectedCardIndex !== null) { buildPanel(); syncPresets(); }
+
+      // ── 3. FLIP shifted items + highlight new card ────────────────
+      requestAnimationFrame(() => {
+        [
+          { els: list     ? Array.from(list.querySelectorAll('.accordion-item')) : [],                                        tops: oldAccordionTops },
+          { els: cardArea ? Array.from(cardArea.querySelectorAll('.card-wrapper[data-index], .phone-card-slot[data-index]')) : [], tops: oldPreviewTops }
+        ].forEach(({ els, tops }) => {
+          const diffs = els.map(el => {
+            const newIdx = Number(el.dataset.index);
+            if (newIdx === newIndex) return 0; // new card — no FLIP, just highlight
+            const oldIdx = newIdx > newIndex ? newIdx - 1 : newIdx;
+            const oldTop = tops.get(oldIdx);
+            const diff   = oldTop !== undefined ? oldTop - el.getBoundingClientRect().top : 0;
+            if (Math.abs(diff) >= 1) {
+              el.style.transition = 'none';
+              el.style.transform  = `translateY(${diff}px)`;
+            }
+            return diff;
+          });
+
+          if (els.length) els[0].offsetHeight; // force reflow
+
+          els.forEach((el, i) => {
+            if (Math.abs(diffs[i]) >= 1) {
+              el.style.transition = 'transform 620ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+              el.style.transform  = 'translateY(0)';
+            }
+          });
+
+          setTimeout(() => {
+            els.forEach(el => { el.style.transition = ''; el.style.transform = ''; });
+          }, 640);
+        });
+
+        // Yellow highlight on the new accordion item
+        const newItem = list ? list.querySelector(`.accordion-item[data-index="${newIndex}"]`) : null;
+        if (newItem) {
+          newItem.classList.add('accordion-item-new');
+          setTimeout(() => newItem.classList.remove('accordion-item-new'), 3500);
+        }
+
+        // Scroll preview to new card + glow highlight
+        const previewEl = cardArea
+          ? cardArea.querySelector(`.card-wrapper[data-index="${newIndex}"], .phone-card-slot[data-index="${newIndex}"]`)
+          : null;
+        if (previewEl) {
+          previewEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          previewEl.classList.add('card-drop-highlight');
+          setTimeout(() => previewEl.classList.remove('card-drop-highlight'), 2000);
+        }
+      });
+    }
+
+    function removeCard(index) {
+      if (!confirm('Remove this card?')) return;
+
+      const cards  = appState.currentPage.cards;
+      const list   = document.getElementById('card-stack-list');
+      const cardArea = document.getElementById('card-area');
+
+      // ── 1. Snapshot positions of cards that will remain ──────────
+      const oldAccordionTops = new Map();
+      if (list) {
+        list.querySelectorAll('.accordion-item').forEach(el => {
+          const i = Number(el.dataset.index);
+          if (i !== index) oldAccordionTops.set(i, el.getBoundingClientRect().top);
+        });
+      }
+      const oldPreviewTops = new Map();
+      if (cardArea) {
+        cardArea.querySelectorAll('.card-wrapper[data-index], .phone-card-slot[data-index]').forEach(el => {
+          const i = Number(el.dataset.index);
+          if (i !== index) oldPreviewTops.set(i, el.getBoundingClientRect().top);
+        });
+      }
+
+      // ── 2. Fade out the target accordion item ────────────────────
+      const itemToFade = list ? list.querySelector(`.accordion-item[data-index="${index}"]`) : null;
+      if (itemToFade) {
+        itemToFade.style.transition = 'opacity 360ms ease';
+        itemToFade.style.opacity = '0';
+        itemToFade.style.pointerEvents = 'none';
+      }
+
+      // ── 3. After fade: mutate state, rebuild DOM ──────────────────
+      setTimeout(() => {
+        pushUndo();
+        cards.splice(index, 1);
+        scheduleSave();
+
+        // Adjust selectedCardIndex
+        if (cards.length === 0) {
+          appState.selectedCardIndex = null;
+        } else if (appState.selectedCardIndex === index) {
+          // Keep pointing at same slot (next card slides in); clamp if last
+          if (appState.selectedCardIndex >= cards.length) {
+            appState.selectedCardIndex = cards.length - 1;
+          }
+        } else if (appState.selectedCardIndex !== null && appState.selectedCardIndex > index) {
+          appState.selectedCardIndex -= 1;
+        }
+
+        if (cards.length === 0) {
+          clearCardEditor();
+          renderAllCards();
+          renderCardStack();
+          return;
+        }
+        renderAllCards();
+        renderCardStack();
+        if (appState.selectedCardIndex !== null) { buildPanel(); syncPresets(); }
+
+        // ── 4. FLIP remaining items ───────────────────────────────
+        requestAnimationFrame(() => {
+          [
+            { els: list     ? Array.from(list.querySelectorAll('.accordion-item')) : [],                                        tops: oldAccordionTops },
+            { els: cardArea ? Array.from(cardArea.querySelectorAll('.card-wrapper[data-index], .phone-card-slot[data-index]')) : [], tops: oldPreviewTops }
+          ].forEach(({ els, tops }) => {
+            const diffs = els.map(el => {
+              const newIdx = Number(el.dataset.index);
+              const oldIdx = newIdx >= index ? newIdx + 1 : newIdx;
+              const oldTop = tops.get(oldIdx);
+              const diff   = oldTop !== undefined ? oldTop - el.getBoundingClientRect().top : 0;
+              if (Math.abs(diff) >= 1) {
+                el.style.transition = 'none';
+                el.style.transform  = `translateY(${diff}px)`;
+              }
+              return diff;
+            });
+
+            if (els.length) els[0].offsetHeight; // force reflow
+
+            els.forEach((el, i) => {
+              if (Math.abs(diffs[i]) >= 1) {
+                el.style.transition = 'transform 620ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                el.style.transform  = 'translateY(0)';
+              }
+            });
+
+            setTimeout(() => {
+              els.forEach(el => { el.style.transition = ''; el.style.transform = ''; });
+            }, 640);
+          });
+        });
+      }, 380);
+    }
+
+    function renderAllCards() {
+      const cardArea = document.getElementById('card-area');
+      const cards = appState.currentPage?.cards || [];
+      const pageWidth = appState.currentPage?.width || '15u';
+      const mobilePx = appState.currentPage?.mobilePreviewWidth || 390;
+      const showPhoneFrame = appState.currentPage?.showPhoneFrame !== false;
+      const deviceHeights = { 320: 568, 375: 812, 390: 844, 430: 932 };
+
+      if (cards.length === 0) {
+        _renderTarget = null;
+        cardArea.innerHTML = '<div class="card-area-placeholder">Add a card to get started</div>';
+        renderPageGrid();
+        return;
+      }
+
+      if (pageWidth === '1u') {
+        // ── Mobile: one phone frame (or bare stack), all cards inside ──
+        const screenH = deviceHeights[mobilePx] || 844;
+        if (showPhoneFrame) {
+          cardArea.innerHTML = `
+            <div class="iphone-frame">
+              <div class="iphone-screen" style="height:${screenH}px; overflow:hidden;">
+                <div class="iphone-island"></div>
+                <div class="iphone-statusbar">
+                  <span class="iphone-statusbar-time">9:41</span>
+                  <div class="iphone-statusbar-icons">
+                    <svg width="17" height="12" viewBox="0 0 17 12" fill="#111"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></svg>
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="#111" stroke-linecap="round"><circle cx="8" cy="11.5" r="1" fill="#111" stroke="none"/><path d="M4.8 8.2a4.5 4.5 0 0 1 6.4 0" stroke-width="1.5"/><path d="M1.5 4.8a9 9 0 0 1 13 0" stroke-width="1.5"/></svg>
+                    <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="20.5" height="10.5" rx="3.25" stroke="#111" stroke-width="1.5" stroke-opacity="0.4"/><rect x="2.5" y="2.5" width="15" height="7" rx="1.5" fill="#111"/><path d="M22.5 4.5v3" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-opacity="0.4"/></svg>
+                  </div>
+                </div>
+                <div class="iphone-scroll-area" id="nb-phone-scroll" style="overflow-y:auto; flex:1;"></div>
+                <div class="iphone-home"></div>
+              </div>
+            </div>`;
+        } else {
+          cardArea.innerHTML = `<div id="nb-phone-scroll" style="width:${mobilePx}px;"></div>`;
+        }
+
+        const scrollArea = document.getElementById('nb-phone-scroll');
+        const slots = [];
+
+        _suppressSync = true;
+        _contentOnly = true;
+        cards.forEach((card, i) => {
+          const isSelected = i === appState.selectedCardIndex;
+          const slot = document.createElement('div');
+          slot.className = 'phone-card-slot' + (isSelected ? ' selected' : '');
+          slot.dataset.index = i;
+          scrollArea.appendChild(slot);
+          slots.push(slot);
+
+          Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
+          Object.assign(state, card || {});
+          state.width = '1u';
+          state.mobilePresetWidth = mobilePx;
+          _renderTarget = slot;
+          render();
+
+          if (!isSelected) {
+            const overlay = document.createElement('div');
+            overlay.className = 'card-select-overlay';
+            overlay.dataset.index = i;
+            overlay.addEventListener('click', () => selectCard(Number(overlay.dataset.index)));
+            slot.appendChild(overlay);
+          }
+        });
+        _contentOnly = false;
+        _suppressSync = false;
+
+        // Leave state + _renderTarget on selected card's slot
+        if (appState.selectedCardIndex !== null && appState.selectedCardIndex < cards.length) {
+          Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
+          Object.assign(state, cards[appState.selectedCardIndex] || {});
+          state.width = '1u';
+          state.mobilePresetWidth = mobilePx;
+          _renderTarget = slots[appState.selectedCardIndex];
+        } else {
+          _renderTarget = null;
+        }
+
+      } else {
+        // ── Desktop: one wrapper per card ──────────────────────
+        cardArea.innerHTML = '';
+        const wrappers = cards.map((card, i) => {
+          const isSelected = i === appState.selectedCardIndex;
+          const div = document.createElement('div');
+          div.className = 'card-wrapper' + (isSelected ? ' selected' : '');
+          div.dataset.index = i;
+          cardArea.appendChild(div);
+          return div;
+        });
+
+        _suppressSync = true;
+        cards.forEach((card, i) => {
+          const isSelected = i === appState.selectedCardIndex;
+          Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
+          Object.assign(state, card || {});
+          state.width = pageWidth;
+          state.mobilePresetWidth = mobilePx;
+          _renderTarget = wrappers[i];
+          render();
+          if (!isSelected) {
+            const overlay = document.createElement('div');
+            overlay.className = 'card-select-overlay';
+            overlay.dataset.index = i;
+            overlay.addEventListener('click', () => selectCard(Number(overlay.dataset.index)));
+            wrappers[i].appendChild(overlay);
+          }
+        });
+        _suppressSync = false;
+
+        if (appState.selectedCardIndex !== null && appState.selectedCardIndex < cards.length) {
+          Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
+          Object.assign(state, cards[appState.selectedCardIndex] || {});
+          state.width = pageWidth;
+          state.mobilePresetWidth = mobilePx;
+          _renderTarget = wrappers[appState.selectedCardIndex];
+        } else {
+          _renderTarget = null;
+        }
+      }
+
+      renderPageGrid();
+    }
+
+    function selectCard(index) {
+      appState.selectedCardIndex = index;
+      editUndoStack.length = 0;
+      importingText = false;
+      importingImage = false;
+      renderAllCards();
+      renderCardStack(); // creates #card-controls-section inside open accordion item
+      buildPanel();      // populates it
+      syncPresets();
+      // Scroll selected card into view in the preview
+      requestAnimationFrame(() => {
+        const el = document.querySelector('.card-wrapper.selected, .phone-card-slot.selected');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
+
+    function clearCardEditor() {
+      appState.selectedCardIndex = null;
+      _renderTarget = null;
+      renderAllCards();
+      renderCardStack();
+    }
+
+    // ── Editor event listeners ─────────────────────────
+
+    document.getElementById('back-btn').addEventListener('click', async () => {
+      clearTimeout(_saveTimer);
+      if (appState.dirty && appState.session && appState.currentPage) {
+        await savePage();
+      }
+      appState.currentPage = null;
+      appState.selectedCardIndex = null;
+      appState.dirty = false;
+      history.pushState({}, '', window.location.pathname);
+      showView('list');
+      loadPages();
+    });
+
+    document.getElementById('add-card-btn').addEventListener('click', addCard);
+
+    // Click empty space in card area to deselect
+    document.getElementById('card-area').addEventListener('click', e => {
+      if (e.target === document.getElementById('card-area')) clearCardEditor();
+    });
+
+    // Page rename — input is always editable; save on blur or Enter, cancel on Escape
+    (function () {
+      const el = document.getElementById('editor-page-name');
+      el.addEventListener('focus', function () { const el = this; setTimeout(() => el.select(), 0); });
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+        if (e.key === 'Escape') { this.value = appState.currentPage.name; this.blur(); }
+      });
+      el.addEventListener('blur', function () {
+        const newName = this.value.trim();
+        if (!newName) { this.value = appState.currentPage.name; return; }
+        if (newName !== appState.currentPage.name) {
+          appState.currentPage.name = newName;
+          scheduleSave();
+        }
+      });
+    })();
+
+    // Grid toggle
+    document.getElementById('grid-toggle').addEventListener('click', () => {
+      if (!appState.currentPage) return;
+      appState.currentPage.showGrid = !appState.currentPage.showGrid;
+      renderPageGrid();
+    });
+
+    // Dark mode toggle
+    (function () {
+      const btn = document.getElementById('dark-toggle');
+      function applyDark(on) {
+        document.body.classList.toggle('dark-mode', on);
+        btn.classList.toggle('active', on);
+        localStorage.setItem('nb-dark-mode', on ? '1' : '0');
+      }
+      // Restore preference
+      applyDark(localStorage.getItem('nb-dark-mode') === '1');
+      btn.addEventListener('click', () => applyDark(!document.body.classList.contains('dark-mode')));
+    })();
+
+    function renderPageGrid() {
+      const cardArea = document.getElementById('card-area');
+      if (!cardArea) return;
+
+      // Remove any existing overlay
+      const existing = document.getElementById('page-grid-overlay');
+      if (existing) existing.remove();
+
+      // Update button state
+      const btn = document.getElementById('grid-toggle');
+      const showGrid = appState.currentPage?.showGrid;
+      if (btn) btn.classList.toggle('active', !!showGrid);
+
+      if (!showGrid || !appState.currentPage) return;
+
+      const pageWidth = appState.currentPage.width || '15u';
+      if (pageWidth === '1u') return; // no grid in mobile view
+
+      const colCounts  = { '10u': 10, '12u': 12, '15u': 15 };
+      const cardWidths = { '10u': 660, '12u': 792, '15u': 990 };
+      const cols  = colCounts[pageWidth];
+      const width = cardWidths[pageWidth];
+
+      let inner = '<div class="grid-margin"></div>';
+      for (let i = 0; i < cols; i++) {
+        inner += '<div class="grid-col"></div>';
+        if (i < cols - 1) inner += '<div class="grid-gutter"></div>';
+      }
+      inner += '<div class="grid-margin"></div>';
+
+      const overlay = document.createElement('div');
+      overlay.id = 'page-grid-overlay';
+      overlay.innerHTML = `<div class="page-grid-inner" style="width:${width}px">${inner}</div>`;
+      // Append last so it paints on top of all cards; pointer-events:none passes clicks through
+      cardArea.appendChild(overlay);
+    }
+
+
+
+    async function initAuth() {
+      const { data: { session } } = await sb.auth.getSession();
+      appState.session = session;
+      sb.auth.onAuthStateChange((_event, session) => {
+        appState.session = session;
+        routeView();
+      });
+      routeView();
+    }
+
+    // Login
+    async function doLogin() {
+      const email    = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errorEl  = document.getElementById('login-error');
+      const btn      = document.getElementById('login-btn');
+
+      if (!email || !password) {
+        errorEl.textContent = 'Please enter your email and password.';
+        return;
+      }
+
+      errorEl.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+
+      if (error) {
+        errorEl.textContent = error.message;
+      }
+      // On success, onAuthStateChange fires → routeView() → showView('list')
+    }
+
+    document.getElementById('login-btn').addEventListener('click', doLogin);
+
+    document.getElementById('login-password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+
+    document.getElementById('new-page-btn').addEventListener('click', createNewPage);
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await sb.auth.signOut();
+    });
+
+
+    /* ── Story Card Engine ───────────────────────────────────────────────
+       Copied from index.html with News Builder adaptations:
+       • buildPanel() targets #card-controls-section
+       • Width controls suppressed (page-level setting)
+       • stateToHash / hashToState no-oped
+       • render() calls _syncCardStateBack() to persist state
+    ─────────────────────────────────────────────────────────────────── */
+    const state = {
+      headline: 'Lead headline goes here. The ideal length is between 50 and 100 characters.',
+      blurb: 'Lead blurb here this is the blurb text. Blurbs appear with the lead story only. Lead blurb here this is the blurb text. Blurbs appear with the lead story only.',
+      imageUrl: 'https://picsum.photos/seed/wapo/628/419',
+      caption: '(Demetrius Freeman/The Post)',
+      // Future properties — not yet wired
+      width: '15u',
+      mobilePresetWidth: 390,
+      phoneClip: true,
+      leadPlus: 0,
+      showPackageLabel: false,
+      packageLabelText: 'Label Text',
+      showLive: false,
+      showKicker: false,
+      kickerSection: 'Analysis',
+      kickerAuthor: 'Jennifer Rubin',
+      showHeadline: true,
+      showBlurb: true,
+      showTicker: false,
+      tickerItems: [
+        { time: '2:47 p.m.', text: 'Harris leads Trump by six points in new post-debate poll, according to a Washington Post–ABC News survey...' },
+        { time: '2:31 p.m.', text: 'When Biden announced he would not seek reelection, his closest allies scrambled to understand what the decision...' },
+        { time: '2:18 p.m.', text: 'Senate Democrats are pushing for an emergency session to address the latest developments...' },
+      ],
+      aspectRatio: '3/2',
+      portrait: false,
+      showOverlayButton: false,
+      overlayButtonLabel: 'Play Video',
+      showOverlayDuration: true,
+      supportingHeadlines: ['', '', '', ''],
+      supportingUrls: ['', '', '', ''],
+      lastImportedSection: null,
+      articleUrl: '',
+    };
+
+    const defaultState = JSON.parse(JSON.stringify(state));
+
+    // Transient import state — not part of serializable state, never written to hash
+    let importingText = false;
+    let importingImage = false;
+
+    // Multi-card render control
+    let _renderTarget = null;   // when set, render() writes here instead of #card-area
+    let _suppressSync = false;  // when true, _syncCardStateBack() is a no-op
+    let _contentOnly = false;   // when true, render() outputs cardHTML without iphone frame
+
+    // Inline editing
+    const editUndoStack = [];
+
+    function attachInlineEditors() {
+      document.querySelectorAll('.editable-wrap').forEach(wrap => {
+        wrap.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const field = wrap.dataset.field;
+          const textEl = wrap.querySelector(field === 'headline' ? '.headline' : field === 'blurb' ? '.blurb' : '.caption');
+          if (!textEl || textEl.contentEditable === 'true') return;
+          const prevValue = state[field] || '';
+          const pencil = wrap.querySelector('.edit-pencil');
+          if (pencil) { pencil.style.opacity = '0'; pencil.style.pointerEvents = 'none'; }
+          textEl.contentEditable = 'true';
+          textEl.style.outline = 'none';
+          textEl.style.borderBottom = '1.5px solid rgba(0,0,0,0.25)';
+          textEl.style.paddingBottom = '1px';
+          // Remove href so clicks inside the editable don't navigate; render() restores it
+          const link = wrap.querySelector('a[href]');
+          if (link) link.removeAttribute('href');
+          textEl.focus();
+          const range = document.createRange();
+          range.selectNodeContents(textEl);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          let done = false;
+          function save() {
+            if (done) return;
+            done = true;
+            const newVal = textEl.textContent.trim();
+            textEl.contentEditable = 'false';
+            textEl.style.borderBottom = '';
+            textEl.style.paddingBottom = '';
+            window.getSelection().removeAllRanges();
+            textEl.blur();
+            if (newVal !== prevValue) {
+              editUndoStack.push({ field, prevValue });
+              state[field] = newVal;
+              if (field === 'headline') { const el = document.getElementById('input-headline'); if (el) el.value = newVal; }
+              if (field === 'blurb') { const el = document.getElementById('input-blurb'); if (el) el.value = newVal; }
+              if (field === 'caption') { const el = document.getElementById('input-caption'); if (el) el.value = newVal; }
+            }
+            render();
+          }
+          function cancel() {
+            if (done) return;
+            done = true;
+            textEl.contentEditable = 'false';
+            textEl.style.borderBottom = '';
+            textEl.style.paddingBottom = '';
+            window.getSelection().removeAllRanges();
+            render();
+          }
+          textEl.addEventListener('keydown', function onKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); textEl.removeEventListener('keydown', onKey); save(); }
+            else if (e.key === 'Escape') { textEl.removeEventListener('keydown', onKey); cancel(); }
+          });
+          textEl.addEventListener('blur', function onBlur() { textEl.removeEventListener('blur', onBlur); if (!done) save(); });
+        });
+      });
+    }
+
+
+    const widthConfig = {
+      '1u':  { cardWidth: null,    maxWidth: '767px', flexDir: 'column', gap: '12px', textFlex: '1 1 auto', artFlex: '1 1 auto', tileWidth: null, carouselTileWidth: null },
+      '10u': { cardWidth: '660px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 298px', artFlex: '0 0 298px', tileWidth: 188,  carouselTileWidth: 232 },
+      '12u': { cardWidth: '792px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 232px', artFlex: '0 0 496px', tileWidth: 232,  carouselTileWidth: 200 },
+      '15u': { cardWidth: '990px', maxWidth: null,    flexDir: 'row',    gap: '32px', textFlex: '0 0 298px', artFlex: '0 0 628px', tileWidth: 298,  carouselTileWidth: 232 },
+    };
+
+    const STOP_WORDS = new Set([
+      'a','an','the','and','or','but','in','on','at','to','for','of','with',
+      'by','from','is','are','was','were','be','been','has','have','had',
+      'it','its','this','that','these','those','as','up','out','into','than',
+      'about','after','before','over','under','between','through','during',
+      'what','who','how','when','where','why','which','will','would','could',
+      'should','may','might','can','do','did','does','not','no','new','says',
+      'say','said','his','her','their','they','he','she','we','us','you','i',
+      'more','than','just','also','back','now','then','so','if','all','one',
+      'two','three','four','five','six','seven','eight','nine','ten',
+    ]);
+
+    function getHeadlineKeywords(headline) {
+      return headline
+        .replace(/[^a-z0-9\s]/gi, ' ')
+        .split(/\s+/)
+        .map(w => w.toLowerCase())
+        .filter(w => w.length > 2 && !STOP_WORDS.has(w))
+        .slice(0, 6)
+        .join(' ');
+    }
+
+    // Known WaPo RSS section slugs
+    const WAPO_SECTIONS = new Set([
+      'politics','national','world','business','sports','entertainment',
+      'technology','lifestyle','local','opinions','opinion','health',
+      'science','climate','education','immigration','economy','investigations',
+    ]);
+
+    async function fetchRelatedArticles() {
+      if (!state.lastImportedSection) return;
+      try {
+        const section = WAPO_SECTIONS.has(state.lastImportedSection)
+          ? state.lastImportedSection : 'national';
+        const wapoRssUrl = 'https://feeds.washingtonpost.com/rss/' + section;
+
+        // Primary: WaPo native RSS via Vercel proxy (real WaPo URLs + titles)
+        // Fallback: rss2json with same feed
+        const tryProxy = fetch('/api/rss?url=' + encodeURIComponent(wapoRssUrl))
+          .then(r => r.json()).then(j => j.items?.length ? j.items : null).catch(() => null);
+        const tryRss2json = fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(wapoRssUrl))
+          .then(r => r.json()).then(j => (j.status === 'ok' && j.items?.length)
+            ? j.items.map(i => ({ title: i.title || '', link: i.link || '' })) : null).catch(() => null);
+
+        const results = await Promise.all([tryProxy, tryRss2json]);
+        const rawItems = results[0] || results[1];
+        if (!rawItems) return;
+        const existing = new Set([state.headline].map(t => (t || '').trim().toLowerCase()));
+        const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter|latest from the post)[:\s,]?/i;
+        const decodeEntities = s => s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+        const items = rawItems
+          .map(item => ({ title: decodeEntities((item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim()), link: item.link || '' }))
+          .filter(({ title }) => title && !existing.has(title.toLowerCase()) && !NON_ARTICLE.test(title))
+          .slice(0, 4);
+        items.forEach(({ title, link }, i) => {
+          state.supportingHeadlines[i] = title;
+          state.supportingUrls[i] = link;
+          const ta = document.getElementById('input-sh-' + i);
+          if (ta) ta.value = title;
+          const urlInput = document.getElementById('input-sh-url-' + i);
+          if (urlInput) urlInput.value = link;
+        });
+        if (items.length > 0) render();
+      } catch (e) { console.log('[suggest] outer error:', e.message); }
+    }
+
+    function getWaPoSection(url) {
+      try {
+        const path = new URL(url).pathname;
+        return path.split('/').filter(Boolean)[0] || null;
+      } catch (e) { return null; }
+    }
+
+    function restoreDefaults() {
+      Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
+      render();
+      buildPanel();
+      syncPresets();
+    }
+
+    function syncPresets() {
+      const label = document.getElementById('preset-label');
+      if (label) label.textContent = `${state.mobilePresetWidth}px`;
+    }
+
+    const deviceHeights = { 320: 568, 375: 812, 390: 844, 430: 932 };
+
+    function stateToHash() { /* disabled in News Builder — URL managed by appState */ }
+
+    function hashToState() { /* disabled in News Builder */ }
+
+    function render() {
+      const cfg = widthConfig[state.width];
+      const cardStyle = state.width === '1u'
+        ? `width:${state.mobilePresetWidth}px`
+        : `width:${cfg.cardWidth}`;
+
+      const sh = (i) => {
+        const text = state.supportingHeadlines[i] || 'Supporting headline text goes here lorem ipsum dolor sit amet';
+        const url = state.supportingUrls && state.supportingUrls[i];
+        return url ? `<a href="${url}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">${text}</a>` : text;
+      };
+      const vDivider = `<div style="flex:0 0 32px;align-self:stretch;position:relative;"><div style="position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:1px;background:rgba(0,0,0,0.1)"></div></div>`;
+      const t1uCard = (item, borderRadius, isLast) => `
+        <div style="flex-shrink:0;padding:16px 20px;border:1px solid rgba(0,0,0,0.1);background:white;border-radius:${borderRadius};${!isLast ? 'margin-right:-1px;' : ''}display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div style="width:6px;height:6px;background:#ea0017;border-radius:50%;flex-shrink:0;"></div>
+            <p style="font-family:'Source Sans 3',sans-serif;font-weight:400;font-size:12px;line-height:15px;color:#ea0017;white-space:nowrap;">${item.time || '1:00 p.m.'}</p>
+          </div>
+          <p style="font-family:'Source Sans 3',sans-serif;font-weight:400;font-size:14px;line-height:17.5px;color:#111;width:208px;overflow:hidden;text-overflow:ellipsis;">${item.text || 'Update text goes here'}</p>
+        </div>
+      `;
+
+      const cardHTML = `
+        <div id="card" style="${cardStyle}">
+          ${state.showPackageLabel ? `
+            <div class="package-label">
+              <span class="package-label-text">${state.packageLabelText}</span>
+              <span class="package-label-chevron">›</span>
+            </div>
+          ` : ''}
+          <div id="card-inner" style="flex-direction:${cfg.flexDir};gap:${cfg.gap}">
+            <div id="text-col" style="flex:${cfg.textFlex}">
+              ${state.showKicker ? `<p class="kicker-label">${state.kickerSection}</p>` : ''}
+              ${state.showLive ? `<div class="live-label"><span>LIVE</span></div>` : ''}
+              ${state.showHeadline ? (importingText ? `<div class="card-skeleton" style="height:26px;margin-bottom:5px;"></div><div class="card-skeleton" style="height:26px;width:68%;"></div>` : `<div class="editable-wrap" data-field="headline"><button class="edit-pencil" title="Edit headline">✎</button>${state.articleUrl ? `<a href="${state.articleUrl}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;display:block;">` : ''}<p class="headline">${state.headline}</p>${state.articleUrl ? `</a>` : ''}</div>`) : ''}
+              ${importingText && state.showBlurb ? `<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px;"><div class="card-skeleton" style="height:15px;"></div><div class="card-skeleton" style="height:15px;"></div><div class="card-skeleton" style="height:15px;width:60%;"></div></div>` : state.showTicker && state.width !== '1u' && state.showBlurb ? `
+                <div class="ticker-container">
+                  <p class="ticker-live-header">LIVE</p>
+                  <div class="ticker-item">
+                    <div class="ticker-gutter">
+                      <div class="ticker-dot"></div>
+                      <div class="ticker-line"></div>
+                    </div>
+                    <div class="ticker-content">
+                      <p class="ticker-time">${state.tickerItems[0].time || '1:00 p.m.'}</p>
+                      <p class="ticker-text">${state.tickerItems[0].text || 'Update text goes here'}</p>
+                    </div>
+                  </div>
+                  <div class="ticker-item">
+                    <div class="ticker-gutter">
+                      <div class="ticker-dot"></div>
+                      <div class="ticker-line"></div>
+                    </div>
+                    <div class="ticker-content">
+                      <p class="ticker-time">${state.tickerItems[1].time || '1:00 p.m.'}</p>
+                      <p class="ticker-text">${state.tickerItems[1].text || 'Update text goes here'}</p>
+                    </div>
+                  </div>
+                  <div class="ticker-item">
+                    <div class="ticker-gutter">
+                      <div class="ticker-dot"></div>
+                    </div>
+                    <div class="ticker-content ticker-content--last">
+                      <p class="ticker-time">${state.tickerItems[2].time || '1:00 p.m.'}</p>
+                      <p class="ticker-text">${state.tickerItems[2].text || 'Update text goes here'}</p>
+                    </div>
+                  </div>
+                </div>
+              ` : (!state.showTicker && state.showBlurb ? `<div class="editable-wrap" data-field="blurb"><button class="edit-pencil" title="Edit blurb">✎</button><p class="blurb">${state.blurb}</p></div>` : '')}
+              ${state.leadPlus >= 1 && state.leadPlus < 3 && (state.width === '12u' || state.width === '15u') ? `
+                <hr class="h-rule">
+                <p class="supporting-headline">${sh(0)}</p>
+              ` : ''}
+              ${state.leadPlus === 2 && (state.width === '12u' || state.width === '15u') ? `
+                <hr class="h-rule">
+                <p class="supporting-headline">${sh(1)}</p>
+              ` : ''}
+            </div>
+            <div id="art-col" style="flex:${cfg.artFlex}">
+              <div class="art-wrapper">
+                ${state.articleUrl ? `<a href="${state.articleUrl}" target="_blank" rel="noopener" style="display:block;line-height:0;">` : ''}
+                ${importingImage ? `<div class="card-skeleton art-image" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()};"></div>` : `<img class="art-image" src="${state.imageUrl}" alt="" onerror="this.onerror=null;this.src='https://picsum.photos/seed/wapo/628/419'" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()};${state.articleUrl ? 'cursor:pointer;' : ''}">`}
+                ${state.showOverlayButton ? `
+                  <div class="art-overlay-btn">
+                    <svg width="10" height="12" viewBox="0 0 10 12" fill="white" style="flex-shrink:0"><path d="M0 0 L10 6 L0 12 Z"/></svg>
+                    <span class="overlay-label">${state.overlayButtonLabel}</span>${state.showOverlayDuration ? `<span class="overlay-duration"> 2:12</span>` : ''}
+                  </div>
+                ` : ''}
+                ${state.articleUrl ? `</a>` : ''}
+              </div>
+              <div class="editable-wrap" data-field="caption"><button class="edit-pencil" title="Edit caption">✎</button><p class="caption">${state.caption}</p></div>
+            </div>
+          </div>
+          ${state.showTicker && state.width === '1u' ? `
+            <div style="overflow-x:auto;padding-top:16px;">
+              <div style="display:flex;">
+                ${t1uCard(state.tickerItems[0], '6px 0 0 6px', false)}
+                ${t1uCard(state.tickerItems[1], '0', false)}
+                ${t1uCard(state.tickerItems[2], '0 6px 6px 0', true)}
+              </div>
+            </div>
+          ` : ''}
+          ${state.leadPlus >= 1 && state.width === '1u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(0)}</p>
+          ` : ''}
+          ${state.leadPlus >= 2 && state.width === '1u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(1)}</p>
+          ` : ''}
+          ${state.leadPlus === 3 && state.width === '1u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(2)}</p>
+          ` : ''}
+          ${state.leadPlus >= 4 && state.width === '1u' ? `
+            <hr class="h-rule">
+            <div style="display:flex;overflow-x:auto;">
+              <p class="supporting-headline" style="flex:0 0 ${Math.floor((state.mobilePresetWidth - 32) * 0.75)}px">${sh(2)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:0 0 ${Math.floor((state.mobilePresetWidth - 32) * 0.75)}px">${sh(3)}</p>
+            </div>
+          ` : ''}
+          ${state.leadPlus === 3 && (state.width === '12u' || state.width === '15u') ? `
+            <hr class="h-rule">
+            <div style="display:flex;align-items:flex-start;">
+              <p class="supporting-headline" style="flex:1">${sh(0)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:1">${sh(1)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:1">${sh(2)}</p>
+            </div>
+          ` : ''}
+          ${state.leadPlus === 1 && state.width === '10u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(0)}</p>
+          ` : ''}
+          ${state.leadPlus === 2 && state.width === '10u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(0)}</p>
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(1)}</p>
+          ` : ''}
+          ${state.leadPlus === 3 && state.width === '10u' ? `
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(0)}</p>
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(1)}</p>
+            <hr class="h-rule">
+            <p class="supporting-headline">${sh(2)}</p>
+          ` : ''}
+          ${state.leadPlus >= 4 && state.width !== '1u' ? `
+            <hr class="h-rule">
+            <div style="display:flex;overflow-x:auto;align-items:flex-start;">
+              <p class="supporting-headline" style="flex:0 0 ${cfg.carouselTileWidth}px">${sh(0)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:0 0 ${cfg.carouselTileWidth}px">${sh(1)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:0 0 ${cfg.carouselTileWidth}px">${sh(2)}</p>
+              ${vDivider}
+              <p class="supporting-headline" style="flex:0 0 ${cfg.carouselTileWidth}px">${sh(3)}</p>
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      const screenHeight = deviceHeights[state.mobilePresetWidth] || 844;
+      (_renderTarget || document.getElementById('card-area')).innerHTML = (state.width === '1u' && !_contentOnly && !_renderTarget) ? `
+        <div class="iphone-frame">
+          <div class="iphone-screen" style="${state.phoneClip ? `height:${screenHeight}px` : ''}">
+            <div class="iphone-island"></div>
+            <div class="iphone-statusbar">
+              <span class="iphone-statusbar-time">9:41</span>
+              <div class="iphone-statusbar-icons">
+                <svg width="17" height="12" viewBox="0 0 17 12" fill="#111"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="#111" stroke-linecap="round"><circle cx="8" cy="11.5" r="1" fill="#111" stroke="none"/><path d="M4.8 8.2a4.5 4.5 0 0 1 6.4 0" stroke-width="1.5"/><path d="M1.5 4.8a9 9 0 0 1 13 0" stroke-width="1.5"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="20.5" height="10.5" rx="3.25" stroke="#111" stroke-width="1.5" stroke-opacity="0.4"/><rect x="2.5" y="2.5" width="15" height="7" rx="1.5" fill="#111"/><path d="M22.5 4.5v3" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-opacity="0.4"/></svg>
+              </div>
+            </div>
+            <div class="iphone-scroll-area">${cardHTML}</div>
+            <div class="iphone-home"></div>
+          </div>
+        </div>
+      ` : cardHTML;
+
+      stateToHash();
+      attachInlineEditors();
+      _syncCardStateBack();
+    }
+
+    function _syncCardStateBack() {
+      if (_suppressSync) return;
+      if (typeof appState === 'undefined' || appState.selectedCardIndex === null || !appState.currentPage) return;
+      const cardState = JSON.parse(JSON.stringify(state));
+      delete cardState.width;
+      delete cardState.mobilePresetWidth;
+      const existing = JSON.stringify(appState.currentPage.cards[appState.selectedCardIndex]);
+      const next = JSON.stringify(cardState);
+      if (existing !== next) {
+        appState.currentPage.cards[appState.selectedCardIndex] = cardState;
+        scheduleSave();
+        _updateStackLabel(appState.selectedCardIndex);
+      }
+    }
+
+    function _updateStackLabel(index) {
+      const label = state.headline || state.headlinePlus || 'Untitled card';
+      const el = document.querySelector(`#card-stack-list .accordion-item[data-index="${index}"] .stack-item-label`);
+      if (el) el.textContent = label;
+    }
+
+    function buildPanel() {
+      document.getElementById('card-controls-section').innerHTML = `
+        <div class="panel-section">
+          <div class="panel-section-title">Import Article</div>
+          <div class="control-row" style="margin-bottom:6px;">
+            <input class="control-input" id="import-url" type="text" placeholder="Paste WaPo article URL…">
+          </div>
+          <div class="control-row" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <button id="import-btn" style="flex-shrink:0;padding:0 12px;height:28px;background:#fff;color:#111;border:1px solid #555;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Import</button>
+            <div class="recents-wrap">
+              <button id="recents-btn" style="padding:0 10px;height:28px;background:transparent;color:#777;border:1px solid #ccc;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;">Recent ▾</button>
+            </div>
+          </div>
+          <div class="recents-list" id="recents-dropdown"></div>
+          <div id="import-status" style="font-size:11px;color:#888;margin-top:4px;min-height:14px;"></div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Layout</div>
+          <div class="control-row">
+            <label class="control-label" for="input-lead-plus">Supporting headlines</label>
+            <select class="control-input" id="input-lead-plus">
+              <option value="0"  ${state.leadPlus === 0  ? 'selected' : ''}>0</option>
+              <option value="1"  ${state.leadPlus === 1  ? 'selected' : ''}>1</option>
+              <option value="2"  ${state.leadPlus === 2  ? 'selected' : ''}>2</option>
+              <option value="3"  ${state.leadPlus === 3  ? 'selected' : ''}>3</option>
+              <option value="4"  ${state.leadPlus === 4  ? 'selected' : ''}>4+</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Package Label</div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-show-package-label" ${state.showPackageLabel ? 'checked' : ''}> Show label</label>
+          </div>
+          <div class="control-row" id="package-label-text-row" style="display:${state.showPackageLabel ? 'flex' : 'none'}">
+            <label class="control-label" for="input-package-label-text">Label text</label>
+            <input class="control-input" type="text" id="input-package-label-text" value="${state.packageLabelText}">
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Primary Text</div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-live" ${state.showLive ? 'checked' : ''}> LIVE label</label>
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-kicker" ${state.showKicker ? 'checked' : ''}> Kicker label</label>
+          </div>
+          <div class="control-row" id="kicker-text-row" style="display:${state.showKicker ? 'block' : 'none'}">
+            <label class="control-label" for="input-kicker-text">Kicker text</label>
+            <input class="control-input" type="text" id="input-kicker-text" value="${state.kickerSection}">
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-ticker" ${state.showTicker ? 'checked' : ''}> Live ticker</label>
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-show-headline" ${state.showHeadline ? 'checked' : ''}> Headline</label>
+            <textarea class="control-input" id="input-headline" rows="3">${state.headline}</textarea>
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-show-blurb" ${state.showBlurb ? 'checked' : ''}> Blurb</label>
+            <textarea class="control-input" id="input-blurb" rows="4">${state.blurb}</textarea>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Art</div>
+
+          <div class="control-row">
+            <label class="control-label" for="input-aspect-ratio">Aspect ratio</label>
+            <select class="control-input" id="input-aspect-ratio">
+              <option value="3/2" ${state.aspectRatio === '3/2' ? 'selected' : ''}>3:2</option>
+              <option value="16/9" ${state.aspectRatio === '16/9' ? 'selected' : ''}>16:9</option>
+              <option value="1/1" ${state.aspectRatio === '1/1' ? 'selected' : ''}>1:1</option>
+            </select>
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-portrait" ${state.portrait ? 'checked' : ''}> Portrait</label>
+          </div>
+          <div class="control-row">
+            <label class="control-label" for="input-caption">Caption</label>
+            <input class="control-input" type="text" id="input-caption" value="${state.caption}">
+          </div>
+          <div class="control-row">
+            <label class="control-label"><input type="checkbox" id="input-show-overlay" ${state.showOverlayButton ? 'checked' : ''}> Overlay button</label>
+          </div>
+          <div class="control-row" id="overlay-fields" style="display:${state.showOverlayButton ? 'flex' : 'none'};flex-direction:column;gap:8px;">
+            <input class="control-input" type="text" id="input-overlay-label" placeholder="Button label" value="${state.overlayButtonLabel}">
+            <label class="control-label"><input type="checkbox" id="input-show-overlay-duration" ${state.showOverlayDuration ? 'checked' : ''}> Show duration</label>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Supporting Headlines</div>
+
+          <div id="sh-row-0" style="display:${state.leadPlus >= 1 ? 'block' : 'none'}">
+            <div class="control-row">
+              <label class="control-label" for="input-sh-0">Headline 1</label>
+              <textarea class="control-input" id="input-sh-0" rows="2">${state.supportingHeadlines[0]}</textarea>
+            </div>
+            <div class="control-row">
+              <label class="control-label" for="input-sh-url-0">URL</label>
+              <input class="control-input" type="url" id="input-sh-url-0" placeholder="Paste URL or press Enter to import…" value="${state.supportingUrls[0] || ''}">
+              <div id="sh-url-status-0" style="font-size:11px;min-height:14px;margin-top:3px;"></div>
+            </div>
+          </div>
+          <div id="sh-row-1" style="display:${state.leadPlus >= 2 ? 'block' : 'none'}">
+            <div class="control-row">
+              <label class="control-label" for="input-sh-1">Headline 2</label>
+              <textarea class="control-input" id="input-sh-1" rows="2">${state.supportingHeadlines[1]}</textarea>
+            </div>
+            <div class="control-row">
+              <label class="control-label" for="input-sh-url-1">URL</label>
+              <input class="control-input" type="url" id="input-sh-url-1" placeholder="Paste URL or press Enter to import…" value="${state.supportingUrls[1] || ''}">
+              <div id="sh-url-status-1" style="font-size:11px;min-height:14px;margin-top:3px;"></div>
+            </div>
+          </div>
+          <div id="sh-row-2" style="display:${state.leadPlus >= 3 ? 'block' : 'none'}">
+            <div class="control-row">
+              <label class="control-label" for="input-sh-2">Headline 3</label>
+              <textarea class="control-input" id="input-sh-2" rows="2">${state.supportingHeadlines[2]}</textarea>
+            </div>
+            <div class="control-row">
+              <label class="control-label" for="input-sh-url-2">URL</label>
+              <input class="control-input" type="url" id="input-sh-url-2" placeholder="Paste URL or press Enter to import…" value="${state.supportingUrls[2] || ''}">
+              <div id="sh-url-status-2" style="font-size:11px;min-height:14px;margin-top:3px;"></div>
+            </div>
+          </div>
+          <div id="sh-row-3" style="display:${state.leadPlus >= 4 ? 'block' : 'none'}">
+            <div class="control-row">
+              <label class="control-label" for="input-sh-3">Headline 4</label>
+              <textarea class="control-input" id="input-sh-3" rows="2">${state.supportingHeadlines[3]}</textarea>
+            </div>
+            <div class="control-row">
+              <label class="control-label" for="input-sh-url-3">URL</label>
+              <input class="control-input" type="url" id="input-sh-url-3" placeholder="Paste URL or press Enter to import…" value="${state.supportingUrls[3] || ''}">
+              <div id="sh-url-status-3" style="font-size:11px;min-height:14px;margin-top:3px;"></div>
+            </div>
+          </div>
+        </div>
+
+
+      `;
+
+      document.getElementById('input-lead-plus').addEventListener('change', function () {
+        state.leadPlus = parseInt(this.value);
+        render();
+        document.getElementById('sh-row-0').style.display = state.leadPlus >= 1 ? 'flex' : 'none';
+        document.getElementById('sh-row-1').style.display = state.leadPlus >= 2 ? 'flex' : 'none';
+        document.getElementById('sh-row-2').style.display = state.leadPlus >= 3 ? 'flex' : 'none';
+        document.getElementById('sh-row-3').style.display = state.leadPlus >= 4 ? 'flex' : 'none';
+      });
+
+      document.getElementById('input-show-package-label').addEventListener('change', function () {
+        state.showPackageLabel = this.checked;
+        document.getElementById('package-label-text-row').style.display = this.checked ? 'flex' : 'none';
+        render();
+      });
+
+      document.getElementById('input-package-label-text').addEventListener('input', function () {
+        state.packageLabelText = this.value;
+        render();
+      });
+
+      document.getElementById('input-live').addEventListener('change', function () {
+        state.showLive = this.checked;
+        if (this.checked) {
+          state.showKicker = false;
+          document.getElementById('input-kicker').checked = false;
+          document.getElementById('kicker-text-row').style.display = 'none';
+        }
+        render();
+      });
+
+      document.getElementById('input-kicker').addEventListener('change', function () {
+        state.showKicker = this.checked;
+        document.getElementById('kicker-text-row').style.display = this.checked ? 'block' : 'none';
+        if (this.checked) {
+          state.showLive = false;
+          document.getElementById('input-live').checked = false;
+        }
+        render();
+      });
+
+      document.getElementById('input-kicker-text').addEventListener('input', function () {
+        state.kickerSection = this.value;
+        render();
+      });
+
+      document.getElementById('input-ticker').addEventListener('change', function () {
+        state.showTicker = this.checked;
+        render();
+      });
+
+      document.getElementById('input-show-headline').addEventListener('change', function () {
+        state.showHeadline = this.checked;
+        render();
+      });
+
+      document.getElementById('input-show-blurb').addEventListener('change', function () {
+        state.showBlurb = this.checked;
+        render();
+      });
+
+      document.getElementById('input-headline').addEventListener('input', function () {
+        state.headline = this.value;
+        render();
+      });
+      document.getElementById('input-headline').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.blur(); }
+      });
+
+      document.getElementById('input-blurb').addEventListener('input', function () {
+        state.blurb = this.value;
+        render();
+      });
+      document.getElementById('input-blurb').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.blur(); }
+      });
+
+
+      document.getElementById('input-aspect-ratio').addEventListener('change', function () {
+        state.aspectRatio = this.value;
+        render();
+      });
+
+      document.getElementById('input-portrait').addEventListener('change', function () {
+        state.portrait = this.checked;
+        render();
+      });
+
+      document.getElementById('input-caption').addEventListener('input', function () {
+        state.caption = this.value;
+        render();
+      });
+
+      document.getElementById('input-show-overlay').addEventListener('change', function () {
+        state.showOverlayButton = this.checked;
+        document.getElementById('overlay-fields').style.display = this.checked ? 'flex' : 'none';
+        render();
+      });
+
+      document.getElementById('input-overlay-label').addEventListener('input', function () {
+        state.overlayButtonLabel = this.value;
+        render();
+      });
+
+      document.getElementById('input-show-overlay-duration').addEventListener('change', function () {
+        state.showOverlayDuration = this.checked;
+        render();
+      });
+
+      async function importShUrl(i, url, urlEl) {
+        const ta = document.getElementById('input-sh-' + i);
+        const statusEl = document.getElementById('sh-url-status-' + i);
+        const setStatus = (msg, color) => { if (statusEl) { statusEl.textContent = msg; statusEl.style.color = color; } };
+        // Immediately clear old headline and show skeleton
+        state.supportingHeadlines[i] = '';
+        if (ta) {
+          ta.value = '';
+          ta.style.background = 'linear-gradient(90deg, #ebebeb 25%, #f5f5f5 50%, #ebebeb 75%)';
+          ta.style.backgroundSize = '200% 100%';
+          ta.style.animation = 'sh-skeleton-pulse 1.2s ease-in-out infinite';
+          ta.style.color = 'transparent';
+        }
+        render();
+        setStatus('Fetching…', '#aaa');
+        try {
+          const res = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url));
+          const json = await res.json();
+          if (json.status !== 'success') throw new Error('Import failed');
+          const title = json.data?.title;
+          const clearSkeleton = () => {
+            if (ta) {
+              ta.style.background = '';
+              ta.style.backgroundSize = '';
+              ta.style.animation = '';
+              ta.style.color = '';
+            }
+          };
+          clearSkeleton();
+          if (title) {
+            state.supportingHeadlines[i] = title;
+            if (ta) ta.value = title;
+            render();
+            setStatus('Imported.', '#5cb85c');
+          } else {
+            setStatus('No headline found.', '#e07070');
+          }
+          setTimeout(() => setStatus('', ''), 2500);
+        } catch (e) {
+          if (ta) {
+            ta.style.background = '';
+            ta.style.backgroundSize = '';
+            ta.style.animation = '';
+            ta.style.color = '';
+          }
+          setStatus('Failed — check URL.', '#e07070');
+          setTimeout(() => setStatus('', ''), 2500);
+        }
+      }
+
+      [0, 1, 2, 3].forEach(i => {
+        document.getElementById(`input-sh-${i}`).addEventListener('input', function () {
+          state.supportingHeadlines[i] = this.value;
+          state.supportingUrls[i] = '';
+          render();
+        });
+        document.getElementById(`input-sh-${i}`).addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.blur(); }
+        });
+        const urlEl = document.getElementById(`input-sh-url-${i}`);
+        let shUrlTimer = null;
+        urlEl.addEventListener('input', function () {
+          const val = this.value.trim();
+          state.supportingUrls[i] = val;
+          render();
+          clearTimeout(shUrlTimer);
+          if (val.startsWith('http')) {
+            shUrlTimer = setTimeout(() => importShUrl(i, val, urlEl), 800);
+          }
+        });
+        urlEl.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = this.value.trim();
+            if (val.startsWith('http')) {
+              clearTimeout(shUrlTimer);
+              importShUrl(i, val, urlEl);
+            }
+          }
+        });
+      });
+
+
+
+      function getRecentImports() {
+        try { return JSON.parse(localStorage.getItem('sc-recents') || '[]'); } catch (_) { return []; }
+      }
+      function addRecentImport(url, headline) {
+        const list = getRecentImports().filter(r => r.url !== url);
+        list.unshift({ url, headline });
+        localStorage.setItem('sc-recents', JSON.stringify(list.slice(0, 8)));
+        renderRecentsDropdown();
+      }
+      function renderRecentsDropdown() {
+        const dd = document.getElementById('recents-dropdown');
+        if (!dd) return;
+        const list = getRecentImports();
+        if (list.length === 0) {
+          dd.innerHTML = '<div class="recents-empty">No recent imports</div>';
+        } else {
+          dd.innerHTML = list.map((r, i) =>
+            `<div class="recents-item" data-i="${i}" title="${r.url}">${r.headline}</div>`
+          ).join('');
+          dd.querySelectorAll('.recents-item').forEach(el => {
+            el.addEventListener('click', function () {
+              document.getElementById('import-url').value = getRecentImports()[+this.dataset.i].url;
+              dd.classList.remove('open');
+              const btn = document.getElementById('recents-btn');
+              if (btn) btn.textContent = 'Recent ▾';
+              const status = document.getElementById('import-status');
+              if (status) { status.textContent = ''; status.style.color = ''; }
+              document.getElementById('import-btn').click();
+            });
+          });
+        }
+      }
+      document.getElementById('recents-btn').addEventListener('click', function () {
+        const dd = document.getElementById('recents-dropdown');
+        renderRecentsDropdown();
+        dd.classList.toggle('open');
+        this.textContent = dd.classList.contains('open') ? 'Recent ▴' : 'Recent ▾';
+      });
+
+      document.getElementById('import-btn').addEventListener('click', async function () {
+        const btn = this;
+        const url = document.getElementById('import-url').value.trim();
+        const status = document.getElementById('import-status');
+        if (!url) { status.textContent = 'Paste a URL first.'; return; }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="import-spinner"></span>Importing…';
+        status.textContent = '';
+        importingText = true;
+        importingImage = true;
+        render();
+
+        try {
+          const res = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url) + '&data.caption.selector=' + encodeURIComponent('[data-testid="lede-art-caption"]') + '&data.caption.type=text');
+          const json = await res.json();
+          if (json.status !== 'success') throw new Error(json.message || 'Import failed');
+          const { title, description, image, caption } = json.data;
+          if (title) { state.headline = title; document.getElementById('input-headline').value = title; }
+          if (description) { state.blurb = description; document.getElementById('input-blurb').value = description; }
+          if (caption) { state.caption = caption; document.getElementById('input-caption').value = caption; }
+          state.articleUrl = url;
+          state.lastImportedSection = getWaPoSection(url);
+          if (title) addRecentImport(url, title);
+          // Text is ready — reveal it immediately, image skeleton stays
+          importingText = false;
+          render();
+          fetchRelatedArticles();
+          if (image?.url) {
+            const proxied = 'https://wsrv.nl/?url=' + encodeURIComponent(image.url);
+            status.style.color = '#5cb85c';
+            status.textContent = 'Imported.';
+            const img = new Image();
+            img.onload = function () {
+              state.imageUrl = proxied;
+              importingImage = false;
+              render();
+            };
+            img.onerror = function () {
+              importingImage = false;
+              render();
+            };
+            img.src = proxied;
+          } else {
+            importingImage = false;
+            render();
+            status.style.color = '#5cb85c';
+            status.textContent = 'Imported.';
+          }
+        } catch (e) {
+          importingText = false;
+          importingImage = false;
+          render();
+          status.style.color = '#c00';
+          status.textContent = 'Error: ' + e.message;
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = 'Import';
+        }
+      });
+    }
+    /* ── End Story Card Engine ───────────────────────────────────────── */
+
+    initAuth();
+  </script>
+</body>
+</html>
