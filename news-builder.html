@@ -635,7 +635,7 @@
     .accordion-body-wrap {
       display: grid;
       grid-template-rows: 0fr;
-      transition: grid-template-rows 250ms ease;
+      transition: grid-template-rows 380ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .accordion-item.open > .accordion-body-wrap {
@@ -2544,6 +2544,18 @@
       renderCardStack(); // creates #card-controls-section inside open accordion item
       buildPanel();      // populates it
       syncPresets();
+
+      // Animate open: render closed, then trigger transition on next two frames
+      const openItem = document.querySelector(`#card-stack-list .accordion-item[data-index="${index}"]`);
+      if (openItem) {
+        openItem.classList.remove('open');
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            openItem.classList.add('open');
+          });
+        });
+      }
+
       // Scroll selected card into view in the preview
       requestAnimationFrame(() => {
         const el = document.querySelector('.card-wrapper.selected, .phone-card-slot.selected');
