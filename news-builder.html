@@ -648,6 +648,16 @@
 
     .accordion-item.dragging { opacity: 0.35; }
 
+    /* Import lock */
+    #card-stack-list.import-locked .accordion-header { cursor: not-allowed; }
+    #card-stack-list.import-locked .accordion-item:not(.accordion-importing) { opacity: 0.45; pointer-events: none; }
+    #card-stack-list.import-locked .accordion-item.accordion-importing .stack-item-label::after {
+      content: ' — Importing…';
+      font-weight: 400;
+      color: #888;
+      font-style: italic;
+    }
+
     .drop-indicator {
       height: 36px;
       margin: 0 8px;
@@ -1972,6 +1982,7 @@
       // Header click — select card or toggle open/close
       list.querySelectorAll('.accordion-header').forEach(header => {
         header.addEventListener('click', e => {
+          if (_importInProgress) return;
           if (e.target.closest('.stack-action-btn') || e.target.closest('.accordion-close-btn')) return;
           const item  = header.closest('.accordion-item');
           const index = Number(item.dataset.index);
@@ -2766,6 +2777,7 @@
     // Transient import state — not part of serializable state, never written to hash
     let importingText = false;
     let importingImage = false;
+    let _importInProgress = false;
 
     // Multi-card render control
     let _renderTarget = null;   // when set, render() writes here instead of #card-area
@@ -3151,7 +3163,7 @@
         <div class="panel-section">
           <div class="panel-section-title">Import Article</div>
           <div class="control-row" style="margin-bottom:6px;">
-            <input class="control-input" id="import-url" type="text" placeholder="Paste WaPo article URL…">
+            <input class="control-input" id="import-url" type="text" placeholder="Paste WaPo article URL…" value="${state.articleUrl || ''}">
           </div>
           <div class="control-row" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
             <button id="import-btn" style="flex-shrink:0;padding:0 12px;height:28px;background:#fff;color:#111;border:1px solid #555;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Import</button>
@@ -3523,6 +3535,10 @@
         this.textContent = dd.classList.contains('open') ? 'Recent ▴' : 'Recent ▾';
       });
 
+      document.getElementById('import-url').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('import-btn').click(); }
+      });
+
       document.getElementById('import-btn').addEventListener('click', async function () {
         const btn = this;
         const url = document.getElementById('import-url').value.trim();
@@ -3534,6 +3550,11 @@
         status.textContent = '';
         importingText = true;
         importingImage = true;
+        _importInProgress = true;
+        const _importList = document.getElementById('card-stack-list');
+        const _importItem = _importList?.querySelector(`.accordion-item[data-index="${appState.selectedCardIndex}"]`);
+        if (_importList)  _importList.classList.add('import-locked');
+        if (_importItem)  _importItem.classList.add('accordion-importing');
         render();
 
         try {
@@ -3581,6 +3602,9 @@
         } finally {
           btn.disabled = false;
           btn.innerHTML = 'Import';
+          _importInProgress = false;
+          if (_importList)  _importList.classList.remove('import-locked');
+          if (_importItem)  _importItem.classList.remove('accordion-importing');
         }
       });
     }
