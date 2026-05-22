@@ -2156,6 +2156,24 @@
       });
     }
 
+    const _fillerHeadlines = [
+      'Lorem Ipsum Leader Calls for Emergency Consectetur Summit',
+      'Adipiscing Officials Deny Allegations Amid Growing Lorem Concerns',
+      'Sed Do Eiusmod Nation Faces Uncertain Future, Experts Warn',
+      'Consectetur Region Braces for Historic Tempor Incididunt Vote',
+      'Lorem Ipsum Talks Collapse as Amet Delegates Walk Out',
+      'Dolore Magna Aliqua Forces Advance on Ut Enim Capital',
+    ];
+    const _fillerSummaries = [
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+      'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+      'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
+      'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+      'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium totam rem aperiam.',
+      'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores.',
+    ];
+    function _randomFiller(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
     function addCard() {
       pushUndo();
 
@@ -2163,9 +2181,13 @@
       const list = document.getElementById('card-stack-list');
       const beforeTops = [...list.querySelectorAll('.accordion-item')].map(el => el.getBoundingClientRect().top);
 
-      // Insert new card at top with a unique random image
+      // Insert new card at top with filler text and a unique random image
       const seed = Math.random().toString(36).slice(2, 9);
-      appState.currentPage.cards.unshift({ imageUrl: `https://picsum.photos/seed/${seed}/628/419` });
+      appState.currentPage.cards.unshift({
+        imageUrl: `https://picsum.photos/seed/${seed}/628/419`,
+        headline: _randomFiller(_fillerHeadlines),
+        blurb:    _randomFiller(_fillerSummaries),
+      });
 
       // Shift selected index down so the currently open card stays open
       if (appState.selectedCardIndex !== null) {
