@@ -103,6 +103,66 @@
       text-align: center;
     }
 
+    .login-status {
+      margin-top: 12px;
+      font-size: 13px;
+      min-height: 18px;
+      text-align: center;
+    }
+    .login-status.error { color: #cc3333; }
+    .login-status.success { color: #2a9d2a; }
+
+    .login-text-btn {
+      display: block;
+      width: 100%;
+      margin-top: 14px;
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      color: #888;
+      cursor: pointer;
+      text-align: center;
+      padding: 0;
+    }
+    .login-text-btn:hover { color: #333; text-decoration: underline; }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0 0;
+      color: #bbb;
+      font-size: 12px;
+    }
+    .login-divider::before,
+    .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0e0e0;
+    }
+
+    .btn-google {
+      width: 100%;
+      height: 40px;
+      margin-top: 12px;
+      background: #fff;
+      color: #333;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-google:hover { background: #f5f5f5; border-color: #bbb; }
+
     /* ── List view ── */
     #view-list {
       flex-direction: column;
@@ -1471,18 +1531,59 @@
   <!-- Login view -->
   <div id="view-login" class="view">
     <div class="login-card">
-      <h1>News Builder</h1>
-      <p>Sign in to continue</p>
-      <div class="login-field">
-        <label for="login-email">Email</label>
-        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+
+      <!-- Panel: Sign in -->
+      <div id="panel-signin">
+        <h1>News Builder</h1>
+        <p>Sign in to continue</p>
+        <div class="login-field">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="login-field">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button id="login-btn">Sign In</button>
+        <div id="login-error"></div>
+        <button class="login-text-btn" id="show-forgot-btn">Forgot password?</button>
+        <div class="login-divider"><span>or</span></div>
+        <button id="google-btn" class="btn-google">
+          <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+            <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+          </svg>
+          Sign in with Google
+        </button>
       </div>
-      <div class="login-field">
-        <label for="login-password">Password</label>
-        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+
+      <!-- Panel: Forgot password -->
+      <div id="panel-forgot" style="display:none">
+        <h1>Reset password</h1>
+        <p>Enter your email and we'll send you a reset link.</p>
+        <div class="login-field">
+          <label for="forgot-email">Email</label>
+          <input type="email" id="forgot-email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <button id="forgot-btn">Send reset link</button>
+        <div id="forgot-status" class="login-status"></div>
+        <button class="login-text-btn" id="back-to-signin-btn">← Back to sign in</button>
       </div>
-      <button id="login-btn">Sign In</button>
-      <div id="login-error"></div>
+
+      <!-- Panel: Set new password (after clicking reset email link) -->
+      <div id="panel-reset" style="display:none">
+        <h1>Set new password</h1>
+        <p>Choose a new password for your account.</p>
+        <div class="login-field">
+          <label for="reset-password">New password</label>
+          <input type="password" id="reset-password" placeholder="••••••••" autocomplete="new-password">
+        </div>
+        <button id="reset-btn">Update password</button>
+        <div id="reset-status" class="login-status"></div>
+      </div>
+
     </div>
   </div>
 
@@ -2759,11 +2860,22 @@
 
 
 
+    function showLoginPanel(name) {
+      ['signin', 'forgot', 'reset'].forEach(p =>
+        document.getElementById('panel-' + p).style.display = p === name ? '' : 'none'
+      );
+    }
+
     async function initAuth() {
       const { data: { session } } = await sb.auth.getSession();
       appState.session = session;
-      sb.auth.onAuthStateChange((_event, session) => {
+      sb.auth.onAuthStateChange((event, session) => {
         appState.session = session;
+        if (event === 'PASSWORD_RECOVERY') {
+          showView('login');
+          showLoginPanel('reset');
+          return;
+        }
         routeView();
       });
       routeView();
@@ -2797,9 +2909,95 @@
     }
 
     document.getElementById('login-btn').addEventListener('click', doLogin);
-
     document.getElementById('login-password').addEventListener('keydown', e => {
       if (e.key === 'Enter') doLogin();
+    });
+
+    // ── Google sign-in ────────────────────────────────
+    document.getElementById('google-btn').addEventListener('click', async function() {
+      this.disabled = true;
+      this.textContent = 'Redirecting…';
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + window.location.pathname }
+      });
+      if (error) {
+        this.disabled = false;
+        this.innerHTML = `<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg> Sign in with Google`;
+        document.getElementById('login-error').textContent = error.message;
+      }
+    });
+
+    // ── Forgot password ───────────────────────────────
+    document.getElementById('show-forgot-btn').addEventListener('click', () => {
+      document.getElementById('forgot-email').value = document.getElementById('login-email').value;
+      document.getElementById('forgot-status').textContent = '';
+      document.getElementById('forgot-status').className = 'login-status';
+      showLoginPanel('forgot');
+    });
+
+    document.getElementById('back-to-signin-btn').addEventListener('click', () => {
+      showLoginPanel('signin');
+    });
+
+    document.getElementById('forgot-btn').addEventListener('click', async function() {
+      const email = document.getElementById('forgot-email').value.trim();
+      const statusEl = document.getElementById('forgot-status');
+      if (!email) { statusEl.className = 'login-status error'; statusEl.textContent = 'Please enter your email.'; return; }
+
+      this.disabled = true;
+      this.textContent = 'Sending…';
+      statusEl.textContent = '';
+
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+
+      this.disabled = false;
+      this.textContent = 'Send reset link';
+
+      if (error) {
+        statusEl.className = 'login-status error';
+        statusEl.textContent = error.message;
+      } else {
+        statusEl.className = 'login-status success';
+        statusEl.textContent = 'Check your email for a reset link.';
+      }
+    });
+
+    document.getElementById('forgot-email').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('forgot-btn').click();
+    });
+
+    // ── Set new password ──────────────────────────────
+    document.getElementById('reset-btn').addEventListener('click', async function() {
+      const password = document.getElementById('reset-password').value;
+      const statusEl = document.getElementById('reset-status');
+      if (password.length < 6) {
+        statusEl.className = 'login-status error';
+        statusEl.textContent = 'Password must be at least 6 characters.';
+        return;
+      }
+
+      this.disabled = true;
+      this.textContent = 'Updating…';
+      statusEl.textContent = '';
+
+      const { error } = await sb.auth.updateUser({ password });
+
+      this.disabled = false;
+      this.textContent = 'Update password';
+
+      if (error) {
+        statusEl.className = 'login-status error';
+        statusEl.textContent = error.message;
+      } else {
+        statusEl.className = 'login-status success';
+        statusEl.textContent = 'Password updated! Signing you in…';
+      }
+    });
+
+    document.getElementById('reset-password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('reset-btn').click();
     });
 
     document.getElementById('new-page-btn').addEventListener('click', createNewPage);
