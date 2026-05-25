@@ -1,0 +1,272 @@
+/* engine.css — shared card rendering styles */
+/* Loaded by both news-builder.html and page.html */
+
+/* ── Supporting headline ── */
+.supporting-headline {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 22px;
+  color: #111111;
+}
+
+/* ── Horizontal rule ── */
+.h-rule {
+  width: 100%;
+  height: 1px;
+  background: rgba(0,0,0,0.1);
+  margin: 16px 0;
+  flex-shrink: 0;
+  border: none;
+}
+
+/* ── Card skeleton shimmer ── */
+@keyframes card-skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.card-skeleton {
+  background: linear-gradient(90deg, #efefef 25%, #e6e6e6 50%, #efefef 75%);
+  background-size: 200% 100%;
+  animation: card-skeleton-shimmer 2.2s ease-in-out infinite;
+  display: block;
+  border-radius: 2px;
+}
+
+/* ── Card ── */
+#card {
+  background: #ffffff;
+  overflow: hidden;
+  position: relative;
+}
+
+#card-inner {
+  display: flex;
+  /* flex-direction and gap set dynamically by render() */
+}
+
+/* ── Image ── */
+.art-image {
+  width: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Package label ── */
+.package-label {
+  border-top: 1px solid #111111;
+  padding-top: 8px;
+  padding-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.package-label-text {
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 20px;
+  color: #111111;
+}
+
+.package-label-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 13px;
+  color: #111111;
+  line-height: 1;
+}
+
+/* ── Art wrapper + overlay button ── */
+.art-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.art-overlay-btn {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: black;
+  border-radius: 9999px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 16px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.overlay-label { font-weight: 700; }
+.overlay-duration { font-weight: 300; }
+
+/* ── Caption ── */
+.caption {
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 15px;
+  color: #595959;
+  margin-top: 4px;
+}
+
+/* ── Live ticker ── */
+.ticker-container { margin-top: 8px; }
+
+.ticker-live-header {
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+  line-height: 15px;
+  color: #ea0017;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.ticker-item { display: flex; gap: 8px; align-items: flex-start; }
+
+.ticker-gutter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 9px;
+  align-self: stretch;
+  padding-top: 5px;
+}
+
+.ticker-dot { width: 6px; height: 6px; background: #ea0017; border-radius: 50%; flex-shrink: 0; }
+.ticker-line { flex: 1; width: 1px; background: #ea0017; margin-top: 4px; min-height: 8px; }
+
+.ticker-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 17.5px;
+}
+
+.ticker-content--last { padding-bottom: 0; }
+.ticker-time { color: #595959; }
+.ticker-text { color: #111111; }
+
+/* ── Kicker label ── */
+.kicker-label {
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 17.5px;
+  color: #111111;
+  margin-bottom: 8px;
+}
+
+/* ── LIVE label ── */
+.live-label {
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  line-height: 14px;
+  color: #ea0017;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.live-label-chevron { font-size: 16px; line-height: 16px; }
+
+/* ── Headline ── */
+.headline {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.1;
+  color: #111111;
+  font-style: normal;
+}
+
+/* ── Blurb ── */
+.blurb {
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 20px;
+  color: #595959;
+  margin-top: 8px;
+}
+
+/* ── Editable wrap (base — pencil show/hide handled per-file) ── */
+.editable-wrap { position: relative; }
+
+/* ── iPhone frame ── */
+.iphone-frame {
+  display: inline-flex;
+  flex-direction: column;
+  background: #1c1c1e;
+  border-radius: 54px;
+  padding: 14px;
+  box-shadow: 0 0 0 1px #3a3a3c, 0 40px 80px rgba(0,0,0,0.4);
+}
+.iphone-screen {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 40px;
+  overflow: hidden;
+  position: relative;
+}
+.iphone-island {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 34px;
+  background: #1c1c1e;
+  border-radius: 20px;
+  z-index: 10;
+  pointer-events: none;
+}
+.iphone-statusbar {
+  height: 59px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 10px;
+  flex-shrink: 0;
+}
+.iphone-statusbar-time {
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 18px;
+  color: #111;
+}
+.iphone-statusbar-icons { display: flex; align-items: center; gap: 7px; }
+.iphone-home {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #fff;
+}
+.iphone-home::after {
+  content: '';
+  width: 34%;
+  height: 5px;
+  background: #111;
+  border-radius: 3px;
+  opacity: 0.3;
+}
+.iphone-scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; }

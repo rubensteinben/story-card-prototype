@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <link rel="stylesheet" href="engine.css">
+  <script src="engine.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -542,8 +544,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 24px 32px;
+      padding: 0 24px 32px;
       scroll-padding-bottom: 60px;
+      position: relative;
     }
 
     .preview-toolbar {
@@ -551,6 +554,7 @@
       flex-direction: column;
       align-items: center;
       gap: 6px;
+      margin-top: 24px;
       margin-bottom: 20px;
     }
 
@@ -598,17 +602,30 @@
 
     #masthead-placeholder {
       background: #fff;
-      overflow: hidden;
       flex-shrink: 0;
-      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      width: 100%;
+      display: flex;
+      justify-content: center;
       padding: 28px 24px 24px;
+      border-bottom: 1px solid transparent;
+      transition: padding 0.35s ease, border-color 0.35s ease;
+    }
+    #masthead-placeholder.stuck {
+      padding: 10px 24px;
+      border-bottom-color: #e0e0e0;
     }
     #masthead-placeholder img {
       max-width: 440px;
       width: 100%;
       height: auto;
       display: block;
-      margin: 0 auto;
+      transition: max-width 0.35s ease;
+    }
+    #masthead-placeholder.stuck img {
+      max-width: 200px;
     }
     #masthead-placeholder.masthead-selected {
       outline: 2px solid #5566ff;
@@ -941,23 +958,7 @@
     }
 
     /* Supporting headlines */
-    .supporting-headline {
-      font-family: 'Playfair Display', serif;
-      font-weight: 700;
-      font-size: 20px;
-      line-height: 22px;
-      color: #111111;
-    }
-    /* .supporting-headline:hover suppressed in admin — keep for page.html */
-
-    .h-rule {
-      width: 100%;
-      height: 1px;
-      background: rgba(0,0,0,0.1);
-      margin: 16px 0;
-      flex-shrink: 0;
-      border: none;
-    }
+    /* .supporting-headline, .h-rule → engine.css */
 
     /* Phone preset buttons */
     .preset-buttons {
@@ -1026,17 +1027,7 @@
       100% { background-position: -200% 0; }
     }
 
-    @keyframes card-skeleton-shimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-    .card-skeleton {
-      background: linear-gradient(90deg, #efefef 25%, #e6e6e6 50%, #efefef 75%);
-      background-size: 200% 100%;
-      animation: card-skeleton-shimmer 2.2s ease-in-out infinite;
-      display: block;
-      border-radius: 2px;
-    }
+    /* .card-skeleton + keyframes → engine.css */
 
     .sh-skeleton {
       background: linear-gradient(90deg, #ebebeb 25%, #f5f5f5 50%, #ebebeb 75%) !important;
@@ -1109,207 +1100,11 @@
     }
 
 
-    /* Card */
-    #card {
-      background: #ffffff;
-      overflow: hidden;
-      position: relative;
-      /* width set dynamically by render() */
-    }
+    /* #card, #card-inner, .art-image → engine.css */
 
-    #card-inner {
-      display: flex;
-      /* flex-direction and gap set dynamically by render() */
-    }
+    /* .package-label → .iphone-scroll-area → engine.css */
 
-    /* text-col and art-col flex set dynamically by render() */
-
-    /* Image */
-    .art-image {
-      width: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    /* Package label */
-    .package-label {
-      border-top: 1px solid #111111;
-      padding-top: 8px;
-      padding-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .package-label-text {
-      font-family: 'Source Sans 3', sans-serif;
-      font-weight: 700;
-      font-size: 16px;
-      line-height: 20px;
-      color: #111111;
-    }
-
-    .package-label-chevron {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 16px;
-      height: 16px;
-      font-size: 13px;
-      color: #111111;
-      line-height: 1;
-    }
-
-    /* Art wrapper + overlay button */
-    .art-wrapper {
-      position: relative;
-      width: 100%;
-    }
-
-    .art-overlay-btn {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      background: black;
-      border-radius: 9999px;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: white;
-      font-family: 'Source Sans 3', sans-serif;
-      font-size: 16px;
-      line-height: 16px;
-      white-space: nowrap;
-    }
-
-    .overlay-label {
-      font-weight: 700;
-    }
-
-    .overlay-duration {
-      font-weight: 300;
-    }
-
-    /* Caption */
-    .caption {
-      font-family: 'Source Sans 3', sans-serif;
-      font-weight: 400;
-      font-size: 12px;
-      line-height: 15px;
-      color: #595959;
-      margin-top: 4px;
-    }
-
-    /* Live ticker */
-    .ticker-container {
-      margin-top: 8px;
-    }
-
-    .ticker-live-header {
-      font-family: 'Source Sans 3', sans-serif;
-      font-weight: 900;
-      font-size: 12px;
-      line-height: 15px;
-      color: #ea0017;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .ticker-item {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-    }
-
-    .ticker-gutter {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 9px;
-      align-self: stretch;
-      padding-top: 5px;
-    }
-
-    .ticker-dot {
-      width: 6px;
-      height: 6px;
-      background: #ea0017;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .ticker-line {
-      flex: 1;
-      width: 1px;
-      background: #ea0017;
-      margin-top: 4px;
-      min-height: 8px;
-    }
-
-    .ticker-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      padding-bottom: 8px;
-      font-family: 'Source Sans 3', sans-serif;
-      font-weight: 400;
-      font-size: 14px;
-      line-height: 17.5px;
-    }
-
-    .ticker-content--last {
-      padding-bottom: 0;
-    }
-
-    .ticker-time {
-      color: #595959;
-    }
-
-    .ticker-text {
-      color: #111111;
-    }
-
-    /* Kicker label */
-    .kicker-label {
-      font-family: 'Source Sans 3', sans-serif;
-      font-weight: 700;
-      font-size: 14px;
-      line-height: 17.5px;
-      color: #111111;
-      margin-bottom: 8px;
-    }
-
-    /* LIVE label */
-    .live-label {
-      font-family: 'Source Sans 3', sans-serif;
-      font-weight: 900;
-      font-size: 14px;
-      line-height: 14px;
-      color: #ea0017;
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-bottom: 4px;
-    }
-
-    .live-label-chevron {
-      font-size: 16px;
-      line-height: 16px;
-    }
-
-    /* Headline */
-    .headline {
-      font-family: 'Playfair Display', serif;
-      font-weight: 700;
-      font-size: 26px;
-      line-height: 1.1;
-      color: #111111;
-      font-style: normal;
-    }
-    /* .headline:hover suppressed in admin — keep for page.html */
+    /* admin-only: contenteditable highlight */
     .headline[contenteditable="true"],
     .blurb[contenteditable="true"] {
       color: #111111;
@@ -1319,86 +1114,6 @@
     .caption[contenteditable="true"] {
       background: rgba(66, 130, 240, 0.06);
       border-radius: 2px;
-    }
-
-    /* Summary */
-    .blurb {
-      font-family: 'Source Sans 3', sans-serif;
-      font-weight: 400;
-      font-size: 16px;
-      line-height: 20px;
-      color: #595959;
-      margin-top: 8px;
-    }
-    /* iPhone frame */
-    .iphone-frame {
-      display: inline-flex;
-      flex-direction: column;
-      background: #1c1c1e;
-      border-radius: 54px;
-      padding: 14px;
-      box-shadow: 0 0 0 1px #3a3a3c, 0 40px 80px rgba(0,0,0,0.4);
-    }
-    .iphone-screen {
-      display: flex;
-      flex-direction: column;
-      background: #ffffff;
-      border-radius: 40px;
-      overflow: hidden;
-      position: relative;
-    }
-    .iphone-island {
-      position: absolute;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 120px;
-      height: 34px;
-      background: #1c1c1e;
-      border-radius: 20px;
-      z-index: 10;
-      pointer-events: none;
-    }
-    .iphone-statusbar {
-      height: 59px;
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      padding: 0 28px 10px;
-      flex-shrink: 0;
-    }
-    .iphone-statusbar-time {
-      font-family: -apple-system, 'Helvetica Neue', sans-serif;
-      font-weight: 600;
-      font-size: 15px;
-      line-height: 18px;
-      color: #111;
-    }
-    .iphone-statusbar-icons {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .iphone-home {
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      background: #fff;
-    }
-    .iphone-home::after {
-      content: '';
-      width: 34%;
-      height: 5px;
-      background: #111;
-      border-radius: 3px;
-      opacity: 0.3;
-    }
-    .iphone-scroll-area {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
     }
     .editable-wrap {
       position: relative;
@@ -1669,7 +1384,7 @@
           <div class="mobile-width-selector" id="mobile-width-selector"></div>
           <div id="phone-frame-control" style="display:none;"></div>
         </div>
-        <div id="masthead-placeholder"></div>
+        <div id="masthead-placeholder" style="display:none"></div>
         <input type="file" accept="image/*" id="masthead-file-input" style="display:none">
         <div id="card-area">
           <div class="card-area-placeholder">Add a card to get started</div>
@@ -2142,16 +1857,10 @@
         return;
       }
 
-      el.style.display = 'block';
-      el.className = appState.selectedCardIndex === -1 ? 'masthead-selected' : '';
+      el.style.display = '';
+      el.classList.toggle('masthead-selected', appState.selectedCardIndex === -1);
 
-      {
-        const cardWidths = { '10u': 628, '12u': 760, '15u': 958 };
-        const cardWidth = cardWidths[page.width] || 958;
-        el.style.width = cardWidth + 'px';
-        el.style.padding = '';
-        el.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Masthead">`;
-      }
+      el.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Logo">`;
 
       if (cardArea) { cardArea.style.marginTop = ''; cardArea.style.paddingTop = ''; cardArea.style.borderTop = ''; }
     }
@@ -3070,8 +2779,9 @@
       const overlay = document.createElement('div');
       overlay.id = 'page-grid-overlay';
       overlay.innerHTML = `<div class="page-grid-inner" style="width:${width}px">${inner}</div>`;
-      // Append last so it paints on top of all cards; pointer-events:none passes clicks through
-      cardArea.appendChild(overlay);
+      // Append to editor-left so the overlay covers both masthead and cards
+      const editorLeft = document.querySelector('.editor-left');
+      (editorLeft || cardArea).appendChild(overlay);
     }
 
 
@@ -4114,6 +3824,12 @@
       });
     }
     /* ── End Story Card Engine ───────────────────────────────────────── */
+
+    // ── Logo sticky scroll behavior ────────────────────
+    document.querySelector('.editor-left').addEventListener('scroll', () => {
+      const el = document.getElementById('masthead-placeholder');
+      if (el) el.classList.toggle('stuck', document.querySelector('.editor-left').scrollTop > 8);
+    });
 
     initAuth();
   </script>
