@@ -769,7 +769,7 @@
 
       // Render masthead if set
       const mastheadArea = document.getElementById('masthead-area');
-      if (page.masthead_url && mastheadArea) {
+      if (page.masthead_url && page.show_masthead !== false && mastheadArea) {
         const img = document.createElement('img');
         img.src = page.masthead_url;
         img.alt = page.name || 'Masthead';

@@ -597,34 +597,30 @@
     }
 
     #masthead-placeholder {
+      background: #fff;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: none;
+      padding: 28px 24px 24px;
+    }
+    #masthead-placeholder img {
+      max-width: 440px;
       width: 100%;
-      max-width: 940px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      background: rgba(0,0,0,0.12);
-      border: 1px dashed rgba(255,255,255,0.18);
-      border-radius: 4px;
-      cursor: pointer;
-      color: rgba(255,255,255,0.65);
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
-      margin-bottom: 4px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
     }
-    #masthead-placeholder:hover {
-      background: rgba(0,0,0,0.22);
-      border-color: rgba(255,255,255,0.45);
-      color: rgba(255,255,255,0.9);
+    #masthead-placeholder.masthead-selected {
+      outline: 2px solid #5566ff;
+      outline-offset: 4px;
+      border-radius: 2px;
     }
-    #masthead-placeholder.masthead-set {
-      border-style: solid;
-      border-color: rgba(255,255,255,0.3);
-      color: rgba(255,255,255,0.65);
+
+    .masthead-item {
+      cursor: default !important;
+    }
+    .masthead-item:active {
+      cursor: default !important;
     }
 
     @keyframes previewCardGlow {
@@ -1797,7 +1793,7 @@
     async function loadPages() {
       const { data: pages, error } = await sb
         .from('pages')
-        .select('id, name, slug, cards, width, mobile_preview_width, masthead_url, created_at, updated_at, owner_id')
+        .select('id, name, slug, cards, width, mobile_preview_width, masthead_url, show_masthead, created_at, updated_at, owner_id')
         .order('updated_at', { ascending: false });
       if (error) { console.error('loadPages:', error.message); return; }
 
@@ -2059,7 +2055,7 @@
 
     async function savePage() {
       if (!appState.session || !appState.currentPage) return;
-      const { id, name, cards, width, mobilePreviewWidth, showPhoneFrame, mastheadUrl } = appState.currentPage;
+      const { id, name, cards, width, mobilePreviewWidth, showPhoneFrame, mastheadUrl, showMasthead } = appState.currentPage;
       const { error } = await sb.from('pages').update({
         name,
         cards,
@@ -2067,6 +2063,7 @@
         mobile_preview_width: mobilePreviewWidth,
         show_phone_frame: showPhoneFrame,
         masthead_url: mastheadUrl || null,
+        show_masthead: showMasthead !== false,
       }).eq('id', id);
       if (error) {
         console.error('Save failed:', error);
@@ -2111,6 +2108,7 @@
         showPhoneFrame: page.show_phone_frame !== false,
         showGrid: false,
         mastheadUrl: page.masthead_url || null,
+        showMasthead: page.show_masthead !== false,
       };
       appState.selectedCardIndex = null;
       appState.dirty = false;
@@ -2127,19 +2125,36 @@
     function renderMasthead() {
       const el = document.getElementById('masthead-placeholder');
       if (!el) return;
-      const isMobile = appState.currentPage && appState.currentPage.width === '1u';
-      el.style.display = isMobile ? 'none' : '';
-      if (isMobile) return;
-      const hasUrl = !!(appState.currentPage && appState.currentPage.mastheadUrl);
-      el.className = hasUrl ? 'masthead-set' : '';
-      el.innerHTML = hasUrl
-        ? `<span class="material-symbols-outlined" style="font-size:14px;font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;">image</span>Masthead set — click to change`
-        : `<span class="material-symbols-outlined" style="font-size:14px;font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;">upload</span>Upload masthead`;
-    }
+      const page = appState.currentPage;
+      const cardArea = document.getElementById('card-area');
+      const isMobile = page && page.width === '1u';
+      const shouldShow = page && page.mastheadUrl && page.showMasthead !== false;
 
-    document.getElementById('masthead-placeholder').addEventListener('click', () => {
-      document.getElementById('masthead-file-input').click();
-    });
+      if (!shouldShow) {
+        el.style.display = 'none';
+        if (cardArea) { cardArea.style.marginTop = ''; cardArea.style.paddingTop = ''; cardArea.style.borderTop = ''; }
+        return;
+      }
+
+      // On mobile the masthead is rendered inside the phone scroll area by renderAllCards()
+      if (isMobile) {
+        el.style.display = 'none';
+        return;
+      }
+
+      el.style.display = 'block';
+      el.className = appState.selectedCardIndex === -1 ? 'masthead-selected' : '';
+
+      {
+        const cardWidths = { '10u': 628, '12u': 760, '15u': 958 };
+        const cardWidth = cardWidths[page.width] || 958;
+        el.style.width = cardWidth + 'px';
+        el.style.padding = '';
+        el.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Masthead">`;
+      }
+
+      if (cardArea) { cardArea.style.marginTop = ''; cardArea.style.paddingTop = ''; cardArea.style.borderTop = ''; }
+    }
 
     document.getElementById('masthead-file-input').addEventListener('change', function() {
       const file = this.files[0];
@@ -2148,6 +2163,8 @@
       reader.onload = function(e) {
         appState.currentPage.mastheadUrl = e.target.result;
         renderMasthead();
+        if (appState.currentPage.width === '1u') renderAllCards();
+        if (appState.selectedCardIndex === -1) buildMastheadPanel();
         scheduleSave();
       };
       reader.readAsDataURL(file);
@@ -2229,12 +2246,27 @@
     function renderCardStack() {
       const list = document.getElementById('card-stack-list');
       const cards = appState.currentPage?.cards || [];
+      const mastheadIsOpen = appState.selectedCardIndex === -1;
+      const mastheadHtml = `
+        <div class="accordion-item masthead-item${mastheadIsOpen ? ' open' : ''}" data-masthead="true">
+          <div class="accordion-header">
+            <span class="material-symbols-outlined" style="font-size:16px;color:#888;flex-shrink:0;font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;">image</span>
+            <span class="stack-item-label">Masthead</span>
+          </div>
+          <div class="accordion-body-wrap">
+            <div class="accordion-body-inner">
+              ${mastheadIsOpen ? '<div id="masthead-controls-section"></div>' : ''}
+            </div>
+          </div>
+        </div>`;
+
       if (cards.length === 0) {
-        list.innerHTML = '<div style="padding:16px 14px;font-size:13px;color:#555;">No cards yet.</div>';
+        list.innerHTML = mastheadHtml + '<div style="padding:16px 14px;font-size:13px;color:#555;">No cards yet.</div>';
+        wireMastheadClick(list);
         return;
       }
 
-      list.innerHTML = cards.map((card, i) => {
+      list.innerHTML = mastheadHtml + cards.map((card, i) => {
         const isOpen = i === appState.selectedCardIndex;
         const label = card.headline || card.headlinePlus || 'Untitled card';
         return `
@@ -2255,8 +2287,10 @@
           </div>`;
       }).join('');
 
+      wireMastheadClick(list);
+
       // Header click — select card or toggle open/close
-      list.querySelectorAll('.accordion-header').forEach(header => {
+      list.querySelectorAll('.accordion-item:not([data-masthead]) .accordion-header').forEach(header => {
         header.addEventListener('click', e => {
           if (_importInProgress) return;
           if (e.target.closest('.stack-action-btn') || e.target.closest('.accordion-close-btn')) return;
@@ -2280,8 +2314,8 @@
         });
       });
 
-      // Drag to reorder
-      list.querySelectorAll('.accordion-item').forEach(item => {
+      // Drag to reorder (masthead item excluded — no draggable="true" attr)
+      list.querySelectorAll('.accordion-item[draggable="true"]').forEach(item => {
         item.addEventListener('dragstart', e => {
           if (e.target.closest('.accordion-body-inner')) { e.preventDefault(); return; }
           if (item.classList.contains('open')) {
@@ -2375,7 +2409,7 @@
 
         // FLIP — First: record each card's current Y position keyed by card object
         const oldTops = new Map();
-        list.querySelectorAll('.accordion-item').forEach((el, i) => {
+        list.querySelectorAll('.accordion-item:not([data-masthead])').forEach((el, i) => {
           oldTops.set(cards[i], el.getBoundingClientRect().top);
         });
 
@@ -2397,7 +2431,7 @@
         // FLIP — Invert + Play
         _flipInProgress = true;
         requestAnimationFrame(() => {
-          const newEls = list.querySelectorAll('.accordion-item');
+          const newEls = list.querySelectorAll('.accordion-item:not([data-masthead])');
           const diffs = [];
           newEls.forEach((el, i) => {
             // Dragged card starts from mouse release point; others from their natural old positions
@@ -2746,6 +2780,17 @@
         }
 
         const scrollArea = document.getElementById('nb-phone-scroll');
+
+        // Inject masthead at top of scroll area if set and visible
+        const page = appState.currentPage;
+        if (page && page.mastheadUrl && page.showMasthead !== false) {
+          const mastheadDiv = document.createElement('div');
+          const maxW = Math.round(mobilePx * 0.55);
+          mastheadDiv.style.cssText = `background:#fff;padding:20px 16px 16px;width:${mobilePx}px;`;
+          mastheadDiv.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Masthead" style="max-width:${maxW}px;width:100%;height:auto;display:block;margin:0 auto;">`;
+          scrollArea.appendChild(mastheadDiv);
+        }
+
         const slots = [];
 
         _suppressSync = true;
@@ -2832,6 +2877,70 @@
       renderPageGrid();
     }
 
+    function wireMastheadClick(list) {
+      const mastheadItem = list.querySelector('[data-masthead]');
+      if (!mastheadItem) return;
+      mastheadItem.querySelector('.accordion-header').addEventListener('click', () => {
+        if (appState.selectedCardIndex === -1) clearCardEditor();
+        else selectMasthead();
+      });
+      if (appState.selectedCardIndex === -1) buildMastheadPanel();
+    }
+
+    function selectMasthead() {
+      appState.selectedCardIndex = -1;
+      _renderTarget = null;
+      renderAllCards();
+      renderCardStack();
+      renderMasthead();
+      buildMastheadPanel();
+      requestAnimationFrame(() => {
+        const el = document.getElementById('masthead-placeholder');
+        if (el && el.style.display !== 'none') el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
+
+    function buildMastheadPanel() {
+      const section = document.getElementById('masthead-controls-section');
+      if (!section || !appState.currentPage) return;
+      const { mastheadUrl, showMasthead } = appState.currentPage;
+      section.innerHTML = `
+        <div class="panel-section" style="border-top:none;">
+          <div class="panel-section-title">Masthead image</div>
+          <div class="control-row">
+            <button class="btn-primary" id="masthead-upload-btn" style="width:100%;height:30px;font-size:12px;border-radius:2px;background:#111;color:#fff;border:none;cursor:pointer;font-family:inherit;font-weight:600;">${mastheadUrl ? 'Change image' : 'Upload image'}</button>
+          </div>
+          ${mastheadUrl ? `
+          <div class="control-row" style="margin-top:6px;">
+            <button id="masthead-remove-btn" style="width:100%;height:28px;background:transparent;color:#cc3333;border:1px solid #cc3333;border-radius:2px;font-size:12px;font-family:inherit;cursor:pointer;font-weight:600;">Remove image</button>
+          </div>` : ''}
+          <div class="control-row" style="margin-top:10px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#333;">
+              <input type="checkbox" id="masthead-show-cb" ${showMasthead !== false ? 'checked' : ''}>
+              Show masthead
+            </label>
+          </div>
+        </div>`;
+      document.getElementById('masthead-upload-btn').addEventListener('click', () => {
+        document.getElementById('masthead-file-input').click();
+      });
+      if (mastheadUrl) {
+        document.getElementById('masthead-remove-btn').addEventListener('click', () => {
+          appState.currentPage.mastheadUrl = null;
+          scheduleSave();
+          renderMasthead();
+          if (appState.currentPage.width === '1u') renderAllCards();
+          buildMastheadPanel();
+        });
+      }
+      document.getElementById('masthead-show-cb').addEventListener('change', function() {
+        appState.currentPage.showMasthead = this.checked;
+        scheduleSave();
+        renderMasthead();
+        if (appState.currentPage.width === '1u') renderAllCards();
+      });
+    }
+
     function selectCard(index) {
       appState.selectedCardIndex = index;
       editUndoStack.length = 0;
@@ -2865,6 +2974,7 @@
       _renderTarget = null;
       renderAllCards();
       renderCardStack();
+      renderMasthead();
     }
 
     // ── Editor event listeners ─────────────────────────
