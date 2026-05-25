@@ -273,10 +273,12 @@
 
 /* ── Dark mode — card render ── */
 body.dark-mode #card { background: #1a1a1a; }
-body.dark-mode .headline { color: #f0f0f0; }
+body.dark-mode .headline { color: #cccccc; transition: color 0.15s; }
+body.dark-mode .headline:hover { color: #ffffff; }
 body.dark-mode .blurb { color: #aaaaaa; }
 body.dark-mode .caption { color: #666; }
-body.dark-mode .supporting-headline { color: #e8e8e8; }
+body.dark-mode .supporting-headline { color: #cccccc; transition: color 0.15s; }
+body.dark-mode .supporting-headline:hover { color: #ffffff; }
 body.dark-mode .h-rule { background: rgba(255,255,255,0.1); }
 body.dark-mode .package-label { border-top-color: rgba(255,255,255,0.15); }
 body.dark-mode .package-label-text,
