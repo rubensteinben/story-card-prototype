@@ -538,7 +538,7 @@
     .editor-left {
       flex: 1;
       overflow-y: auto;
-      background: #d8d8d8;
+      background: #ffffff;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -588,7 +588,6 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 24px;
     }
 
     .card-area-placeholder {
@@ -642,7 +641,13 @@
       flex-shrink: 0;
     }
 
-    .card-wrapper.selected {
+    .card-wrapper + .card-wrapper {
+      margin-top: 40px;
+      padding-top: 40px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .card-wrapper.selected #card {
       outline: 2px solid #5566ff;
       outline-offset: 4px;
       border-radius: 2px;
@@ -1111,7 +1116,6 @@
     /* Card */
     #card {
       background: #ffffff;
-      padding: 16px;
       overflow: hidden;
       position: relative;
       /* width set dynamically by render() */
@@ -3338,8 +3342,8 @@
     function render() {
       const cfg = widthConfig[state.width];
       const cardStyle = state.width === '1u'
-        ? `width:${state.mobilePresetWidth}px`
-        : `width:${cfg.cardWidth}`;
+        ? `width:${state.mobilePresetWidth}px;padding:0 16px`
+        : `width:${parseInt(cfg.cardWidth) - 32}px`;
 
       const sh = (i) => {
         const text = state.supportingHeadlines[i] || 'Supporting headline text goes here lorem ipsum dolor sit amet';

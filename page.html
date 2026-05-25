@@ -79,8 +79,62 @@
       flex-direction: column;
       align-items: center;
       padding: 16px 0 80px;
-      gap: 24px;
+      gap: 0;
     }
+
+    .card-wrapper + .card-wrapper {
+      margin-top: 40px;
+      padding-top: 40px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .card-wrapper { position: relative; z-index: 2; }
+    #masthead-area { position: sticky; z-index: 10; }
+    #page-container { position: relative; z-index: 2; }
+
+    #full-page-grid {
+      position: fixed;
+      top: 48px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 50;
+    }
+    .page-grid-inner {
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: row;
+    }
+    .grid-col { flex-shrink: 0; width: 34px; background: rgba(180,160,220,0.22); }
+    .grid-col-fluid { flex: 1; background: rgba(180,160,220,0.22); }
+    .grid-gutter { flex-shrink: 0; width: 32px; }
+    .grid-margin { flex-shrink: 0; width: 16px; }
+
+    #grid-toggle-btn {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      z-index: 1000;
+      height: 22px;
+      padding: 0 8px;
+      background: rgba(0,0,0,0.32);
+      border: none;
+      border-radius: 3px;
+      color: rgba(255,255,255,0.55);
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    #grid-toggle-btn:hover { background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.85); }
+    #grid-toggle-btn.active { background: rgba(85,102,255,0.8); color: #fff; }
 
     #status {
       padding: 80px 24px;
@@ -133,9 +187,9 @@
     /* Card */
     #card {
       background: #ffffff;
-      padding: 16px;
       overflow: hidden;
       position: relative;
+      box-sizing: border-box;
     }
 
     #card-inner {
@@ -367,6 +421,7 @@
 </head>
 <body>
   <div id="page-header"><h1 id="page-title">Preview</h1></div>
+  <button id="grid-toggle-btn">Grid</button>
   <div id="masthead-area" style="display:none;"></div>
   <div id="page-container">
     <div id="status">Loading…</div>
@@ -440,7 +495,7 @@
     function render() {
       const cfg = widthConfig[state.width];
       const cardStyle = state.width === '1u'
-        ? `width:${state.mobilePresetWidth}px`
+        ? `width:${state.mobilePresetWidth}px;padding:0 16px`
         : `width:${cfg.cardWidth}`;
 
       const sh = (i) => {
@@ -613,11 +668,10 @@
 
       const container = document.getElementById('page-container');
       container.innerHTML = '';
-      container.style.gap = effectiveWidth === '1u' ? '16px' : '24px';
 
       const mobilePx = window.innerWidth; // fluid — full viewport width
 
-      (_pageData.cards || []).forEach(card => {
+      (_pageData.cards || []).forEach((card, i) => {
         Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
         Object.assign(state, card);
         state.width = effectiveWidth;
@@ -626,6 +680,10 @@
 
         const wrapper = document.createElement('div');
         wrapper.className = 'card-wrapper';
+        if (effectiveWidth !== '1u') {
+          const cw = parseInt(widthConfig[effectiveWidth]?.cardWidth || '990', 10);
+          wrapper.style.width = (cw - 32) + 'px'; // subtract card's 16px padding on each side
+        }
         container.appendChild(wrapper);
 
         _renderTarget = wrapper;
@@ -643,6 +701,36 @@
 
       _renderTarget = null;
     }
+
+    // ── Grid toggle ──────────────────────────────────
+    let _gridOn = false;
+    function renderGrid() {
+      const existing = document.getElementById('full-page-grid');
+      if (existing) existing.remove();
+      const btn = document.getElementById('grid-toggle-btn');
+      btn.classList.toggle('active', _gridOn);
+      if (!_gridOn) return;
+      const effectiveWidth = getEffectiveWidth();
+      if (effectiveWidth === '1u') return;
+      const colCounts  = { '10u': 10, '12u': 12, '15u': 15 };
+      const cardWidths = { '10u': 660, '12u': 792, '15u': 990 };
+      const cols  = colCounts[effectiveWidth];
+      const width = cardWidths[effectiveWidth];
+      let inner = '<div class="grid-margin"></div>';
+      for (let i = 0; i < cols; i++) {
+        inner += '<div class="grid-col"></div>';
+        if (i < cols - 1) inner += '<div class="grid-gutter"></div>';
+      }
+      inner += '<div class="grid-margin"></div>';
+      const overlay = document.createElement('div');
+      overlay.id = 'full-page-grid';
+      overlay.innerHTML = `<div class="page-grid-inner" style="width:${width}px">${inner}</div>`;
+      document.body.appendChild(overlay);
+    }
+    document.getElementById('grid-toggle-btn').addEventListener('click', () => {
+      _gridOn = !_gridOn;
+      renderGrid();
+    });
 
     // Debounced resize — re-render only when the effective width bucket changes
     let _resizeTimer = null;
