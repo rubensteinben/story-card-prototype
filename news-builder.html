@@ -2218,6 +2218,7 @@
       pushUndo();
 
       // Record existing card positions before DOM change
+      // allItems[0] = Masthead, allItems[1] = old first card, etc.
       const list = document.getElementById('card-stack-list');
       const beforeTops = [...list.querySelectorAll('.accordion-item')].map(el => el.getBoundingClientRect().top);
 
@@ -2229,8 +2230,8 @@
         blurb:    _randomFiller(_fillerSummaries),
       });
 
-      // Shift selected index down so the currently open card stays open
-      if (appState.selectedCardIndex !== null) {
+      // Shift selected index so the currently open card stays open
+      if (appState.selectedCardIndex !== null && appState.selectedCardIndex >= 0) {
         appState.selectedCardIndex += 1;
       }
 
@@ -2238,10 +2239,13 @@
       renderAllCards();
       renderCardStack();
 
-      // FLIP: animate existing cards sliding down to their new positions
+      // FLIP: animate existing cards sliding down to their new positions.
+      // After renderCardStack(), DOM order is: [Masthead(0), newCard(1), oldCard0(2), oldCard1(3)…]
+      // beforeTops order was:                  [Masthead(0), oldCard0(1), oldCard1(2)…]
+      // So for i≥2: old position = beforeTops[i-1] (maps new DOM index back to old DOM index).
       const allItems = [...list.querySelectorAll('.accordion-item')];
       allItems.forEach((el, i) => {
-        if (i === 0) return; // new card — skip FLIP, just highlight
+        if (i <= 1) return; // skip Masthead (i=0) and new card (i=1)
         const oldTop = beforeTops[i - 1];
         if (oldTop === undefined) return;
         const delta = oldTop - el.getBoundingClientRect().top;
@@ -2253,8 +2257,8 @@
         el.style.transform = 'translateY(0)';
       });
 
-      // Highlight the new card for 3 seconds
-      if (allItems[0]) allItems[0].classList.add('accordion-item-new');
+      // Flash-highlight the new card (allItems[1] — first card after Masthead)
+      if (allItems[1]) allItems[1].classList.add('accordion-item-new');
     }
 
     function moveCard(index, direction) {
