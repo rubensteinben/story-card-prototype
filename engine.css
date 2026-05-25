@@ -270,3 +270,22 @@
   opacity: 0.3;
 }
 .iphone-scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; }
+
+/* ── Dark mode — card render ── */
+body.dark-mode #card { background: #1a1a1a; }
+body.dark-mode .headline { color: #f0f0f0; }
+body.dark-mode .blurb { color: #aaaaaa; }
+body.dark-mode .caption { color: #666; }
+body.dark-mode .supporting-headline { color: #e8e8e8; }
+body.dark-mode .h-rule { background: rgba(255,255,255,0.1); }
+body.dark-mode .package-label { border-top-color: rgba(255,255,255,0.15); }
+body.dark-mode .package-label-text,
+body.dark-mode .package-label-chevron { color: #e8e8e8; }
+body.dark-mode .kicker-label { color: #e8e8e8; }
+body.dark-mode .ticker-text { color: #e0e0e0; }
+body.dark-mode .ticker-time { color: #666; }
+body.dark-mode .iphone-screen { background: #111111; }
+body.dark-mode .iphone-home { background: #111111; }
+body.dark-mode .iphone-home::after { background: #e0e0e0; }
+body.dark-mode .iphone-statusbar-time { color: #e0e0e0; }
+body.dark-mode .iphone-statusbar-icons svg { fill: #e0e0e0; }

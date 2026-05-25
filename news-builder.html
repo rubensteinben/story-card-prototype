@@ -1168,6 +1168,9 @@
       animation-name: newCardHighlightDark;
     }
 
+    body.dark-mode .editor-header {
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
     body.dark-mode .editor-left {
       background: #1a1a1a;
     }
@@ -1266,29 +1269,13 @@
     body.dark-mode .recents-item::before { color: #444; }
     body.dark-mode .recents-empty { color: #555; }
     body.dark-mode .panel-placeholder { color: #555; }
-    /* Card render */
-    body.dark-mode #card { background: #111111; }
-    body.dark-mode .headline { color: #f0f0f0; }
+    /* Card render dark mode → engine.css */
+    /* Admin-only: editable fields in dark mode */
     body.dark-mode .headline[contenteditable="true"],
     body.dark-mode .blurb[contenteditable="true"] {
       color: #f0f0f0;
       background: rgba(66, 130, 240, 0.1);
     }
-    body.dark-mode .blurb { color: #aaaaaa; }
-    body.dark-mode .caption { color: #666; }
-    body.dark-mode .supporting-headline { color: #e8e8e8; }
-    body.dark-mode .h-rule { background: rgba(255,255,255,0.1); }
-    body.dark-mode .package-label { border-top-color: rgba(255,255,255,0.15); }
-    body.dark-mode .package-label-text,
-    body.dark-mode .package-label-chevron { color: #e8e8e8; }
-    body.dark-mode .kicker-label { color: #e8e8e8; }
-    body.dark-mode .ticker-text { color: #e0e0e0; }
-    body.dark-mode .ticker-time { color: #666; }
-    body.dark-mode .iphone-screen { background: #111111; }
-    body.dark-mode .iphone-home { background: #111111; }
-    body.dark-mode .iphone-home::after { background: #e0e0e0; }
-    body.dark-mode .iphone-statusbar-time { color: #e0e0e0; }
-    body.dark-mode .iphone-statusbar-icons svg { fill: #e0e0e0; }
   </style>
 </head>
 <body>
