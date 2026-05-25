@@ -119,11 +119,16 @@
     .grid-gutter { flex-shrink: 0; width: 32px; }
     .grid-margin { flex-shrink: 0; width: 16px; }
 
-    #grid-toggle-btn {
+    #canvas-controls {
       position: fixed;
       bottom: 16px;
       left: 16px;
       z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .canvas-ctrl-btn {
       height: 22px;
       padding: 0 8px;
       background: rgba(0,0,0,0.32);
@@ -138,8 +143,12 @@
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
     }
-    #grid-toggle-btn:hover { background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.85); }
-    #grid-toggle-btn.active { background: rgba(85,102,255,0.8); color: #fff; }
+    .canvas-ctrl-btn:hover { background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.85); }
+    .canvas-ctrl-btn.active { background: rgba(85,102,255,0.8); color: #fff; }
+
+    body.dark-mode { background: #1a1a1a; }
+    body.dark-mode #page-header { background: #111; border-bottom-color: #2a2a2a; }
+    body.dark-mode #page-footer { color: #444; }
 
     #status {
       padding: 80px 24px;
@@ -171,7 +180,10 @@
 </head>
 <body>
   <div id="page-header"><h1 id="page-title">Preview</h1></div>
-  <button id="grid-toggle-btn">Grid</button>
+  <div id="canvas-controls">
+    <button id="grid-toggle-btn" class="canvas-ctrl-btn">Grid</button>
+    <button id="dark-toggle-btn" class="canvas-ctrl-btn">Dark</button>
+  </div>
   <div id="masthead-area" style="display:none;"></div>
   <div id="page-container">
     <div id="status">Loading…</div>
@@ -295,6 +307,17 @@
       _gridOn = !_gridOn;
       renderGrid();
     });
+
+    (function () {
+      const btn = document.getElementById('dark-toggle-btn');
+      function applyDark(on) {
+        document.body.classList.toggle('dark-mode', on);
+        btn.classList.toggle('active', on);
+        localStorage.setItem('nb-dark-mode', on ? '1' : '0');
+      }
+      applyDark(localStorage.getItem('nb-dark-mode') === '1');
+      btn.addEventListener('click', () => applyDark(!document.body.classList.contains('dark-mode')));
+    })();
 
     // Debounced resize — re-render only when the effective width bucket changes
     let _resizeTimer = null;
