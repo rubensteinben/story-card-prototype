@@ -1504,7 +1504,7 @@
     async function loadPages() {
       const { data: pages, error } = await sb
         .from('pages')
-        .select('id, name, slug, cards, width, mobile_preview_width, masthead_url, show_masthead, created_at, updated_at, owner_id')
+        .select('id, name, slug, cards, width, mobile_preview_width, created_at, updated_at, owner_id')
         .order('updated_at', { ascending: false });
       if (error) { console.error('loadPages:', error.message); return; }
 
@@ -3174,19 +3174,6 @@
           <div id="import-status" style="font-size:11px;color:#888;margin-top:4px;min-height:14px;"></div>
         </div>
 
-        <div class="panel-section">
-          <div class="panel-section-title">Layout</div>
-          <div class="control-row">
-            <label class="control-label" for="input-lead-plus">Supporting headlines</label>
-            <select class="control-input" id="input-lead-plus">
-              <option value="0"  ${state.leadPlus === 0  ? 'selected' : ''}>0</option>
-              <option value="1"  ${state.leadPlus === 1  ? 'selected' : ''}>1</option>
-              <option value="2"  ${state.leadPlus === 2  ? 'selected' : ''}>2</option>
-              <option value="3"  ${state.leadPlus === 3  ? 'selected' : ''}>3</option>
-              <option value="4"  ${state.leadPlus === 4  ? 'selected' : ''}>4+</option>
-            </select>
-          </div>
-        </div>
 
         <div class="panel-section">
           <div class="panel-section-title">Package Label</div>
@@ -3253,6 +3240,16 @@
 
         <div class="panel-section">
           <div class="panel-section-title">Supporting Headlines</div>
+          <div class="control-row">
+            <label class="control-label" for="input-lead-plus">Count</label>
+            <select class="control-input" id="input-lead-plus">
+              <option value="0"  ${state.leadPlus === 0  ? 'selected' : ''}>0</option>
+              <option value="1"  ${state.leadPlus === 1  ? 'selected' : ''}>1</option>
+              <option value="2"  ${state.leadPlus === 2  ? 'selected' : ''}>2</option>
+              <option value="3"  ${state.leadPlus === 3  ? 'selected' : ''}>3</option>
+              <option value="4"  ${state.leadPlus === 4  ? 'selected' : ''}>4+</option>
+            </select>
+          </div>
 
           <div id="sh-row-0" style="display:${state.leadPlus >= 1 ? 'block' : 'none'}">
             <div class="control-row">
