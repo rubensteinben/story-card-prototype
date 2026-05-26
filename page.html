@@ -350,15 +350,7 @@
       document.title = page.name + ' — Preview';
       document.getElementById('page-title').textContent = page.name;
 
-      if (!page.cards || page.cards.length === 0) {
-        statusEl.textContent = 'This page has no cards yet.';
-        return;
-      }
-
-      statusEl.remove();
-      _pageData = page;
-
-      // Render masthead if set
+      // Render masthead first — always, independent of card count
       const mastheadArea = document.getElementById('masthead-area');
       if (page.masthead_url && page.show_masthead !== false && mastheadArea) {
         const img = document.createElement('img');
@@ -372,6 +364,14 @@
           mastheadArea.classList.toggle('stuck', window.scrollY > 8);
         }, { passive: true });
       }
+
+      if (!page.cards || page.cards.length === 0) {
+        statusEl.textContent = 'This page has no cards yet.';
+        return;
+      }
+
+      statusEl.remove();
+      _pageData = page;
 
       renderPage();
     })();
