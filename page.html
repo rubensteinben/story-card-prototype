@@ -64,6 +64,7 @@
     #masthead-area.stuck {
       padding: 10px 24px;
       border-bottom-color: #e0e0e0;
+      cursor: pointer;
     }
     #masthead-area img {
       max-width: 440px;
@@ -379,6 +380,13 @@
         window.addEventListener('scroll', () => {
           mastheadArea.classList.toggle('stuck', window.scrollY > 8);
         }, { passive: true });
+
+        // Click stuck header → scroll to top
+        mastheadArea.addEventListener('click', () => {
+          if (mastheadArea.classList.contains('stuck')) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        });
       }
 
       if (!page.cards || page.cards.length === 0) {
