@@ -418,6 +418,54 @@
       _pageData = page;
 
       renderPage();
+
+      // ── Real-time: breaking news bar ──────────────────────────────────────
+      // Subscribe to updates on this page row. When the editor publishes or
+      // removes the bar, inject or remove it instantly — no page reload needed.
+      sb.channel('page-bn-' + slug)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'pages',
+          filter: 'slug=eq.' + slug,
+        }, (payload) => {
+          const updated = payload.new;
+
+          // Remove any existing bar first
+          const oldBar = document.getElementById('breaking-news-bar');
+          if (oldBar) oldBar.remove();
+
+          if (!updated.show_breaking_news) return;
+
+          // Check expiry
+          if (updated.breaking_news_expires_at && new Date(updated.breaking_news_expires_at) < new Date()) return;
+
+          const publishedAt = updated.breaking_news_published_at || '';
+          const dismissKey  = 'bn-dismissed-' + slug + '-' + publishedAt;
+
+          // Don't show if this reader already dismissed this exact broadcast
+          if (dismissKey && localStorage.getItem(dismissKey)) return;
+
+          const wasStuck = mastheadArea.classList.contains('stuck');
+
+          renderBreakingNewsBar(stickyWrap, {
+            label:     updated.breaking_news_label  || 'BREAKING NEWS',
+            text:      updated.breaking_news_text   || '',
+            url:       updated.breaking_news_url    || '',
+            color:     updated.breaking_news_color  || 'red',
+            expiresAt: updated.breaking_news_expires_at || null,
+            dismissKey,
+            animate:   true,
+          });
+
+          // CLS compensation: if the reader is scrolled down, shift the
+          // viewport down by the bar's height so content stays anchored.
+          if (wasStuck && window.scrollY > 0) {
+            const bar = document.getElementById('breaking-news-bar');
+            if (bar) window.scrollBy(0, bar.offsetHeight + 28); // bar height + padding
+          }
+        })
+        .subscribe();
     })();
   </script>
 </body>
