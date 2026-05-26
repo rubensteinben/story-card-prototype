@@ -26,6 +26,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
     }
     #page-header h1 {
       color: rgba(255,255,255,0.55);
@@ -33,6 +34,18 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+    }
+    #preview-badge {
+      position: absolute;
+      right: 16px;
+      background: #5566ff;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 4px 10px;
+      border-radius: 3px;
     }
 
     #masthead-area {
@@ -184,7 +197,7 @@
   </style>
 </head>
 <body>
-  <div id="page-header"><h1 id="page-title">Preview</h1></div>
+  <div id="page-header"><h1 id="page-title">Preview</h1><span id="preview-badge">Preview</span></div>
   <div id="canvas-controls">
     <button id="grid-toggle-btn" class="canvas-ctrl-btn">Grid</button>
     <button id="dark-toggle-btn" class="canvas-ctrl-btn">Dark</button>
