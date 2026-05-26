@@ -431,11 +431,13 @@
         }, (payload) => {
           const updated = payload.new;
 
-          // Remove any existing bar first
+          // Only act when the bar is being turned ON — if the editor removes
+          // it, leave it on screen until the reader closes it or navigates away.
+          if (!updated.show_breaking_news) return;
+
+          // Remove any existing bar before rendering the fresh one
           const oldBar = document.getElementById('breaking-news-bar');
           if (oldBar) oldBar.remove();
-
-          if (!updated.show_breaking_news) return;
 
           // Check expiry
           if (updated.breaking_news_expires_at && new Date(updated.breaking_news_expires_at) < new Date()) return;
