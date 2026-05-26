@@ -608,8 +608,9 @@
       z-index: 10;
       width: 100%;
       display: flex;
-      justify-content: center;
-      padding: 28px 24px 24px;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 24px 20px;
       border-bottom: 1px solid transparent;
       transition: padding 0.35s ease, border-color 0.35s ease;
     }
@@ -1666,7 +1667,7 @@
       }
       const { data, error } = await sb
         .from('pages')
-        .insert({ name: name.trim(), slug, cards: [], owner_id: appState.session.user.id, width: '15u', mobile_preview_width: 390, masthead_url: '/logo-times-of-reston.png' })
+        .insert({ name: name.trim(), slug, cards: [], owner_id: appState.session.user.id, width: '15u', mobile_preview_width: 390, masthead_url: '/logo-times-of-reston.png', show_weather_bar: true })
         .select()
         .single();
       if (error) { alert('Could not create page: ' + error.message); return; }
@@ -1763,7 +1764,7 @@
 
     async function savePage() {
       if (!appState.session || !appState.currentPage) return;
-      const { id, name, cards, width, mobilePreviewWidth, showPhoneFrame, mastheadUrl, showMasthead } = appState.currentPage;
+      const { id, name, cards, width, mobilePreviewWidth, showPhoneFrame, mastheadUrl, showMasthead, showWeatherBar } = appState.currentPage;
       const { error } = await sb.from('pages').update({
         name,
         cards,
@@ -1772,6 +1773,7 @@
         show_phone_frame: showPhoneFrame,
         masthead_url: mastheadUrl || null,
         show_masthead: showMasthead !== false,
+        show_weather_bar: showWeatherBar !== false,
       }).eq('id', id);
       if (error) {
         console.error('Save failed:', error);
@@ -1817,6 +1819,7 @@
         showGrid: false,
         mastheadUrl: page.masthead_url || null,
         showMasthead: page.show_masthead !== false,
+        showWeatherBar: page.show_weather_bar !== false,
       };
       appState.selectedCardIndex = null;
       appState.dirty = false;
@@ -1854,6 +1857,8 @@
       el.classList.toggle('masthead-selected', appState.selectedCardIndex === -1);
 
       el.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Logo">`;
+
+      if (page.showWeatherBar !== false) renderWeatherBar(el);
 
       if (cardArea) { cardArea.style.marginTop = ''; cardArea.style.paddingTop = ''; cardArea.style.borderTop = ''; }
     }
@@ -2609,7 +2614,7 @@
     function buildMastheadPanel() {
       const section = document.getElementById('masthead-controls-section');
       if (!section || !appState.currentPage) return;
-      const { mastheadUrl, showMasthead } = appState.currentPage;
+      const { mastheadUrl, showMasthead, showWeatherBar } = appState.currentPage;
       const DEFAULT_MASTHEAD = '/logo-times-of-reston.png';
       const hasCustomImage = mastheadUrl && mastheadUrl !== DEFAULT_MASTHEAD;
       section.innerHTML = `
@@ -2619,10 +2624,14 @@
             <button class="btn-primary" id="masthead-upload-btn" style="flex:1;height:30px;font-size:12px;border-radius:2px;background:#111;color:#fff;border:none;cursor:pointer;font-family:inherit;font-weight:600;">Upload image</button>
             ${hasCustomImage ? `<button id="masthead-restore-btn" style="flex:0 0 auto;height:30px;padding:0 10px;font-size:12px;border-radius:2px;background:transparent;color:#555;border:1px solid #ccc;cursor:pointer;font-family:inherit;font-weight:600;" title="Restore the default logo">Restore default</button>` : ''}
           </div>
-          <div class="control-row" style="margin-top:10px;">
+          <div class="control-row" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#333;">
               <input type="checkbox" id="masthead-show-cb" ${showMasthead !== false ? 'checked' : ''}>
               Show masthead
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#333;">
+              <input type="checkbox" id="masthead-weather-cb" ${showWeatherBar !== false ? 'checked' : ''}>
+              Show date &amp; weather
             </label>
           </div>
           <div class="control-row" style="margin-top:12px;padding:10px;background:#f5f5f5;border-radius:4px;">
@@ -2648,6 +2657,11 @@
         scheduleSave();
         renderMasthead();
         if (appState.currentPage.width === '1u') renderAllCards();
+      });
+      document.getElementById('masthead-weather-cb').addEventListener('change', function() {
+        appState.currentPage.showWeatherBar = this.checked;
+        scheduleSave();
+        renderMasthead();
       });
     }
 

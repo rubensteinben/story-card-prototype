@@ -242,3 +242,83 @@ function render() {
   attachInlineEditors();
   _syncCardStateBack();
 }
+
+/* ── Weather bar ── */
+function forecastToEmoji(text) {
+  text = (text || '').toLowerCase();
+  if (text.includes('thunder'))                             return '⛈️';
+  if (text.includes('blizzard'))                            return '❄️';
+  if (text.includes('snow') || text.includes('flurr'))     return '🌨️';
+  if (text.includes('sleet') || text.includes('freezing')) return '🌧️';
+  if (text.includes('fog') || text.includes('haz'))        return '🌫️';
+  if (text.includes('rain') || text.includes('shower') || text.includes('drizzle')) return '🌧️';
+  if (text.includes('partly') || text.includes('mostly sunny') || text.includes('partly sunny')) return '⛅';
+  if (text.includes('mostly cloudy') || text.includes('overcast') || text.includes('cloudy')) return '☁️';
+  if (text.includes('sunny') || text.includes('clear'))    return '☀️';
+  return '🌤️';
+}
+
+let _weatherCache = null; // { ts, loc, emoji, temp }
+
+async function renderWeatherBar(containerEl) {
+  const existing = containerEl.querySelector('#weather-bar');
+  if (existing) existing.remove();
+
+  const bar = document.createElement('div');
+  bar.id = 'weather-bar';
+  containerEl.appendChild(bar);
+
+  const longDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+  });
+
+  // Show date immediately while weather loads
+  bar.innerHTML = `<span class="wb-date">${longDate}</span>`;
+
+  // Use cache if fresh (10 min)
+  const now = Date.now();
+  if (_weatherCache && (now - _weatherCache.ts) < 10 * 60 * 1000) {
+    bar.innerHTML = `
+      <span class="wb-date">${longDate}</span>
+      <span class="wb-sep">·</span>
+      <span class="wb-wx">${_weatherCache.emoji} ${_weatherCache.temp}°F in ${escapeHtml(_weatherCache.loc)}</span>`;
+    return;
+  }
+
+  try {
+    const pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000 })
+    );
+    const { latitude: lat, longitude: lon } = pos.coords;
+
+    // NWS step 1: get grid point + city/state (US government API — no key, great CORS)
+    const hdrs = { 'User-Agent': 'Times-of-Reston-prototype/1.0 (benrubenstein@me.com)' };
+    const ptRes = await fetch(`https://api.weather.gov/points/${lat.toFixed(4)},${lon.toFixed(4)}`, { headers: hdrs });
+    if (!ptRes.ok) throw new Error('NWS points ' + ptRes.status);
+    const ptData = await ptRes.json();
+
+    const forecastUrl = ptData.properties.forecastHourly;
+    const city  = ptData.properties.relativeLocation?.properties?.city  || '';
+    const state = ptData.properties.relativeLocation?.properties?.state || '';
+    const loc   = [city, state].filter(Boolean).join(', ');
+
+    // NWS step 2: get current hourly period
+    const fcRes = await fetch(forecastUrl, { headers: hdrs });
+    if (!fcRes.ok) throw new Error('NWS forecast ' + fcRes.status);
+    const fcData = await fcRes.json();
+    const period = fcData.properties.periods[0];
+
+    const temp  = period.temperature; // already °F
+    const emoji = forecastToEmoji(period.shortForecast);
+
+    _weatherCache = { ts: now, loc, emoji, temp };
+
+    bar.innerHTML = `
+      <span class="wb-date">${longDate}</span>
+      <span class="wb-sep">·</span>
+      <span class="wb-wx">${emoji} ${temp}°F in ${escapeHtml(loc)}</span>`;
+
+  } catch (e) {
+    // Geo denied, outside US, or API error — date only, no broken UI
+  }
+}

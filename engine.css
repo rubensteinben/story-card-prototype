@@ -271,6 +271,31 @@
 }
 .iphone-scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; }
 
+/* ── Weather bar ── */
+#weather-bar {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 13px;
+  line-height: 16px;
+  color: #777;
+  padding-top: 10px;
+  max-height: 30px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.25s ease, padding-top 0.35s ease;
+}
+.stuck #weather-bar { max-height: 0; opacity: 0; padding-top: 0; }
+.wb-sep  { opacity: 0.35; }
+.wb-date { font-weight: 600; color: #555; }
+
+body.dark-mode #weather-bar { color: rgba(255,255,255,0.38); }
+body.dark-mode #weather-bar .wb-date { color: rgba(255,255,255,0.55); }
+
 /* ── Dark mode — card render ── */
 body.dark-mode #card { background: #1a1a1a; }
 body.dark-mode .headline { color: #cccccc; transition: color 0.15s; }

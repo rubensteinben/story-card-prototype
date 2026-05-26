@@ -1,6 +1,9 @@
 # Claude internal data
 .claude/
 
+# Design scratch pads
+weather-scratch.html
+
 # PDFs and local assets
 *.pdf
 
