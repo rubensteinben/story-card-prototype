@@ -334,3 +334,84 @@ async function renderWeatherBar(containerEl) {
     // Geo denied, outside US, or API error — date only, no broken UI
   }
 }
+
+/* ── Breaking News Bar ─────────────────────────────────────────────────────────
+   renderBreakingNewsBar(containerEl, opts)
+
+   opts:
+     label       string   — e.g. 'BREAKING NEWS'
+     text        string   — body text
+     url         string   — optional link URL
+     color       string   — 'red' | 'black'
+     expiresAt   string   — ISO timestamp or null (forever)
+     dismissKey  string   — localStorage key for reader dismissal; null = admin (no dismiss)
+     animate     boolean  — true = entrance animation (real-time injection)
+────────────────────────────────────────────────────────────────────────────── */
+function renderBreakingNewsBar(containerEl, { label, text, url, color, expiresAt, dismissKey, animate } = {}) {
+  // Remove any existing bar
+  const existing = document.getElementById('breaking-news-bar');
+  if (existing) existing.remove();
+
+  // Reader dismissal check
+  if (dismissKey && localStorage.getItem(dismissKey)) return;
+
+  // Expiry check
+  if (expiresAt && new Date(expiresAt) < new Date()) return;
+
+  // Build bar
+  const bar = document.createElement('div');
+  bar.id = 'breaking-news-bar';
+  bar.style.background = color === 'black'
+    ? 'linear-gradient(to right, #000000, #222222)'
+    : 'linear-gradient(to right, #6d0000, #b80000)';
+
+  const labelHtml   = `<span class="bn-label">${escapeHtml(label || 'BREAKING NEWS')}</span>`;
+  const bodyHtml    = text ? `<span class="bn-sep">·</span><span class="bn-text">${escapeHtml(text)}</span>` : '';
+  const contentHtml = labelHtml + bodyHtml;
+
+  const inner = document.createElement('div');
+  inner.className = 'bn-inner';
+
+  const contentEl = document.createElement(url ? 'a' : 'div');
+  contentEl.className = url ? 'bn-content-link' : 'bn-content';
+  if (url) { contentEl.href = escapeHtml(url); contentEl.target = '_blank'; }
+  contentEl.innerHTML = contentHtml;
+  inner.appendChild(contentEl);
+
+  // Close button — always visible; functional only for readers (dismissKey set)
+  const closeBtn = document.createElement('button');
+  closeBtn.className = dismissKey ? 'bn-close bn-close-active' : 'bn-close bn-close-disabled';
+  closeBtn.setAttribute('aria-label', 'Dismiss');
+  closeBtn.textContent = '✕';
+  if (dismissKey) {
+    closeBtn.addEventListener('click', () => {
+      localStorage.setItem(dismissKey, '1');
+      bar.style.transition = 'max-height 0.25s ease, padding-top 0.25s ease, padding-bottom 0.25s ease, opacity 0.2s ease';
+      bar.style.maxHeight     = '0';
+      bar.style.paddingTop    = '0';
+      bar.style.paddingBottom = '0';
+      bar.style.opacity       = '0';
+      setTimeout(() => bar.remove(), 300);
+    });
+  }
+  inner.appendChild(closeBtn);
+
+  bar.appendChild(inner);
+  containerEl.appendChild(bar);
+
+  // Entrance animation
+  if (animate) {
+    requestAnimationFrame(() => {
+      bar.classList.add('bn-visible');
+      if (containerEl.classList.contains('stuck') && window.scrollY > 0) {
+        window.scrollBy({ top: bar.offsetHeight, behavior: 'instant' });
+      }
+    });
+  } else {
+    // Disable CSS transition so the bar snaps to its final position immediately.
+    // Without this, every re-render (the admin does many) starts the margin-top
+    // transition from 0 and it never appears to reach 24px.
+    bar.style.transition = 'none';
+    bar.classList.add('bn-visible');
+  }
+}

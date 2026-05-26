@@ -600,12 +600,16 @@
       padding-top: 60px;
     }
 
-    #masthead-placeholder {
-      background: #fff;
-      flex-shrink: 0;
+    /* Sticky outer shell — holds masthead + breaking news bar together */
+    #masthead-sticky-wrap {
       position: sticky;
       top: 0;
       z-index: 10;
+      width: 100%;
+    }
+    #masthead-placeholder {
+      background: #fff;
+      flex-shrink: 0;
       width: 100%;
       display: flex;
       flex-direction: column;
@@ -914,7 +918,7 @@
     /* ── Story Card Engine CSS ───────────────────────────────────────── */
     .panel-section {
       border-top: 1px solid #e8e8e8;
-      padding: 16px 0;
+      padding: 16px 14px;
     }
 
     .recents-wrap {
@@ -1283,6 +1287,171 @@
       color: #f0f0f0;
       background: rgba(66, 130, 240, 0.1);
     }
+
+    /* ── Breaking News Bar — preview wrapper ── */
+    #bn-preview-wrapper {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px dashed #c8c8c8;
+      border-radius: 2px;
+      position: relative;
+    }
+    .bn-preview-label {
+      position: absolute;
+      top: -8px;
+      left: 16px;
+      background: #fff;
+      padding: 0 6px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #c0c0c0;
+      pointer-events: none;
+      font-family: 'Source Sans 3', sans-serif;
+    }
+    body.dark-mode #bn-preview-wrapper { border-color: rgba(255,255,255,0.18); }
+    body.dark-mode .bn-preview-label { background: #1a1a1a; color: rgba(255,255,255,0.25); }
+
+    /* ── Breaking News Bar — admin styles ── */
+    .bn-stack-item.bn-live-closed {
+      border-color: #b30000;
+      border-left: 4px solid #b30000;
+      box-shadow: 0 2px 8px rgba(179,0,0,0.2);
+    }
+    .bn-stack-item.bn-live-closed > .accordion-header { background: rgba(179,0,0,0.08); }
+    .bn-stack-item.bn-live-closed .stack-item-label { color: #900; }
+
+    .bn-stack-live-chip {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      background: #b30000;
+      color: #fff;
+      padding: 1px 5px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .bn-stack-live-chip.hidden { display: none; }
+
+    /* Live banner inside panel */
+    .bn-panel-live-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #b30000;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .bn-panel-live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    /* Status log rows */
+    .log-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .log-row:last-child { margin-bottom: 0; }
+    .log-key {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #999;
+      flex-shrink: 0;
+    }
+    .log-val { font-size: 12px; font-weight: 600; color: #333; text-align: right; }
+    .bn-countdown { color: #b30000; font-size: 13px; }
+
+    /* Remove button — prominent */
+    #bn-remove-btn {
+      width: 100%;
+      padding: 9px 0;
+      background: #fff;
+      border: 1.5px solid #c00;
+      border-radius: 3px;
+      color: #c00;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    #bn-remove-btn:hover { background: #c00; color: #fff; }
+
+    /* Color swatches */
+    .color-picker { display: flex; gap: 6px; }
+    .color-swatch {
+      flex: 1; height: 32px; border: none; border-radius: 3px;
+      cursor: pointer; font-family: inherit; font-size: 11px;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+      color: rgba(255,255,255,0.7);
+      transition: box-shadow 0.15s, color 0.15s;
+    }
+    .color-swatch[data-color="red"]   { background: #b30000; }
+    .color-swatch[data-color="black"] { background: #111; }
+    .color-swatch:hover { color: #fff; }
+    .color-swatch[data-color="red"].active   { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #b30000; color: #fff; }
+    .color-swatch[data-color="black"].active { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #555; color: #fff; }
+
+    /* Duration grid */
+    .duration-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+    .dur-btn {
+      padding: 6px 0;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .dur-btn:hover { background: #e8e8e8; color: #333; }
+    .dur-btn.active { background: #5566ff; border-color: #5566ff; color: #fff; }
+
+    /* Clear all link */
+    #clear-all-row { margin-top: 9px; text-align: right; }
+    #bn-clear-all {
+      font-size: 11px;
+      color: #bbb;
+      cursor: pointer;
+      border-bottom: 1px solid transparent;
+      transition: color 0.1s, border-color 0.1s;
+    }
+    #bn-clear-all:hover { color: #888; border-bottom-color: #888; }
+
+    /* Go Live button */
+    #bn-publish-btn {
+      width: 100%; padding: 8px 0;
+      background: #b30000; border: none; border-radius: 3px;
+      color: #fff; font-family: inherit; font-size: 12px;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+      cursor: pointer; transition: background 0.15s;
+    }
+    #bn-publish-btn:hover:not(:disabled) { background: #cc0000; }
+    #bn-publish-btn:disabled { background: #d9a0a0; color: rgba(255,255,255,0.65); cursor: not-allowed; }
+
+    body.dark-mode .bn-stack-item.bn-live-closed > .accordion-header { background: rgba(179,0,0,0.2); }
+    body.dark-mode .bn-panel-live-banner { background: #8a0000; }
+    body.dark-mode #bn-remove-btn { background: transparent; }
+    body.dark-mode #bn-remove-btn:hover { background: #c00; color: #fff; }
   </style>
 </head>
 <body>
@@ -1380,7 +1549,7 @@
           <div class="mobile-width-selector" id="mobile-width-selector"></div>
           <div id="phone-frame-control" style="display:none;"></div>
         </div>
-        <div id="masthead-placeholder" style="display:none"></div>
+        <div id="masthead-sticky-wrap" style="display:none"><div id="masthead-placeholder"></div></div>
         <input type="file" accept="image/*" id="masthead-file-input" style="display:none">
         <div id="card-area">
           <div class="card-area-placeholder">Add a card to get started</div>
@@ -1504,7 +1673,7 @@
     async function loadPages() {
       const { data: pages, error } = await sb
         .from('pages')
-        .select('id, name, slug, cards, width, mobile_preview_width, created_at, updated_at, owner_id')
+        .select('id, name, slug, cards, width, mobile_preview_width, created_at, updated_at, owner_id, show_breaking_news, breaking_news_expires_at')
         .order('updated_at', { ascending: false });
       if (error) { console.error('loadPages:', error.message); return; }
 
@@ -1729,6 +1898,7 @@
     const _undoStack = [];
     const _undoMax = 50;
     let _saveTimer = null;
+    let _bnCountdownTimer = null;
 
     function pushUndo() {
       if (!appState.currentPage) return;
@@ -1764,7 +1934,9 @@
 
     async function savePage() {
       if (!appState.session || !appState.currentPage) return;
-      const { id, name, cards, width, mobilePreviewWidth, showPhoneFrame, mastheadUrl, showMasthead, showWeatherBar } = appState.currentPage;
+      const { id, name, cards, width, mobilePreviewWidth, showPhoneFrame, mastheadUrl, showMasthead, showWeatherBar,
+              showBreakingNews, breakingNewsLabel, breakingNewsText, breakingNewsUrl, breakingNewsColor,
+              breakingNewsExpiresAt, breakingNewsPublishedAt, breakingNewsPublishedBy } = appState.currentPage;
       const { error } = await sb.from('pages').update({
         name,
         cards,
@@ -1774,6 +1946,14 @@
         masthead_url: mastheadUrl || null,
         show_masthead: showMasthead !== false,
         show_weather_bar: showWeatherBar !== false,
+        show_breaking_news: showBreakingNews || false,
+        breaking_news_label: breakingNewsLabel || null,
+        breaking_news_text: breakingNewsText || null,
+        breaking_news_url: breakingNewsUrl || null,
+        breaking_news_color: breakingNewsColor || 'red',
+        breaking_news_expires_at: breakingNewsExpiresAt || null,
+        breaking_news_published_at: breakingNewsPublishedAt || null,
+        breaking_news_published_by: breakingNewsPublishedBy || null,
       }).eq('id', id);
       if (error) {
         console.error('Save failed:', error);
@@ -1820,7 +2000,22 @@
         mastheadUrl: page.masthead_url || null,
         showMasthead: page.show_masthead !== false,
         showWeatherBar: page.show_weather_bar !== false,
+        showBreakingNews: page.show_breaking_news || false,
+        breakingNewsLabel: page.breaking_news_label || 'BREAKING NEWS',
+        breakingNewsText: page.breaking_news_text || '',
+        breakingNewsUrl: page.breaking_news_url || '',
+        breakingNewsColor: page.breaking_news_color || 'red',
+        breakingNewsExpiresAt: page.breaking_news_expires_at || null,
+        breakingNewsPublishedAt: page.breaking_news_published_at || null,
+        breakingNewsPublishedBy: page.breaking_news_published_by || null,
       };
+      // Auto-expire: if bar has a timestamp that's already passed, clear it
+      if (appState.currentPage.showBreakingNews && appState.currentPage.breakingNewsExpiresAt) {
+        if (new Date(appState.currentPage.breakingNewsExpiresAt) < new Date()) {
+          appState.currentPage.showBreakingNews = false;
+          appState.currentPage.breakingNewsExpiresAt = null;
+        }
+      }
       appState.selectedCardIndex = null;
       appState.dirty = false;
       history.pushState({ pageSlug: page.slug }, '', `?page=${page.slug}`);
@@ -1834,33 +2029,84 @@
     // ── Masthead ───────────────────────────────────────
 
     function renderMasthead() {
-      const el = document.getElementById('masthead-placeholder');
-      if (!el) return;
+      const el   = document.getElementById('masthead-placeholder');
+      const wrap = document.getElementById('masthead-sticky-wrap');
+      if (!el || !wrap) return;
       const page = appState.currentPage;
       const cardArea = document.getElementById('card-area');
       const isMobile = page && page.width === '1u';
       const shouldShow = page && page.mastheadUrl && page.showMasthead !== false;
 
       if (!shouldShow) {
-        el.style.display = 'none';
+        wrap.style.display = 'none';
         if (cardArea) { cardArea.style.marginTop = ''; cardArea.style.paddingTop = ''; cardArea.style.borderTop = ''; }
         return;
       }
 
       // On mobile the masthead is rendered inside the phone scroll area by renderAllCards()
       if (isMobile) {
-        el.style.display = 'none';
+        wrap.style.display = 'none';
         return;
       }
 
-      el.style.display = '';
+      wrap.style.display = '';
       el.classList.toggle('masthead-selected', appState.selectedCardIndex === -1);
 
       el.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Logo">`;
 
       if (page.showWeatherBar !== false) renderWeatherBar(el);
 
-      if (cardArea) { cardArea.style.marginTop = ''; cardArea.style.paddingTop = ''; cardArea.style.borderTop = ''; }
+      // Clean up any existing preview wrapper + bar from the sticky wrap
+      const existingPreviewWrap = wrap.querySelector('#bn-preview-wrapper');
+      if (existingPreviewWrap) existingPreviewWrap.remove();
+      const existingBar = document.getElementById('breaking-news-bar');
+      if (existingBar) existingBar.remove();
+
+      const bnAccordionOpen = appState.selectedCardIndex === -2;
+      if (page.showBreakingNews) {
+        // Live — append bar to the sticky WRAPPER (sibling of masthead, full width)
+        renderBreakingNewsBar(wrap, {
+          label:     page.breakingNewsLabel,
+          text:      page.breakingNewsText,
+          url:       page.breakingNewsUrl,
+          color:     page.breakingNewsColor,
+          expiresAt: page.breakingNewsExpiresAt,
+          dismissKey: null,
+          animate:   false,
+        });
+      } else if (bnAccordionOpen) {
+        // Accordion open, not live — show preview frame below the masthead
+        renderBreakingNewsBar(wrap, {
+          label:     page.breakingNewsLabel || 'BREAKING NEWS',
+          text:      page.breakingNewsText  || '',
+          url:       page.breakingNewsUrl   || '',
+          color:     page.breakingNewsColor || 'red',
+          expiresAt: null,
+          dismissKey: null,
+          animate:   false,
+        });
+        // Wrap in dashed preview frame
+        const bar = document.getElementById('breaking-news-bar');
+        if (bar) {
+          const previewWrap = document.createElement('div');
+          previewWrap.id = 'bn-preview-wrapper';
+          const lbl = document.createElement('span');
+          lbl.className = 'bn-preview-label';
+          lbl.textContent = 'Preview';
+          previewWrap.appendChild(lbl);
+          bar.parentNode.insertBefore(previewWrap, bar);
+          previewWrap.appendChild(bar);
+        }
+      }
+
+      // Add top breathing room below the bar so cards don't crash into it.
+      // page.html gets this from #page-container's 16px padding; admin needs it explicitly.
+      const bnIsVisible = page.showBreakingNews || bnAccordionOpen;
+      if (cardArea) {
+        cardArea.style.marginTop  = '';
+        cardArea.style.paddingTop = bnIsVisible ? '20px' : '';
+        cardArea.style.borderTop  = '';
+      }
     }
 
     document.getElementById('masthead-file-input').addEventListener('change', function() {
@@ -1953,7 +2199,12 @@
     function renderCardStack() {
       const list = document.getElementById('card-stack-list');
       const cards = appState.currentPage?.cards || [];
+      const page  = appState.currentPage;
       const mastheadIsOpen = appState.selectedCardIndex === -1;
+      const bnIsOpen  = appState.selectedCardIndex === -2;
+      const bnIsLive  = page?.showBreakingNews;
+      const bnLiveClosed = bnIsLive && !bnIsOpen;
+
       const mastheadHtml = `
         <div class="accordion-item masthead-item${mastheadIsOpen ? ' open' : ''}" data-masthead="true">
           <div class="accordion-header">
@@ -1967,13 +2218,28 @@
           </div>
         </div>`;
 
+      const breakingNewsHtml = `
+        <div class="accordion-item bn-stack-item${bnIsOpen ? ' open' : ''}${bnLiveClosed ? ' bn-live-closed' : ''}" data-breaking-news="true">
+          <div class="accordion-header">
+            <span class="material-symbols-outlined" style="font-size:16px;color:#b30000;flex-shrink:0;font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;">crisis_alert</span>
+            <span class="stack-item-label">Breaking News Bar</span>
+            ${bnIsLive ? `<span class="bn-stack-live-chip${bnIsOpen ? ' hidden' : ''}">LIVE</span>` : ''}
+          </div>
+          <div class="accordion-body-wrap">
+            <div class="accordion-body-inner">
+              ${bnIsOpen ? '<div id="breaking-news-controls-section"></div>' : ''}
+            </div>
+          </div>
+        </div>`;
+
       if (cards.length === 0) {
-        list.innerHTML = mastheadHtml + '<div style="padding:16px 14px;font-size:13px;color:#555;">No cards yet.</div>';
+        list.innerHTML = mastheadHtml + breakingNewsHtml + '<div style="padding:16px 14px;font-size:13px;color:#555;">No cards yet.</div>';
         wireMastheadClick(list);
+        wireBreakingNewsClick(list);
         return;
       }
 
-      list.innerHTML = mastheadHtml + cards.map((card, i) => {
+      list.innerHTML = mastheadHtml + breakingNewsHtml + cards.map((card, i) => {
         const isOpen = i === appState.selectedCardIndex;
         const label = card.headline || card.headlinePlus || 'Untitled card';
         return `
@@ -1995,9 +2261,10 @@
       }).join('');
 
       wireMastheadClick(list);
+      wireBreakingNewsClick(list);
 
       // Header click — select card or toggle open/close
-      list.querySelectorAll('.accordion-item:not([data-masthead]) .accordion-header').forEach(header => {
+      list.querySelectorAll('.accordion-item:not([data-masthead]):not([data-breaking-news]) .accordion-header').forEach(header => {
         header.addEventListener('click', e => {
           if (_importInProgress) return;
           if (e.target.closest('.stack-action-btn') || e.target.closest('.accordion-close-btn')) return;
@@ -2116,7 +2383,7 @@
 
         // FLIP — First: record each card's current Y position keyed by card object
         const oldTops = new Map();
-        list.querySelectorAll('.accordion-item:not([data-masthead])').forEach((el, i) => {
+        list.querySelectorAll('.accordion-item:not([data-masthead]):not([data-breaking-news])').forEach((el, i) => {
           oldTops.set(cards[i], el.getBoundingClientRect().top);
         });
 
@@ -2138,7 +2405,7 @@
         // FLIP — Invert + Play
         _flipInProgress = true;
         requestAnimationFrame(() => {
-          const newEls = list.querySelectorAll('.accordion-item:not([data-masthead])');
+          const newEls = list.querySelectorAll('.accordion-item:not([data-masthead]):not([data-breaking-news])');
           const diffs = [];
           newEls.forEach((el, i) => {
             // Dragged card starts from mouse release point; others from their natural old positions
@@ -2500,6 +2767,27 @@
           mastheadDiv.style.cssText = `background:#fff;padding:20px 16px 16px;width:${mobilePx}px;`;
           mastheadDiv.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Masthead" style="max-width:${maxW}px;width:100%;height:auto;display:block;margin:0 auto;">`;
           scrollArea.appendChild(mastheadDiv);
+
+          // Inject breaking news bar directly below the masthead in the phone scroll area
+          const bnMobileOpen = appState.selectedCardIndex === -2;
+          if (page.showBreakingNews || bnMobileOpen) {
+            renderBreakingNewsBar(scrollArea, {
+              label:     page.breakingNewsLabel  || 'BREAKING NEWS',
+              text:      page.breakingNewsText   || '',
+              url:       page.breakingNewsUrl    || '',
+              color:     page.breakingNewsColor  || 'red',
+              expiresAt: page.showBreakingNews ? (page.breakingNewsExpiresAt || null) : null,
+              dismissKey: null,
+              animate:   false,
+            });
+            // Constrain bar to phone width and apply mobile-friendly layout
+            const bnBar = document.getElementById('breaking-news-bar');
+            if (bnBar) {
+              bnBar.style.width = mobilePx + 'px';
+              bnBar.style.boxSizing = 'border-box';
+              bnBar.classList.add('bn-mobile');
+            }
+          }
         }
 
         const slots = [];
@@ -2596,6 +2884,243 @@
         else selectMasthead();
       });
       if (appState.selectedCardIndex === -1) buildMastheadPanel();
+    }
+
+    function wireBreakingNewsClick(list) {
+      const bnItem = list.querySelector('[data-breaking-news]');
+      if (!bnItem) return;
+      bnItem.querySelector('.accordion-header').addEventListener('click', () => {
+        if (appState.selectedCardIndex === -2) clearCardEditor();
+        else selectBreakingNews();
+      });
+      if (appState.selectedCardIndex === -2) buildBreakingNewsPanel();
+    }
+
+    function selectBreakingNews() {
+      appState.selectedCardIndex = -2;
+      _renderTarget = null;
+      renderAllCards();
+      renderCardStack();
+      renderMasthead();
+      buildBreakingNewsPanel();
+    }
+
+    function buildBreakingNewsPanel() {
+      const section = document.getElementById('breaking-news-controls-section');
+      if (!section || !appState.currentPage) return;
+      const page = appState.currentPage;
+      const isLive = page.showBreakingNews;
+      const user = appState.session?.user;
+      const userName = user?.user_metadata?.full_name || user?.email || 'Unknown';
+
+      // Helper: format time
+      function fmtTime(d) {
+        return new Date(d).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      }
+      function fmtCountdown(ms) {
+        if (ms <= 0) return '0:00';
+        const totalSec = Math.floor(ms / 1000);
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        return `${m}m ${s.toString().padStart(2, '0')}s`;
+      }
+
+      if (isLive) {
+        // Live state: banner + status + remove
+        section.innerHTML = `
+          <div class="bn-panel-live-banner">
+            <span class="bn-panel-live-dot"></span>
+            Breaking news bar is live
+          </div>
+          <div class="panel-section">
+            <div class="log-row"><span class="log-key">Published by</span><span class="log-val" id="bn-log-publisher">${escapeHtml(page.breakingNewsPublishedBy || '—')}</span></div>
+            <div class="log-row"><span class="log-key">Active since</span><span class="log-val" id="bn-log-since">${page.breakingNewsPublishedAt ? fmtTime(page.breakingNewsPublishedAt) : '—'}</span></div>
+            <div class="log-row"><span class="log-key">Expires</span><span class="log-val" id="bn-log-expires">${page.breakingNewsExpiresAt ? fmtTime(page.breakingNewsExpiresAt) : 'No expiry — remove manually'}</span></div>
+            ${page.breakingNewsExpiresAt ? `<div class="log-row"><span class="log-key">Remaining</span><span class="log-val bn-countdown" id="bn-log-countdown">—</span></div>` : ''}
+          </div>
+          <div class="panel-section">
+            <button id="bn-remove-btn">Remove bar</button>
+          </div>`;
+
+        // Wire remove
+        document.getElementById('bn-remove-btn').addEventListener('click', () => {
+          if (!confirm('Remove the breaking news bar? Readers will no longer see it.')) return;
+          clearTimeout(_bnCountdownTimer);
+          page.showBreakingNews = false;
+          page.breakingNewsExpiresAt = null;
+          page.breakingNewsPublishedAt = null;
+          page.breakingNewsPublishedBy = null;
+          savePage();
+          appState.selectedCardIndex = null;
+          renderCardStack();
+          renderMasthead();
+        });
+
+        // Start countdown if timed
+        if (page.breakingNewsExpiresAt) {
+          clearTimeout(_bnCountdownTimer);
+          (function tick() {
+            const el = document.getElementById('bn-log-countdown');
+            if (!el) return;
+            const ms = new Date(page.breakingNewsExpiresAt) - Date.now();
+            if (ms <= 0) {
+              page.showBreakingNews = false;
+              page.breakingNewsExpiresAt = null;
+              savePage();
+              renderCardStack();
+              renderMasthead();
+              return;
+            }
+            el.textContent = fmtCountdown(ms);
+            _bnCountdownTimer = setTimeout(tick, 500);
+          })();
+        }
+
+      } else {
+        // Pre-live state: all controls
+        const hasLabel = page.breakingNewsLabel && page.breakingNewsLabel !== '__custom__';
+        const customVisible = page.breakingNewsLabel && !['BREAKING NEWS','DEVELOPING','HAPPENING NOW','ALERT'].includes(page.breakingNewsLabel);
+        const canGoLive = (page.breakingNewsLabel || '').trim().length > 0 && (page.breakingNewsText || '').trim().length > 0;
+        const labelOptions = ['BREAKING NEWS','DEVELOPING','HAPPENING NOW','ALERT'];
+        const isCustom = !labelOptions.includes(page.breakingNewsLabel || 'BREAKING NEWS');
+
+        section.innerHTML = `
+          <div id="bn-fields">
+            <div class="panel-section">
+              <div class="panel-section-title">Bar Color</div>
+              <div class="color-picker">
+                <button class="color-swatch${page.breakingNewsColor !== 'black' ? ' active' : ''}" data-color="red" title="For urgent, breaking news — use sparingly">Red</button>
+                <button class="color-swatch${page.breakingNewsColor === 'black' ? ' active' : ''}" data-color="black" title="For live events, press conferences, or lower-urgency alerts">Black</button>
+              </div>
+            </div>
+            <div class="panel-section">
+              <div class="panel-section-title">Alert Label</div>
+              <select class="control-input" id="bn-label-select">
+                <option value="BREAKING NEWS"${page.breakingNewsLabel === 'BREAKING NEWS' || !isCustom && !page.breakingNewsLabel ? ' selected' : ''}>BREAKING NEWS</option>
+                <option value="DEVELOPING"${page.breakingNewsLabel === 'DEVELOPING' ? ' selected' : ''}>DEVELOPING</option>
+                <option value="HAPPENING NOW"${page.breakingNewsLabel === 'HAPPENING NOW' ? ' selected' : ''}>HAPPENING NOW</option>
+                <option value="ALERT"${page.breakingNewsLabel === 'ALERT' ? ' selected' : ''}>ALERT</option>
+                <option value="__custom__"${isCustom ? ' selected' : ''}>Custom…</option>
+              </select>
+              <div id="bn-custom-label-wrap" style="${isCustom ? '' : 'display:none;'}margin-top:7px;">
+                <input class="control-input" type="text" id="bn-custom-label" placeholder="Enter label text" maxlength="28" value="${isCustom ? escapeHtml(page.breakingNewsLabel || '') : ''}">
+              </div>
+            </div>
+            <div class="panel-section">
+              <div class="panel-section-title">Body Text</div>
+              <textarea class="control-input" id="bn-text" placeholder="e.g. Officials confirm emergency evacuation order for Lake Anne area.">${escapeHtml(page.breakingNewsText || '')}</textarea>
+            </div>
+            <div class="panel-section">
+              <div class="panel-section-title">Link URL <span class="optional">(optional)</span></div>
+              <input class="control-input" type="url" id="bn-url" placeholder="https://…" value="${escapeHtml(page.breakingNewsUrl || '')}">
+            </div>
+            <div class="panel-section">
+              <div class="panel-section-title">Duration</div>
+              <div class="duration-grid">
+                <button class="dur-btn${(page._bnDuration || 15) === 15 ? ' active' : ''}" data-min="15">15 min</button>
+                <button class="dur-btn${page._bnDuration === 30 ? ' active' : ''}" data-min="30">30 min</button>
+                <button class="dur-btn${page._bnDuration === 60 ? ' active' : ''}" data-min="60">60 min</button>
+                <button class="dur-btn${page._bnDuration === null ? ' active' : ''}" data-forever="1">Forever</button>
+              </div>
+            </div>
+            <div class="panel-section">
+              <button id="bn-publish-btn" ${canGoLive ? '' : 'disabled'}>⚡ Go Live</button>
+              <div id="clear-all-row"><a id="bn-clear-all">Clear all</a></div>
+            </div>
+          </div>`;
+
+        // Color swatches
+        section.querySelectorAll('.color-swatch').forEach(btn => {
+          btn.addEventListener('click', () => {
+            section.querySelectorAll('.color-swatch').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            page.breakingNewsColor = btn.dataset.color;
+            scheduleSave();
+            renderMasthead();
+          });
+        });
+
+        // Label select
+        document.getElementById('bn-label-select').addEventListener('change', function() {
+          const wrap = document.getElementById('bn-custom-label-wrap');
+          const isC = this.value === '__custom__';
+          wrap.style.display = isC ? '' : 'none';
+          if (!isC) page.breakingNewsLabel = this.value;
+          if (isC) document.getElementById('bn-custom-label').focus();
+          updateBnPublishBtn();
+          scheduleSave();
+          renderMasthead();
+        });
+
+        // Custom label input
+        const customInput = document.getElementById('bn-custom-label');
+        if (customInput) {
+          customInput.addEventListener('input', function() {
+            page.breakingNewsLabel = this.value;
+            updateBnPublishBtn();
+            scheduleSave();
+            renderMasthead();
+          });
+        }
+
+        // Body text
+        document.getElementById('bn-text').addEventListener('input', function() {
+          page.breakingNewsText = this.value;
+          updateBnPublishBtn();
+          scheduleSave();
+          renderMasthead();
+        });
+
+        // URL
+        document.getElementById('bn-url').addEventListener('input', function() {
+          page.breakingNewsUrl = this.value;
+          scheduleSave();
+          renderMasthead();
+        });
+
+        // Duration buttons
+        section.querySelectorAll('.dur-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            section.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            page._bnDuration = btn.dataset.forever ? null : Number(btn.dataset.min);
+          });
+        });
+
+        // Go Live
+        document.getElementById('bn-publish-btn').addEventListener('click', () => {
+          const duration = page._bnDuration !== undefined ? page._bnDuration : 15;
+          page.showBreakingNews = true;
+          page.breakingNewsPublishedAt = new Date().toISOString();
+          page.breakingNewsExpiresAt = duration ? new Date(Date.now() + duration * 60 * 1000).toISOString() : null;
+          page.breakingNewsPublishedBy = userName;
+          savePage();
+          renderCardStack();
+          renderMasthead();
+          buildBreakingNewsPanel();
+        });
+
+        // Clear all
+        document.getElementById('bn-clear-all').addEventListener('click', () => {
+          if (!confirm('Clear all breaking news fields?')) return;
+          page.breakingNewsLabel = 'BREAKING NEWS';
+          page.breakingNewsText = '';
+          page.breakingNewsUrl = '';
+          page.breakingNewsColor = 'red';
+          page._bnDuration = 15;
+          scheduleSave();
+          buildBreakingNewsPanel();
+          renderMasthead();
+        });
+      }
+
+      function updateBnPublishBtn() {
+        const btn = document.getElementById('bn-publish-btn');
+        if (!btn) return;
+        const label = page.breakingNewsLabel || '';
+        const text  = page.breakingNewsText  || '';
+        btn.disabled = !(label.trim().length > 0 && text.trim().length > 0);
+      }
     }
 
     function selectMasthead() {

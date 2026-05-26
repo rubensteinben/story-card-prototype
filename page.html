@@ -48,10 +48,14 @@
       border-radius: 3px;
     }
 
-    #masthead-area {
+    /* Sticky outer shell — holds masthead + breaking news bar together */
+    #masthead-sticky-wrap {
       position: sticky;
       top: 0;
       z-index: 100;
+      width: 100%;
+    }
+    #masthead-area {
       width: 100%;
       background: #fff;
       display: flex;
@@ -109,7 +113,6 @@
     }
 
     .card-wrapper { position: relative; z-index: 2; }
-    #masthead-area { position: sticky; z-index: 10; }
     #page-container { position: relative; z-index: 2; }
 
     #full-page-grid {
@@ -203,7 +206,7 @@
     <button id="grid-toggle-btn" class="canvas-ctrl-btn">Grid</button>
     <button id="dark-toggle-btn" class="canvas-ctrl-btn">Dark</button>
   </div>
-  <div id="masthead-area" style="display:none;"></div>
+  <div id="masthead-sticky-wrap"><div id="masthead-area" style="display:none;"></div></div>
   <div id="page-container">
     <div id="status">Loading…</div>
   </div>
@@ -366,7 +369,8 @@
       document.getElementById('page-title').textContent = page.name;
 
       // Render masthead first — always, independent of card count
-      const mastheadArea = document.getElementById('masthead-area');
+      const mastheadArea  = document.getElementById('masthead-area');
+      const stickyWrap    = document.getElementById('masthead-sticky-wrap');
       if (page.masthead_url && page.show_masthead !== false && mastheadArea) {
         const img = document.createElement('img');
         img.src = page.masthead_url;
@@ -375,6 +379,22 @@
         mastheadArea.style.display = '';
 
         if (page.show_weather_bar !== false) renderWeatherBar(mastheadArea);
+
+        if (page.show_breaking_news) {
+          const publishedAt = page.breaking_news_published_at || '';
+          const dismissKey  = 'bn-dismissed-' + slug + '-' + publishedAt;
+          // Append bar to the sticky WRAPPER (sibling of masthead-area),
+          // so it sits flush below the header at full viewport width.
+          renderBreakingNewsBar(stickyWrap, {
+            label:     page.breaking_news_label  || 'BREAKING NEWS',
+            text:      page.breaking_news_text   || '',
+            url:       page.breaking_news_url    || '',
+            color:     page.breaking_news_color  || 'red',
+            expiresAt: page.breaking_news_expires_at || null,
+            dismissKey,
+            animate:   false,
+          });
+        }
 
         // Shrink logo on scroll
         window.addEventListener('scroll', () => {
