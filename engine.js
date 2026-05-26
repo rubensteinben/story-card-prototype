@@ -123,11 +123,11 @@ function render() {
               </div>
             </div>
           ` : (!state.showTicker && state.showBlurb ? `<div class="editable-wrap" data-field="blurb"><button class="edit-pencil" title="Edit summary">✎</button><p class="blurb">${state.blurb}</p></div>` : '')}
-          ${state.leadPlus >= 1 && state.leadPlus < 3 && (state.width === '12u' || state.width === '15u') ? `
+          ${state.leadPlus >= 1 && state.leadPlus < 3 && !state.showTicker && (state.width === '12u' || state.width === '15u') ? `
             <hr class="h-rule">
             <p class="supporting-headline">${sh(0)}</p>
           ` : ''}
-          ${state.leadPlus === 2 && (state.width === '12u' || state.width === '15u') ? `
+          ${state.leadPlus === 2 && !state.showTicker && (state.width === '12u' || state.width === '15u') ? `
             <hr class="h-rule">
             <p class="supporting-headline">${sh(1)}</p>
           ` : ''}
@@ -174,6 +174,18 @@ function render() {
           <p class="supporting-headline" style="flex:0 0 ${Math.floor((state.mobilePresetWidth - 32) * 0.75)}px">${sh(2)}</p>
           ${vDivider}
           <p class="supporting-headline" style="flex:0 0 ${Math.floor((state.mobilePresetWidth - 32) * 0.75)}px">${sh(3)}</p>
+        </div>
+      ` : ''}
+      ${state.showTicker && state.leadPlus === 1 && (state.width === '12u' || state.width === '15u') ? `
+        <hr class="h-rule">
+        <p class="supporting-headline">${sh(0)}</p>
+      ` : ''}
+      ${state.showTicker && state.leadPlus === 2 && (state.width === '12u' || state.width === '15u') ? `
+        <hr class="h-rule">
+        <div style="display:flex;align-items:flex-start;">
+          <p class="supporting-headline" style="flex:1">${sh(0)}</p>
+          ${vDivider}
+          <p class="supporting-headline" style="flex:1">${sh(1)}</p>
         </div>
       ` : ''}
       ${state.leadPlus === 3 && (state.width === '12u' || state.width === '15u') ? `
