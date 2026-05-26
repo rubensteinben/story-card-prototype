@@ -1898,7 +1898,7 @@
       wSel.querySelectorAll('.width-btn').forEach(btn =>
         btn.addEventListener('click', () => setPageWidth(btn.dataset.width)));
 
-      const mobilePxs = [320, 375, 390, 430];
+      const mobilePxs = [375, 390, 430];
       const mSel = document.getElementById('mobile-width-selector');
       mSel.innerHTML = mobilePxs.map(px =>
         `<button class="mobile-width-btn${page.mobilePreviewWidth === px ? ' active' : ''}" data-px="${px}">${px}</button>`

@@ -51,7 +51,7 @@ const state = {
 const defaultState = JSON.parse(JSON.stringify(state));
 
 /* ── deviceHeights ── */
-const deviceHeights = { 320: 568, 375: 812, 390: 844, 430: 932 };
+const deviceHeights = { 375: 812, 390: 844, 430: 932 };
 
 /* ── render() ── */
 function render() {
