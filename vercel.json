@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/p/:slug", "destination": "/page.html?page=:slug" },
+    { "source": "/sandbox", "destination": "/sandbox.html" }
+  ]
+}

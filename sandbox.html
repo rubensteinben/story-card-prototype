@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Sandbox — Times of Reston</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Source+Sans+3:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { height: 100%; }
+
+    body {
+      min-height: 100%;
+      background: #0d0d12;
+      color: #e0e0e0;
+      font-family: 'Source Sans 3', sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ── */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 72px 32px 80px;
+    }
+
+    /* ── Back link ── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.3);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 56px;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: rgba(255,255,255,0.7); }
+
+    /* ── Header ── */
+    .sandbox-header { margin-bottom: 64px; }
+
+    .sandbox-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #b8860b;
+      margin-bottom: 20px;
+    }
+
+    .sandbox-eyebrow-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #d4a017;
+      animation: pulse-dot 2.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.45; transform: scale(0.7); }
+    }
+
+    .sandbox-title {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: clamp(48px, 8vw, 80px);
+      line-height: 0.95;
+      color: #f0ece4;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+
+    .sandbox-title em {
+      font-style: italic;
+      color: #d4a017;
+    }
+
+    .sandbox-desc {
+      max-width: 540px;
+      font-size: 17px;
+      line-height: 1.65;
+      color: rgba(255,255,255,0.5);
+      font-weight: 400;
+    }
+
+    .sandbox-desc strong {
+      color: rgba(255,255,255,0.75);
+      font-weight: 600;
+    }
+
+    /* ── Divider ── */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .section-divider-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+      white-space: nowrap;
+    }
+
+    .section-divider-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* ── Experiment cards ── */
+    .experiments-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .experiment-card {
+      display: block;
+      text-decoration: none;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 6px;
+      padding: 28px 32px;
+      position: relative;
+      transition: background 0.18s, border-color 0.18s, transform 0.15s;
+      overflow: hidden;
+    }
+
+    .experiment-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(212,160,23,0.04) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+
+    .experiment-card:hover {
+      background: rgba(255,255,255,0.055);
+      border-color: rgba(212,160,23,0.25);
+      transform: translateY(-1px);
+    }
+
+    .experiment-card:hover::before { opacity: 1; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
+    .card-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #d4a017;
+      background: rgba(212,160,23,0.1);
+      border: 1px solid rgba(212,160,23,0.2);
+      border-radius: 3px;
+      padding: 3px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .card-arrow {
+      font-size: 20px;
+      color: rgba(255,255,255,0.15);
+      flex-shrink: 0;
+      transition: color 0.15s, transform 0.15s;
+      line-height: 1;
+      margin-top: 2px;
+    }
+
+    .experiment-card:hover .card-arrow {
+      color: rgba(212,160,23,0.7);
+      transform: translateX(3px);
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 22px;
+      line-height: 1.2;
+      color: #f0ece4;
+      flex: 1;
+    }
+
+    .card-description {
+      font-size: 15px;
+      line-height: 1.6;
+      color: rgba(255,255,255,0.45);
+      max-width: 600px;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      padding: 48px 32px;
+      border: 1px dashed rgba(255,255,255,0.1);
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .empty-state-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+
+    .empty-state-text {
+      font-size: 15px;
+      color: rgba(255,255,255,0.25);
+      line-height: 1.5;
+    }
+
+    /* ── Footer ── */
+    .sandbox-footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-text {
+      font-size: 12px;
+      color: rgba(255,255,255,0.2);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .footer-text a {
+      color: rgba(255,255,255,0.35);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer-text a:hover { color: rgba(255,255,255,0.65); }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .page-wrap { padding: 48px 20px 60px; }
+      .sandbox-title { font-size: 44px; }
+      .experiment-card { padding: 22px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-wrap">
+
+    <a class="back-link" href="/news-builder.html">← News Builder</a>
+
+    <header class="sandbox-header">
+      <div class="sandbox-eyebrow">
+        <span class="sandbox-eyebrow-dot"></span>
+        Experimental
+      </div>
+      <h1 class="sandbox-title">The&nbsp;<em>Sand</em>box</h1>
+      <p class="sandbox-desc">
+        A collection of prototypes and experiments built by <strong>Ben Rubenstein</strong> using <strong>Claude Code</strong>.
+        Nothing here is final. That's the point. These pages exist to push ideas further than production
+        would allow — a testing ground for what might come next, or might not.
+      </p>
+    </header>
+
+    <div class="section-divider">
+      <span class="section-divider-label">Experiments</span>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <div class="experiments-grid" id="experiments-grid">
+
+      <a class="experiment-card" href="/">
+        <div class="card-top">
+          <div>
+            <div class="card-badge">Prototype</div>
+          </div>
+          <span class="card-arrow">→</span>
+        </div>
+        <div class="card-title">Story Card Designer v1</div>
+        <p class="card-description">The original single-card layout tool — the prototype that started it all. Import Washington Post articles, dial in layouts, and experiment with card configurations. An early proof of concept that evolved into the full News Builder.</p>
+      </a>
+
+    </div>
+
+  </div>
+
+  <footer class="sandbox-footer">
+    <p class="footer-text">
+      An experimental content management system built by <a href="https://www.linkedin.com/in/benrubenstein/" target="_blank" rel="noopener">Ben Rubenstein</a>
+      using <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude Code</a>.
+    </p>
+  </footer>
+
+</body>
+</html>
