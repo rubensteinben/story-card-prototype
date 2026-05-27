@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Flyout v2 — Sandbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: #ebebeb;
+      color: #111;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Editor header ── */
+    .editor-header {
+      height: 48px;
+      background: #111;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      flex-shrink: 0;
+      border-bottom: 2px solid #222;
+    }
+    .editor-header-back {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .editor-header-back:hover { color: #fff; }
+    .editor-header-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      flex: 1;
+    }
+    .editor-header-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 3px;
+      padding: 3px 8px;
+    }
+
+    /* ── Editor body ── */
+    .editor-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Canvas ── */
+    .canvas-area {
+      flex: 1;
+      background: #ebebeb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: default;
+    }
+    .canvas-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+      user-select: none;
+    }
+    .canvas-card {
+      width: 460px;
+      height: 260px;
+      background: #fff;
+      border: 1px solid #d8d8d8;
+      border-radius: 3px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+    }
+    .canvas-card-img { flex: 1; background: #e8e8e8; }
+    .canvas-card-text { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .canvas-card-headline { height: 20px; background: #ddd; border-radius: 2px; width: 80%; }
+    .canvas-card-blurb { height: 13px; background: #e8e8e8; border-radius: 2px; width: 55%; }
+    .canvas-label { font-size: 12px; color: #bbb; letter-spacing: 0.04em; }
+
+    /* ══════════════════════════════════════════
+       PANEL WRAP — the key container
+       Normal: 300px (stack only)
+       Editing: 500px (controls + stack peek)
+    ══════════════════════════════════════════ */
+    .panel-wrap {
+      position: relative;
+      display: flex;
+      flex-direction: row;
+      width: 300px;
+      flex-shrink: 0;
+      overflow: hidden;
+      border-left: 2px solid #222;
+      transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .panel-wrap.editing {
+      width: 500px;
+    }
+
+    /* ── Controls panel (slides in from the left) ── */
+    .controls-panel {
+      width: 452px; /* 500 - 48px peek */
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-right: 1px solid #d8d8d8;
+      overflow: hidden;
+
+      /* Hidden: pushed left, takes no layout space */
+      margin-left: -452px;
+      opacity: 0;
+      transition: margin-left 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.22s ease;
+    }
+
+    .panel-wrap.editing .controls-panel {
+      margin-left: 0;
+      opacity: 1;
+    }
+
+    /* Controls header */
+    .controls-header {
+      height: 40px;
+      padding: 0 14px;
+      background: #dde0ff;
+      border-bottom: 1.5px solid #b8bcf0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .controls-card-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #3344cc;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .controls-close {
+      width: 26px;
+      height: 26px;
+      background: none;
+      border: none;
+      color: rgba(51,68,204,0.5);
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s, color 0.12s;
+      flex-shrink: 0;
+    }
+    .controls-close:hover { background: rgba(51,68,204,0.1); color: #3344cc; }
+
+    /* Controls body — scrollable */
+    .controls-body {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 32px;
+    }
+
+    /* ── Control section ── */
+    .ctrl-section {
+      padding: 16px 16px 0;
+    }
+    .ctrl-section + .ctrl-section {
+      border-top: 1px solid #ececec;
+      margin-top: 16px;
+      padding-top: 16px;
+    }
+    .ctrl-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 12px;
+    }
+
+    /* ── Control grid — two columns ── */
+    .ctrl-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .ctrl-grid-2.col-3-1 {
+      grid-template-columns: 3fr 1fr;
+    }
+    .ctrl-full {
+      grid-column: 1 / -1;
+    }
+
+    .ctrl-row { margin-bottom: 10px; }
+    .ctrl-row:last-child { margin-bottom: 0; }
+
+    .ctrl-label {
+      display: block;
+      font-size: 12px;
+      color: #777;
+      margin-bottom: 3px;
+    }
+
+    .ctrl-input {
+      width: 100%;
+      background: #f5f5f5;
+      border: 1px solid #d8d8d8;
+      border-radius: 3px;
+      color: #111;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 13px;
+      padding: 6px 8px;
+      resize: none;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .ctrl-input:focus { outline: none; border-color: #5566ff; background: #fff; }
+
+    .ctrl-check-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #444;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .ctrl-check-row:last-child { margin-bottom: 0; }
+
+    .ctrl-check-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 16px;
+    }
+
+    /* ── Stack panel ── */
+    .stack-panel {
+      width: 300px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      overflow-y: auto;
+      position: relative;
+      transition: box-shadow 0.2s;
+    }
+
+    /* When editing, the peeking strip is clickable to go back */
+    .panel-wrap.editing .stack-panel {
+      cursor: pointer;
+      box-shadow: -4px 0 16px rgba(0,0,0,0.15);
+    }
+
+    /* Back-to-list hint strip — only visible when peeking */
+    .stack-peek-hint {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 0;
+      gap: 6px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 10;
+    }
+    .panel-wrap.editing .stack-peek-hint {
+      opacity: 1;
+    }
+    .peek-arrow {
+      font-size: 16px;
+      color: #5566ff;
+      line-height: 1;
+    }
+    .peek-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #5566ff;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+    }
+
+    /* Dim the stack content when peeking */
+    .stack-content {
+      transition: opacity 0.25s;
+    }
+    .panel-wrap.editing .stack-content {
+      opacity: 0.18;
+      pointer-events: none;
+    }
+
+    /* ── Stack headers & items (match admin) ── */
+    .stack-header {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      height: 40px;
+      border-bottom: 1px solid #e0e0e0;
+      flex-shrink: 0;
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    .stack-header-pinned {
+      background: #f2f2f2;
+      border-bottom: none;
+    }
+    .stack-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      flex: 1;
+    }
+    .stack-collapse-btn {
+      font-size: 13px;
+      color: #888;
+      margin-right: 4px;
+    }
+    .btn-primary {
+      height: 28px;
+      padding: 0 12px;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 2px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary:hover { background: #333; }
+
+    .pinned-section {
+      background: #f2f2f2;
+      padding: 10px 8px 8px;
+      border-bottom: 2px solid #d0d0d0;
+    }
+    .pinned-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 10px;
+      border: 1.5px solid #c8c8c8;
+      border-radius: 2px;
+      background: #e8e8e8;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .pinned-item:last-child { margin-bottom: 0; }
+    .pinned-item:hover { background: #ddd; }
+    .pinned-icon { font-size: 15px; color: #666; }
+    .pinned-label { font-size: 13px; font-weight: 600; color: #333; flex: 1; }
+
+    .cards-section { padding: 10px 0 20px; }
+
+    .accordion-item {
+      margin: 0 8px 10px;
+      border: 1.5px solid #999;
+      border-radius: 2px;
+      background: #e8e8e8;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.13);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .accordion-item.selected {
+      border-color: #5566ff;
+      border-left: 4px solid #5566ff;
+      box-shadow: 0 2px 8px rgba(85,102,255,0.18);
+    }
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 10px 11px 8px;
+    }
+    .accordion-item.selected > .accordion-header { background: #dde0ff; }
+    .accordion-header:hover { background: rgba(0,0,0,0.05); }
+    .accordion-item.selected > .accordion-header:hover { background: #d0d4ff; }
+
+    .drag-handle { color: #888; font-size: 14px; pointer-events: none; line-height: 1; }
+    .stack-item-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stack-item-actions { display: flex; gap: 2px; flex-shrink: 0; }
+    .stack-action-btn {
+      width: 24px;
+      height: 24px;
+      background: rgba(0,0,0,0.07);
+      border: 1px solid rgba(0,0,0,0.1);
+      color: #555;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s;
+    }
+    .stack-action-btn:hover { background: rgba(0,0,0,0.15); }
+
+    /* ── Experiment note ── */
+    .experiment-note {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.72);
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      pointer-events: none;
+      white-space: nowrap;
+      transition: opacity 0.4s;
+    }
+    .experiment-note.hidden { opacity: 0; }
+  </style>
+</head>
+<body>
+
+  <header class="editor-header">
+    <a class="editor-header-back" href="/sandbox.html">← Sandbox</a>
+    <span class="editor-header-name">Panel Flyout v2 — Stack Slide</span>
+    <span class="editor-header-tag">Sandbox</span>
+  </header>
+
+  <div class="editor-body">
+
+    <!-- Canvas -->
+    <div class="canvas-area" id="canvas-area">
+      <div class="canvas-placeholder">
+        <div class="canvas-card">
+          <div class="canvas-card-img"></div>
+          <div class="canvas-card-text">
+            <div class="canvas-card-headline"></div>
+            <div class="canvas-card-blurb"></div>
+          </div>
+        </div>
+        <span class="canvas-label">Card preview area</span>
+      </div>
+    </div>
+
+    <!-- Panel wrap -->
+    <div class="panel-wrap" id="panel-wrap">
+
+      <!-- Controls panel -->
+      <div class="controls-panel" id="controls-panel">
+        <div class="controls-header">
+          <span class="controls-card-name" id="controls-card-name">Card</span>
+          <button class="controls-close" id="controls-close">✕</button>
+        </div>
+        <div class="controls-body">
+
+          <div class="ctrl-section">
+            <div class="ctrl-section-title">Text</div>
+            <div class="ctrl-grid-2">
+              <label class="ctrl-check-row"><input type="checkbox" checked> Show headline</label>
+              <label class="ctrl-check-row"><input type="checkbox" checked> Show summary</label>
+            </div>
+            <div class="ctrl-row">
+              <label class="ctrl-label">Headline</label>
+              <textarea class="ctrl-input" rows="3" placeholder="Headline goes here…"></textarea>
+            </div>
+            <div class="ctrl-row">
+              <label class="ctrl-label">Summary</label>
+              <textarea class="ctrl-input" rows="3" placeholder="Summary text goes here…"></textarea>
+            </div>
+            <div class="ctrl-row">
+              <label class="ctrl-label">Article URL</label>
+              <input type="text" class="ctrl-input" placeholder="https://…">
+            </div>
+          </div>
+
+          <div class="ctrl-section">
+            <div class="ctrl-section-title">Art</div>
+            <div class="ctrl-grid-2 col-3-1">
+              <div>
+                <label class="ctrl-label">Photo URL</label>
+                <input type="text" class="ctrl-input" placeholder="https://…">
+              </div>
+              <div>
+                <label class="ctrl-label">Ratio</label>
+                <select class="ctrl-input">
+                  <option>3:2</option>
+                  <option>16:9</option>
+                  <option>1:1</option>
+                </select>
+              </div>
+            </div>
+            <div class="ctrl-grid-2">
+              <div>
+                <label class="ctrl-label">Caption</label>
+                <input type="text" class="ctrl-input" placeholder="Photographer / agency">
+              </div>
+              <div style="display:flex;align-items:flex-end;padding-bottom:2px;">
+                <label class="ctrl-check-row" style="margin-bottom:0"><input type="checkbox"> Portrait</label>
+              </div>
+            </div>
+            <label class="ctrl-check-row"><input type="checkbox"> Overlay play button</label>
+          </div>
+
+          <div class="ctrl-section">
+            <div class="ctrl-section-title">Layout</div>
+            <div class="ctrl-grid-2">
+              <div>
+                <label class="ctrl-label">Card width</label>
+                <select class="ctrl-input">
+                  <option>Desktop</option>
+                  <option>Tablet</option>
+                  <option>Mobile</option>
+                </select>
+              </div>
+              <div>
+                <label class="ctrl-label">Supporting stories</label>
+                <select class="ctrl-input">
+                  <option>0</option>
+                  <option>1</option>
+                  <option>2</option>
+                  <option>3</option>
+                  <option>4+</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="ctrl-section">
+            <div class="ctrl-section-title">Labels &amp; Extras</div>
+            <div class="ctrl-check-grid">
+              <label class="ctrl-check-row"><input type="checkbox"> LIVE label</label>
+              <label class="ctrl-check-row"><input type="checkbox"> Kicker</label>
+              <label class="ctrl-check-row"><input type="checkbox"> Live ticker</label>
+              <label class="ctrl-check-row"><input type="checkbox"> Package label</label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Stack panel -->
+      <div class="stack-panel" id="stack-panel">
+
+        <!-- Peek hint — visible when stack is mostly hidden -->
+        <div class="stack-peek-hint">
+          <span class="peek-arrow">←</span>
+          <span class="peek-label">All cards</span>
+        </div>
+
+        <!-- Stack content — dimmed when peeking -->
+        <div class="stack-content">
+
+          <!-- Pinned -->
+          <div class="stack-header stack-header-pinned">
+            <span class="stack-collapse-btn">▾</span>
+            <span class="stack-title">Pinned</span>
+          </div>
+          <div class="pinned-section">
+            <div class="pinned-item">
+              <span class="pinned-icon">🖼</span>
+              <span class="pinned-label">Masthead</span>
+            </div>
+            <div class="pinned-item">
+              <span class="pinned-icon">🚨</span>
+              <span class="pinned-label">Breaking News</span>
+            </div>
+          </div>
+
+          <!-- Story cards -->
+          <div class="stack-header">
+            <span class="stack-title">Story Cards</span>
+            <button class="btn-primary">+ Add</button>
+          </div>
+          <div class="cards-section" id="card-list">
+
+            <div class="accordion-item" data-label="Lead story — Local elections">
+              <div class="accordion-header">
+                <span class="drag-handle">⠿</span>
+                <span class="stack-item-label">Lead story — Local elections</span>
+                <div class="stack-item-actions">
+                  <button class="stack-action-btn">⧉</button>
+                  <button class="stack-action-btn">✕</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item" data-label="School board approves budget">
+              <div class="accordion-header">
+                <span class="drag-handle">⠿</span>
+                <span class="stack-item-label">School board approves budget</span>
+                <div class="stack-item-actions">
+                  <button class="stack-action-btn">⧉</button>
+                  <button class="stack-action-btn">✕</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item" data-label="Weekend weather forecast">
+              <div class="accordion-header">
+                <span class="drag-handle">⠿</span>
+                <span class="stack-item-label">Weekend weather forecast</span>
+                <div class="stack-item-actions">
+                  <button class="stack-action-btn">⧉</button>
+                  <button class="stack-action-btn">✕</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item" data-label="New park opens in North Reston">
+              <div class="accordion-header">
+                <span class="drag-handle">⠿</span>
+                <span class="stack-item-label">New park opens in North Reston</span>
+                <div class="stack-item-actions">
+                  <button class="stack-action-btn">⧉</button>
+                  <button class="stack-action-btn">✕</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div><!-- end stack-content -->
+      </div><!-- end stack-panel -->
+
+    </div><!-- end panel-wrap -->
+  </div><!-- end editor-body -->
+
+  <div class="experiment-note" id="experiment-note">Click any card to see the controls expand →</div>
+
+  <script>
+    const panelWrap    = document.getElementById('panel-wrap');
+    const controlsName = document.getElementById('controls-card-name');
+    const closeBtn     = document.getElementById('controls-close');
+    const stackPanel   = document.getElementById('stack-panel');
+    const canvasArea   = document.getElementById('canvas-area');
+    const note         = document.getElementById('experiment-note');
+    const cards        = document.querySelectorAll('#card-list .accordion-item');
+
+    let activeIndex = null;
+
+    function openControls(index, label) {
+      cards.forEach(c => c.classList.remove('selected'));
+      cards[index].classList.add('selected');
+      controlsName.textContent = label;
+      panelWrap.classList.add('editing');
+      activeIndex = index;
+      // Dismiss the hint after first use
+      note.classList.add('hidden');
+    }
+
+    function closeControls() {
+      panelWrap.classList.remove('editing');
+      cards.forEach(c => c.classList.remove('selected'));
+      activeIndex = null;
+    }
+
+    cards.forEach((card, i) => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.stack-action-btn')) return;
+        if (activeIndex === i) {
+          closeControls();
+        } else {
+          openControls(i, card.dataset.label);
+        }
+      });
+    });
+
+    // Clicking the peeking stack returns to list
+    stackPanel.addEventListener('click', (e) => {
+      if (panelWrap.classList.contains('editing')) {
+        closeControls();
+      }
+    });
+
+    // Clicking canvas closes controls
+    canvasArea.addEventListener('click', closeControls);
+
+    // Close button
+    closeBtn.addEventListener('click', closeControls);
+  </script>
+
+</body>
+</html>
