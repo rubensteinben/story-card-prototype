@@ -730,7 +730,7 @@
       flex-shrink: 0;
       position: sticky;
       top: 0;
-      background: #f4f4f4;
+      background: #ffffff;
       z-index: 10;
     }
 
@@ -750,6 +750,37 @@
     }
 
     .stack-header .btn-primary:hover { background: #333; }
+
+    .stack-header-pinned { background: #f2f2f2; border-bottom: none; }
+
+    .stack-header-collapse-btn {
+      font-size: 14px;
+      color: #888;
+      margin-right: 2px;
+      transition: transform 0.2s ease;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .stack-header-pinned.collapsed .stack-header-collapse-btn { transform: rotate(-90deg); }
+    .stack-header-pinned.collapsed #add-pinned-btn { display: none; }
+
+    #pinned-stack-section {
+      background: #f2f2f2;
+      padding-top: 10px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #d0d0d0;
+      overflow: hidden;
+      transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+      max-height: 600px;
+      opacity: 1;
+    }
+    #pinned-stack-section.collapsed {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
 
     #card-stack-list {
       padding: 10px 0 20px;
@@ -1221,8 +1252,14 @@
       background: #1e1e1e;
       border-left-color: #111;
     }
-    body.dark-mode .stack-header {
+    body.dark-mode #pinned-stack-section {
       background: #252525;
+      border-bottom-color: #333;
+    }
+    body.dark-mode .stack-header-pinned { background: #252525; }
+    body.dark-mode .stack-header-collapse-btn { color: #555; }
+    body.dark-mode .stack-header {
+      background: #1e1e1e;
       border-bottom-color: #333;
     }
     body.dark-mode .stack-title { color: #666; }
@@ -1557,11 +1594,16 @@
       </div>
       <div class="editor-right" id="panel">
         <div class="stack-section">
-          <div class="stack-header">
-            <span class="stack-title">Cards</span>
-            <button class="btn-primary" id="add-card-btn" style="height:26px;font-size:12px;padding:0 12px;">+ Add</button>
+          <div class="stack-header stack-header-pinned" id="pinned-section-header">
+            <span class="stack-header-collapse-btn" id="pinned-collapse-btn">▾</span>
+            <span class="stack-title">Pinned</span>
+            <button class="btn-primary" id="add-pinned-btn" style="height:26px;font-size:12px;padding:0 12px;">+ Add</button>
           </div>
           <div id="pinned-stack-section"></div>
+          <div class="stack-header" id="cards-section-header">
+            <span class="stack-title">Story Cards</span>
+            <button class="btn-primary" id="add-card-btn" style="height:26px;font-size:12px;padding:0 12px;">+ Add</button>
+          </div>
           <div id="card-stack-list"></div>
         </div>
       </div>
@@ -3260,6 +3302,35 @@
     });
 
     document.getElementById('add-card-btn').addEventListener('click', addCard);
+
+    // ── Pinned section collapse toggle ───────────────────────────────────────
+    (function () {
+      const header  = document.getElementById('pinned-section-header');
+      const section = document.getElementById('pinned-stack-section');
+      const STORAGE_KEY = 'nb-pinned-collapsed';
+
+      function applyCollapsed(collapsed) {
+        header.classList.toggle('collapsed', collapsed);
+        section.classList.toggle('collapsed', collapsed);
+      }
+
+      // Restore saved state (default: expanded)
+      applyCollapsed(localStorage.getItem(STORAGE_KEY) === '1');
+
+      // Toggle on header click (anywhere except the + Add button)
+      header.addEventListener('click', e => {
+        if (e.target.closest('#add-pinned-btn')) return;
+        const next = !header.classList.contains('collapsed');
+        applyCollapsed(next);
+        localStorage.setItem(STORAGE_KEY, next ? '1' : '0');
+      });
+
+      // + Add pinned — not yet active
+      document.getElementById('add-pinned-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        alert('This feature is coming soon.');
+      });
+    })();
 
     // Click empty space in card area to deselect
     document.getElementById('card-area').addEventListener('click', e => {
