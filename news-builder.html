@@ -2829,16 +2829,19 @@
 
         const scrollArea = document.getElementById('nb-phone-scroll');
 
-        // Inject masthead at top of scroll area if set and visible
         const page = appState.currentPage;
+
+        // Inject masthead at top of scroll area if set and visible
         if (page && page.mastheadUrl && page.showMasthead !== false) {
           const mastheadDiv = document.createElement('div');
           const maxW = Math.round(mobilePx * 0.55);
           mastheadDiv.style.cssText = `background:#fff;padding:20px 16px 16px;width:${mobilePx}px;`;
           mastheadDiv.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Masthead" style="max-width:${maxW}px;width:100%;height:auto;display:block;margin:0 auto;">`;
           scrollArea.appendChild(mastheadDiv);
+        }
 
-          // Inject breaking news bar directly below the masthead in the phone scroll area
+        // Inject breaking news bar — independent of masthead visibility
+        if (page) {
           const bnMobileOpen = appState.selectedCardIndex === -2;
           if (page.showBreakingNews || bnMobileOpen) {
             renderBreakingNewsBar(scrollArea, {
