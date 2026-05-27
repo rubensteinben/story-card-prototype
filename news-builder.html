@@ -1561,6 +1561,7 @@
             <span class="stack-title">Cards</span>
             <button class="btn-primary" id="add-card-btn" style="height:26px;font-size:12px;padding:0 12px;">+ Add</button>
           </div>
+          <div id="pinned-stack-section"></div>
           <div id="card-stack-list"></div>
         </div>
       </div>
@@ -2196,16 +2197,19 @@
     const _dropIndicator = document.createElement('div');
     _dropIndicator.className = 'drop-indicator';
 
-    function renderCardStack() {
-      const list = document.getElementById('card-stack-list');
-      const cards = appState.currentPage?.cards || [];
-      const page  = appState.currentPage;
+    // ── Pinned items (Masthead + Breaking News) ──────────────────────────────
+    // Rendered into #pinned-stack-section, which is never rebuilt during card
+    // operations. Only called when masthead/BN state changes, or on page open.
+    function renderPinnedStack() {
+      const section = document.getElementById('pinned-stack-section');
+      if (!section) return;
+      const page = appState.currentPage;
       const mastheadIsOpen = appState.selectedCardIndex === -1;
-      const bnIsOpen  = appState.selectedCardIndex === -2;
-      const bnIsLive  = page?.showBreakingNews;
-      const bnLiveClosed = bnIsLive && !bnIsOpen;
+      const bnIsOpen       = appState.selectedCardIndex === -2;
+      const bnIsLive       = page?.showBreakingNews;
+      const bnLiveClosed   = bnIsLive && !bnIsOpen;
 
-      const mastheadHtml = `
+      section.innerHTML = `
         <div class="accordion-item masthead-item${mastheadIsOpen ? ' open' : ''}" data-masthead="true">
           <div class="accordion-header">
             <span class="material-symbols-outlined" style="font-size:16px;color:#888;flex-shrink:0;font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;">image</span>
@@ -2216,9 +2220,7 @@
               ${mastheadIsOpen ? '<div id="masthead-controls-section"></div>' : ''}
             </div>
           </div>
-        </div>`;
-
-      const breakingNewsHtml = `
+        </div>
         <div class="accordion-item bn-stack-item${bnIsOpen ? ' open' : ''}${bnLiveClosed ? ' bn-live-closed' : ''}" data-breaking-news="true">
           <div class="accordion-header">
             <span class="material-symbols-outlined" style="font-size:16px;color:#b30000;flex-shrink:0;font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;">crisis_alert</span>
@@ -2232,14 +2234,22 @@
           </div>
         </div>`;
 
+      wireMastheadClick(section);
+      wireBreakingNewsClick(section);
+    }
+
+    // ── Orderable cards ───────────────────────────────────────────────────────
+    function renderCardStack() {
+      const list = document.getElementById('card-stack-list');
+      const cards = appState.currentPage?.cards || [];
+
       if (cards.length === 0) {
-        list.innerHTML = mastheadHtml + breakingNewsHtml + '<div style="padding:16px 14px;font-size:13px;color:#555;">No cards yet.</div>';
-        wireMastheadClick(list);
-        wireBreakingNewsClick(list);
+        list.innerHTML = '<div style="padding:16px 14px;font-size:13px;color:#555;">No cards yet.</div>';
+        renderPinnedStack();
         return;
       }
 
-      list.innerHTML = mastheadHtml + breakingNewsHtml + cards.map((card, i) => {
+      list.innerHTML = cards.map((card, i) => {
         const isOpen = i === appState.selectedCardIndex;
         const label = card.headline || card.headlinePlus || 'Untitled card';
         return `
@@ -2260,8 +2270,7 @@
           </div>`;
       }).join('');
 
-      wireMastheadClick(list);
-      wireBreakingNewsClick(list);
+      renderPinnedStack();
 
       // Header click — select card or toggle open/close
       list.querySelectorAll('.accordion-item:not([data-masthead]):not([data-breaking-news]) .accordion-header').forEach(header => {
@@ -2483,7 +2492,7 @@
       pushUndo();
 
       // Record existing card positions before DOM change
-      // allItems[0] = Masthead, allItems[1] = old first card, etc.
+      // allItems[0] = old first card, allItems[1] = old second card, etc.
       const list = document.getElementById('card-stack-list');
       const beforeTops = [...list.querySelectorAll('.accordion-item')].map(el => el.getBoundingClientRect().top);
 
@@ -2505,12 +2514,12 @@
       renderCardStack();
 
       // FLIP: animate existing cards sliding down to their new positions.
-      // After renderCardStack(), DOM order is: [Masthead(0), newCard(1), oldCard0(2), oldCard1(3)…]
-      // beforeTops order was:                  [Masthead(0), oldCard0(1), oldCard1(2)…]
-      // So for i≥2: old position = beforeTops[i-1] (maps new DOM index back to old DOM index).
+      // After renderCardStack(), DOM order is: [newCard(0), oldCard0(1), oldCard1(2)…]
+      // beforeTops order was:                  [oldCard0(0), oldCard1(1)…]
+      // So for i≥1: old position = beforeTops[i-1] (maps new DOM index back to old DOM index).
       const allItems = [...list.querySelectorAll('.accordion-item')];
       allItems.forEach((el, i) => {
-        if (i <= 1) return; // skip Masthead (i=0) and new card (i=1)
+        if (i === 0) return; // skip new card
         const oldTop = beforeTops[i - 1];
         if (oldTop === undefined) return;
         const delta = oldTop - el.getBoundingClientRect().top;
@@ -2522,8 +2531,8 @@
         el.style.transform = 'translateY(0)';
       });
 
-      // Flash-highlight the new card (allItems[1] — first card after Masthead)
-      if (allItems[1]) allItems[1].classList.add('accordion-item-new');
+      // Flash-highlight the new card (allItems[0] — first card in list)
+      if (allItems[0]) allItems[0].classList.add('accordion-item-new');
     }
 
     function moveCard(index, direction) {
@@ -2720,6 +2729,13 @@
 
     function renderAllCards() {
       const cardArea = document.getElementById('card-area');
+
+      // Lock the scroll container's height during the re-render so the scroll
+      // position can't change, which would fire a scroll event that toggles
+      // .stuck on the masthead and triggers its CSS transition (causing a jump).
+      const _prevH = cardArea.offsetHeight;
+      if (_prevH > 0) cardArea.style.minHeight = _prevH + 'px';
+
       const cards = appState.currentPage?.cards || [];
       const pageWidth = appState.currentPage?.width || '15u';
       const mobilePx = appState.currentPage?.mobilePreviewWidth || 390;
@@ -2729,6 +2745,7 @@
       if (cards.length === 0) {
         _renderTarget = null;
         cardArea.innerHTML = '<div class="card-area-placeholder">Add a card to get started</div>';
+        cardArea.style.minHeight = '';
         renderPageGrid();
         return;
       }
@@ -2873,6 +2890,7 @@
         }
       }
 
+      cardArea.style.minHeight = '';
       renderPageGrid();
     }
 
