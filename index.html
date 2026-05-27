@@ -674,9 +674,48 @@
       vertical-align: middle;
       margin-right: 4px;
     }
+    /* ── Sandbox page header ── */
+    .sandbox-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 48px;
+      background: #111;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      z-index: 1000;
+      border-bottom: 2px solid #222;
+    }
+    .sandbox-header-back {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .sandbox-header-back:hover { color: #fff; }
+    .sandbox-header-name { font-size: 14px; font-weight: 600; color: #fff; flex: 1; }
+    .sandbox-header-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 3px;
+      padding: 3px 8px;
+    }
   </style>
 </head>
 <body>
+
+  <header class="sandbox-header">
+    <a class="sandbox-header-back" href="/sandbox.html">← Sandbox</a>
+    <span class="sandbox-header-name">Story Card Designer v1</span>
+    <span class="sandbox-header-tag">Sandbox</span>
+  </header>
 
   <div id="card-area">
     <!-- Card rendered by JS -->

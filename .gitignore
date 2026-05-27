@@ -3,7 +3,6 @@
 
 # Design scratch pads
 weather-scratch.html
-breaking-news-scratch.html
 breaking-news-reader-scratch.html
 
 # Logo backups
@@ -18,3 +17,4 @@ __pycache__/
 
 # OS files
 .DS_Store
+.vercel

@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Breaking News Bar — Scratch Pad</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: #fff;
+      color: #111;
+      min-height: 100vh;
+    }
+    body.dark-mode { background: #1a1a1a; }
+
+    /* ── Scratch badge ── */
+    #scratch-badge {
+      position: fixed;
+      top: 8px;
+      left: 50%;
+      transform: translateX(calc(-50% - 130px)); /* centered in reader area */
+      z-index: 9999;
+      background: rgba(255,80,0,0.85);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 3px 8px;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    /* ── Canvas controls (bottom-left, matching page.html) ── */
+    #canvas-controls {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      z-index: 1000;
+    }
+    .canvas-ctrl-btn {
+      height: 22px;
+      padding: 0 8px;
+      background: rgba(0,0,0,0.32);
+      border: none;
+      border-radius: 3px;
+      color: rgba(255,255,255,0.55);
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .canvas-ctrl-btn:hover { background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.85); }
+    .canvas-ctrl-btn.active { background: rgba(85,102,255,0.8); color: #fff; }
+
+    /* ════════════════════════════════════════════════════
+       ADMIN PANEL (simulated, right side)
+    ════════════════════════════════════════════════════ */
+    #admin-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 260px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-left: 2px solid #222;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    /* ── Sandbox page header ── */
+    .sandbox-header {
+      height: 48px;
+      background: #111;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      flex-shrink: 0;
+      border-bottom: 2px solid #222;
+    }
+    .sandbox-header-back {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .sandbox-header-back:hover { color: #fff; }
+    .sandbox-header-name { font-size: 14px; font-weight: 600; color: #fff; flex: 1; }
+    .sandbox-header-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 3px;
+      padding: 3px 8px;
+    }
+
+    /* Simulated editor header */
+    #admin-header {
+      flex-shrink: 0;
+      height: 48px;
+      background: #111;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      gap: 8px;
+    }
+    #admin-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+    #admin-back {
+      font-size: 18px;
+      color: rgba(255,255,255,0.25);
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    #admin-page-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #admin-save-status {
+      font-size: 11px;
+      color: rgba(255,255,255,0.25);
+      flex-shrink: 0;
+    }
+
+    /* Card stack */
+    #card-stack {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 0 20px;
+    }
+    #card-stack::-webkit-scrollbar { width: 4px; }
+    #card-stack::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+
+    /* Accordion items */
+    .accordion-item {
+      margin: 0 8px 12px;
+      border: 1.5px solid #999;
+      border-radius: 2px;
+      background: #e8e8e8;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.13);
+      user-select: none;
+    }
+    .accordion-item.open {
+      border-color: #5566ff;
+      border-left: 4px solid #5566ff;
+      background: #e8e8e8;
+      box-shadow: 0 2px 8px rgba(85,102,255,0.18);
+    }
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 10px 12px 8px;
+      user-select: none;
+    }
+    .accordion-header.clickable {
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .accordion-header.clickable:hover { background: rgba(0,0,0,0.06); }
+    .accordion-item.open > .accordion-header {
+      background: #dde0ff;
+      border-bottom: 1.5px solid #b8bcf0;
+    }
+
+    .acc-drag {
+      font-family: 'Material Symbols Outlined';
+      font-size: 14px;
+      color: #aaa;
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+      flex-shrink: 0;
+      cursor: grab;
+    }
+    .acc-icon {
+      font-family: 'Material Symbols Outlined';
+      font-size: 16px;
+      color: #777;
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+      flex-shrink: 0;
+    }
+    .acc-label {
+      font-size: 13px;
+      color: #111;
+      font-weight: 600;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .acc-chevron {
+      font-family: 'Material Symbols Outlined';
+      font-size: 16px;
+      color: #888;
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .accordion-item.open > .accordion-header > .acc-chevron { transform: rotate(180deg); }
+
+    /* Live dot inside accordion header */
+    .acc-live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ff5555;
+      flex-shrink: 0;
+      display: none;
+    }
+    .acc-live-dot.visible { display: block; }
+
+    /* Accordion body (panel controls — light background) */
+    .accordion-body {
+      display: none;
+      background: #f7f7f7;
+      border-top: 1px solid #d8d8d8;
+    }
+    .accordion-item.open > .accordion-body { display: block; }
+
+    /* ── RED header state: live + closed ── */
+    #bn-accordion.live-closed {
+      border-color: #b30000;
+      border-left: 4px solid #b30000;
+      box-shadow: 0 2px 8px rgba(179,0,0,0.2);
+    }
+    #bn-accordion.live-closed > .accordion-header {
+      background: rgba(179,0,0,0.08);
+    }
+    #bn-accordion.live-closed > .accordion-header .acc-icon { color: #b30000; }
+    #bn-accordion.live-closed > .accordion-header .acc-label { color: #900; }
+    #bn-accordion.live-closed > .accordion-header .acc-chevron { color: rgba(180,0,0,0.4); }
+
+    /* ── Panel sections (inside accordion body) ── */
+    .panel-section {
+      padding: 12px 14px;
+      border-bottom: 1px solid #ececec;
+    }
+    .panel-section:last-child { border-bottom: none; }
+
+    .panel-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #999;
+      margin-bottom: 7px;
+    }
+    .panel-section-title .optional {
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      color: #bbb;
+    }
+
+    .control-input {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      padding: 6px 9px;
+      font-family: inherit;
+      font-size: 12px;
+      color: #111;
+      background: #fff;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .control-input:focus { outline: none; border-color: #5566ff; box-shadow: 0 0 0 2px rgba(85,102,255,0.15); }
+
+    select.control-input {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 9px center;
+      padding-right: 26px;
+      cursor: pointer;
+    }
+    textarea.control-input { resize: none; height: 58px; line-height: 1.5; }
+
+    #custom-label-wrap { display: none; margin-top: 7px; }
+    #custom-label-wrap.visible { display: block; }
+
+    /* Duration grid */
+    .duration-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+    .dur-btn {
+      padding: 6px 0;
+      background: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      color: #666;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .dur-btn:hover { background: #e8e8e8; color: #333; }
+    .dur-btn.active { background: #5566ff; border-color: #5566ff; color: #fff; }
+
+    /* Bar color picker */
+    .color-picker {
+      display: flex;
+      gap: 6px;
+    }
+    .color-swatch {
+      flex: 1;
+      height: 32px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: rgba(255,255,255,0.7);
+      position: relative;
+      transition: box-shadow 0.15s, color 0.15s;
+    }
+    .color-swatch[data-color="red"]   { background: #b30000; }
+    .color-swatch[data-color="black"] { background: #111; }
+    .color-swatch:hover { color: #fff; }
+    .color-swatch.active {
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px currentColor;
+      color: #fff;
+    }
+    .color-swatch[data-color="red"].active   { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #b30000; }
+    .color-swatch[data-color="black"].active { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #555; }
+
+    /* Header countdown chip */
+    .bn-header-timer {
+      display: none;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.04em;
+      color: #900;
+      background: rgba(179,0,0,0.1);
+      border: 1px solid rgba(179,0,0,0.25);
+      border-radius: 3px;
+      padding: 1px 5px;
+      flex-shrink: 0;
+    }
+    #bn-accordion.live-closed .bn-header-timer { display: inline-block; }
+
+    /* Live banner */
+    #bn-live-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #b30000;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .bn-live-banner-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    /* Fields hidden while live */
+    .fields-hidden { display: none; }
+
+    /* Go Live button */
+    #publish-btn {
+      width: 100%;
+      padding: 8px 0;
+      background: #b30000;
+      border: none;
+      border-radius: 3px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #publish-btn:hover:not(:disabled) { background: #cc0000; }
+    #publish-btn:disabled { background: #d9a0a0; color: rgba(255,255,255,0.65); cursor: not-allowed; }
+
+    /* Clear all */
+    #clear-all-row { margin-top: 9px; text-align: right; }
+    #clear-all-link {
+      font-size: 11px;
+      color: #bbb;
+      cursor: pointer;
+      border-bottom: 1px dotted #ccc;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    #clear-all-link:hover { color: #888; border-bottom-color: #888; }
+
+    /* Status log */
+    #status-log { display: none; }
+    #status-log.visible { display: block; }
+    .status-box {}
+    .log-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .log-row:last-child { margin-bottom: 0; }
+    .log-key {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #999;
+      flex-shrink: 0;
+    }
+    .log-val { font-size: 12px; font-weight: 600; color: #333; text-align: right; }
+    .log-val.live-countdown { color: #b30000; font-size: 13px; }
+
+    /* Remove button */
+    #remove-btn {
+      width: 100%;
+      padding: 9px 0;
+      background: #fff;
+      border: 1.5px solid #c00;
+      border-radius: 3px;
+      color: #c00;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    #remove-btn:hover { background: #c00; color: #fff; }
+
+    /* Add card area */
+    #add-card-area {
+      flex-shrink: 0;
+      padding: 0 8px 16px;
+      border-top: none;
+    }
+    #add-card-btn {
+      width: 100%;
+      padding: 7px 0;
+      background: transparent;
+      border: 1px dashed rgba(0,0,0,0.2);
+      border-radius: 3px;
+      color: rgba(0,0,0,0.3);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: not-allowed;
+    }
+    body.dark-mode #add-card-area { border-top-color: #2a2a2a; }
+    body.dark-mode #add-card-btn {
+      border-color: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.2);
+    }
+
+    /* ════════════════════════════════════════════════════
+       READER VIEW
+    ════════════════════════════════════════════════════ */
+    #reader-view {
+      margin-right: 260px;
+      min-height: 200vh;
+    }
+
+    /* ── Masthead (exact copy of page.html) ── */
+    #masthead-area {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      width: 100%;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid transparent;
+      transition: padding 0.35s ease, border-color 0.35s ease;
+    }
+    #masthead-area.stuck {
+      padding: 10px 24px;
+      border-bottom-color: #e0e0e0;
+    }
+    #masthead-area img {
+      max-width: 440px;
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: max-width 0.35s ease;
+    }
+    #masthead-area.stuck img { max-width: 200px; }
+
+    body.dark-mode #masthead-area { background: transparent; }
+    body.dark-mode #masthead-area.stuck { background: #1a1a1a; border-bottom-color: rgba(255,255,255,0.1); }
+    body.dark-mode #masthead-area img { filter: invert(1); }
+
+    /* ── Weather bar (exact copy of engine.css) ── */
+    #weather-bar {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 16px;
+      color: #777;
+      padding-top: 10px;
+      max-height: 30px;
+      opacity: 1;
+      overflow: hidden;
+      transition: max-height 0.35s ease, opacity 0.25s ease, padding-top 0.35s ease;
+    }
+    #masthead-area.stuck #weather-bar { max-height: 0; opacity: 0; padding-top: 0; }
+    .wb-date { font-weight: 600; color: #555; }
+    .wb-sep  { opacity: 0.35; }
+    body.dark-mode #weather-bar { color: rgba(255,255,255,0.38); }
+    body.dark-mode .wb-date { color: rgba(255,255,255,0.55); }
+
+    /* ══════════════════════════════════════════════
+       PREVIEW WRAPPER — dashed frame around the bar
+       shown only when accordion open + not yet live
+    ══════════════════════════════════════════════ */
+    #bn-preview-wrapper {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px dashed #c8c8c8;
+      border-radius: 2px;
+      position: relative;
+    }
+    .bn-preview-label {
+      position: absolute;
+      top: -8px;
+      left: 16px;
+      background: #fff; /* must match masthead bg */
+      padding: 0 6px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #c0c0c0;
+      pointer-events: none;
+      font-family: 'Source Sans 3', sans-serif;
+    }
+    body.dark-mode #bn-preview-wrapper { border-color: rgba(255,255,255,0.18); }
+    body.dark-mode .bn-preview-label { background: #1a1a1a; color: rgba(255,255,255,0.25); }
+
+    /* ══════════════════════════════════
+       BREAKING NEWS BAR
+    ══════════════════════════════════ */
+    #breaking-news-bar {
+      width: 100%;
+      background: #b30000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+      transition: max-height 0.3s ease, padding-top 0.3s ease, padding-bottom 0.3s ease, opacity 0.3s ease;
+    }
+    #breaking-news-bar.bn-visible {
+      max-height: 48px;
+      padding-top: 9px;
+      padding-bottom: 9px;
+      opacity: 1;
+    }
+    /* Bar stays visible when masthead is stuck */
+    #masthead-area.stuck #breaking-news-bar { /* intentionally not collapsed */ }
+
+    .bn-inner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 40px 0 16px; /* right padding reserves space for close btn */
+      width: 100%;
+      max-width: 800px;
+    }
+    .bn-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+    .bn-content-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      color: inherit;
+      text-decoration: none;
+    }
+    .bn-content-link:hover { opacity: 0.85; }
+
+    /* No dot — removed per feedback */
+    .bn-label { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; white-space: nowrap; }
+    .bn-sep   { opacity: 0.5; font-weight: 400; }
+    .bn-text  { font-weight: 400; }
+
+    .bn-close {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      font-size: 18px;
+      line-height: 1;
+      cursor: not-allowed;
+      padding: 4px 6px;
+    }
+
+    /* ── Placeholder content ── */
+    #page-container {
+      padding: 40px 48px 120px;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+    .placeholder-card {
+      display: flex;
+      gap: 32px;
+      padding: 40px 0;
+      border-top: 1px solid #e0e0e0;
+    }
+    .placeholder-card:first-child { border-top: none; padding-top: 0; }
+    body.dark-mode .placeholder-card { border-top-color: #333; }
+    .ph-text { flex: 0 0 260px; display: flex; flex-direction: column; gap: 10px; }
+    .ph-art  { flex: 1; }
+    .ph-block { background: #efefef; border-radius: 2px; height: 22px; }
+    .ph-block.tall  { height: 260px; }
+    .ph-block.thin  { height: 13px; }
+    body.dark-mode .ph-block { background: #2a2a2a; }
+
+    /* ── Dark mode: admin panel ── */
+    body.dark-mode #admin-panel {
+      background: #1e1e1e;
+      border-left-color: #111;
+    }
+    body.dark-mode .accordion-item {
+      background: #252525;
+      border-color: #3a3a3a;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    body.dark-mode .accordion-item.open {
+      background: #252525;
+      border-color: #5566ff;
+      box-shadow: 0 2px 8px rgba(85,102,255,0.25);
+    }
+    body.dark-mode .accordion-item.open > .accordion-header {
+      background: rgba(85,102,255,0.15);
+      border-bottom-color: rgba(85,102,255,0.3);
+    }
+    body.dark-mode .accordion-header.clickable:hover { background: rgba(255,255,255,0.04); }
+    body.dark-mode .acc-label { color: #d0d0d0; }
+    body.dark-mode .acc-drag { color: #555; }
+    body.dark-mode .acc-icon { color: #666; }
+    body.dark-mode .acc-chevron { color: #555; }
+    body.dark-mode .accordion-body {
+      background: #1e1e1e;
+      border-top-color: #2a2a2a;
+    }
+    /* Red live-closed on dark */
+    body.dark-mode #bn-accordion.live-closed {
+      border-color: #b30000;
+      box-shadow: 0 2px 8px rgba(179,0,0,0.3);
+    }
+    body.dark-mode #bn-accordion.live-closed > .accordion-header {
+      background: rgba(179,0,0,0.2);
+    }
+    body.dark-mode #bn-accordion.live-closed > .accordion-header .acc-icon { color: rgba(255,120,120,0.8); }
+    body.dark-mode #bn-accordion.live-closed > .accordion-header .acc-label { color: rgba(255,130,130,0.9); }
+    body.dark-mode #bn-accordion.live-closed > .accordion-header .acc-chevron { color: rgba(255,100,100,0.4); }
+    body.dark-mode #bn-live-banner { background: #8a0000; }
+
+    /* ── Scroll hint ── */
+    #scroll-hint {
+      position: fixed;
+      bottom: 16px;
+      left: calc((100vw - 260px) / 2);
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(0,0,0,0.28);
+      pointer-events: none;
+      letter-spacing: 0.05em;
+      transition: opacity 0.4s;
+    }
+    #scroll-hint.hidden { opacity: 0; }
+    body.dark-mode #scroll-hint { color: rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+
+  <header class="sandbox-header">
+    <a class="sandbox-header-back" href="/sandbox.html">← Sandbox</a>
+    <span class="sandbox-header-name">Breaking News Bar</span>
+    <span class="sandbox-header-tag">Sandbox</span>
+  </header>
+
+  <div id="scratch-badge">Scratch pad — not shipped</div>
+
+  <!-- Canvas controls (bottom-left) -->
+  <div id="canvas-controls">
+    <button class="canvas-ctrl-btn" id="dark-btn">Dark</button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       ADMIN PANEL (right side — simulated)
+  ════════════════════════════════════════════════ -->
+  <div id="admin-panel">
+
+    <div id="admin-header">
+      <div id="admin-header-left">
+        <span id="admin-back">←</span>
+        <span id="admin-page-name">Times of Reston</span>
+      </div>
+      <span id="admin-save-status">Saved</span>
+    </div>
+
+    <div id="card-stack">
+
+      <!-- Masthead (static, closed) -->
+      <div class="accordion-item static-item">
+        <div class="accordion-header">
+          <span class="acc-icon material-symbols-outlined">image</span>
+          <span class="acc-label">Masthead</span>
+          <span class="acc-chevron material-symbols-outlined">expand_more</span>
+        </div>
+      </div>
+
+      <!-- Breaking News (interactive) -->
+      <div class="accordion-item" id="bn-accordion">
+        <div class="accordion-header clickable" id="bn-header">
+          <span class="acc-icon material-symbols-outlined" style="color:#b30000;">crisis_alert</span>
+          <span class="acc-label">Breaking News Bar</span>
+          <span class="acc-live-dot" id="bn-live-dot"></span>
+          <span class="bn-header-timer" id="bn-header-timer"></span>
+          <span class="acc-chevron material-symbols-outlined">expand_more</span>
+        </div>
+        <div class="accordion-body" id="bn-body">
+
+          <!-- Live banner (shown when active) -->
+          <div id="bn-live-banner" style="display:none;">
+            <span class="bn-live-banner-dot"></span>
+            Breaking news bar is live
+          </div>
+
+          <!-- Lockable fields -->
+          <div id="bn-fields">
+
+            <!-- Bar Color -->
+            <div class="panel-section">
+              <div class="panel-section-title">Bar Color</div>
+              <div class="color-picker">
+                <button class="color-swatch active" data-color="red"
+                  title="For urgent, breaking news — use sparingly">Red</button>
+                <button class="color-swatch" data-color="black"
+                  title="For live events, press conferences, or lower-urgency alerts">Black</button>
+              </div>
+            </div>
+
+            <!-- Alert Label -->
+            <div class="panel-section">
+              <div class="panel-section-title">Alert Label</div>
+              <select class="control-input" id="sp-label-select">
+                <option value="BREAKING NEWS">BREAKING NEWS</option>
+                <option value="DEVELOPING">DEVELOPING</option>
+                <option value="HAPPENING NOW">HAPPENING NOW</option>
+                <option value="ALERT">ALERT</option>
+                <option value="__custom__">Custom…</option>
+              </select>
+              <div id="custom-label-wrap">
+                <input class="control-input" type="text" id="sp-custom-label" placeholder="Enter label text" maxlength="28">
+              </div>
+            </div>
+
+            <!-- Body text -->
+            <div class="panel-section">
+              <div class="panel-section-title">Body Text</div>
+              <textarea class="control-input" id="sp-text" placeholder="e.g. Officials confirm emergency evacuation order for Lake Anne area."></textarea>
+            </div>
+
+            <!-- Link URL -->
+            <div class="panel-section">
+              <div class="panel-section-title">Link URL <span class="optional">(optional)</span></div>
+              <input class="control-input" type="url" id="sp-url" placeholder="https://…">
+            </div>
+
+            <!-- Duration -->
+            <div class="panel-section">
+              <div class="panel-section-title">Duration</div>
+              <div class="duration-grid">
+                <button class="dur-btn active" data-min="15">15 min</button>
+                <button class="dur-btn" data-min="30">30 min</button>
+                <button class="dur-btn" data-min="60">60 min</button>
+                <button class="dur-btn" data-forever="1">Forever</button>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="panel-section">
+              <button id="publish-btn" disabled>⚡ Go Live</button>
+              <div id="clear-all-row">
+                <a id="clear-all-link">Clear all</a>
+              </div>
+            </div>
+
+          </div><!-- /bn-fields -->
+
+          <!-- Status log + Remove (shown when live) -->
+          <div id="status-log">
+            <div class="panel-section">
+              <div class="status-box">
+                <div class="log-row">
+                  <span class="log-key">Published by</span>
+                  <span class="log-val" id="log-publisher">—</span>
+                </div>
+                <div class="log-row">
+                  <span class="log-key">Active since</span>
+                  <span class="log-val" id="log-since">—</span>
+                </div>
+                <div class="log-row">
+                  <span class="log-key">Expires</span>
+                  <span class="log-val" id="log-expires">—</span>
+                </div>
+                <div class="log-row" id="log-countdown-row" style="display:none;">
+                  <span class="log-key">Remaining</span>
+                  <span class="log-val live-countdown" id="log-countdown">—</span>
+                </div>
+              </div>
+            </div>
+            <div class="panel-section">
+              <button id="remove-btn">Remove bar</button>
+            </div>
+          </div>
+
+        </div><!-- /accordion-body -->
+      </div><!-- /bn-accordion -->
+
+      <!-- Placeholder cards (static) -->
+      <div class="accordion-item static-item">
+        <div class="accordion-header">
+          <span class="acc-drag material-symbols-outlined">drag_indicator</span>
+          <span class="acc-icon material-symbols-outlined">article</span>
+          <span class="acc-label">Card 1</span>
+          <span class="acc-chevron material-symbols-outlined">expand_more</span>
+        </div>
+      </div>
+      <div class="accordion-item static-item">
+        <div class="accordion-header">
+          <span class="acc-drag material-symbols-outlined">drag_indicator</span>
+          <span class="acc-icon material-symbols-outlined">article</span>
+          <span class="acc-label">Card 2</span>
+          <span class="acc-chevron material-symbols-outlined">expand_more</span>
+        </div>
+      </div>
+      <div class="accordion-item static-item">
+        <div class="accordion-header">
+          <span class="acc-drag material-symbols-outlined">drag_indicator</span>
+          <span class="acc-icon material-symbols-outlined">article</span>
+          <span class="acc-label">Card 3</span>
+          <span class="acc-chevron material-symbols-outlined">expand_more</span>
+        </div>
+      </div>
+
+    </div><!-- /card-stack -->
+
+    <div id="add-card-area">
+      <button id="add-card-btn">+ Add Card</button>
+    </div>
+
+  </div><!-- /admin-panel -->
+
+
+  <!-- ════════════════════════════════════════════════
+       READER VIEW (scrollable)
+  ════════════════════════════════════════════════ -->
+  <div id="reader-view">
+
+    <div id="masthead-area">
+      <img src="/logo-times-of-reston-trans.png" alt="Times of Reston">
+      <div id="weather-bar">
+        <span class="wb-date" id="wb-date"></span>
+        <span class="wb-sep">·</span>
+        <span>⛅ 68°F in Reston, VA</span>
+      </div>
+      <!-- #bn-preview-wrapper or #breaking-news-bar injected here -->
+    </div>
+
+    <div id="page-container">
+
+      <div class="placeholder-card">
+        <div class="ph-text">
+          <div class="ph-block" style="width:45%;height:13px;"></div>
+          <div class="ph-block" style="height:26px;"></div>
+          <div class="ph-block" style="width:75%;height:26px;"></div>
+          <div class="ph-block" style="width:85%;height:13px;margin-top:4px;"></div>
+          <div class="ph-block" style="width:70%;height:13px;"></div>
+          <div class="ph-block" style="width:90%;height:13px;"></div>
+        </div>
+        <div class="ph-art">
+          <div class="ph-block tall"></div>
+          <div class="ph-block thin" style="width:55%;margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="placeholder-card">
+        <div class="ph-text">
+          <div class="ph-block" style="width:38%;height:13px;"></div>
+          <div class="ph-block"></div>
+          <div class="ph-block" style="width:60%;"></div>
+          <div class="ph-block" style="width:80%;height:13px;margin-top:4px;"></div>
+          <div class="ph-block" style="width:65%;height:13px;"></div>
+        </div>
+        <div class="ph-art">
+          <div class="ph-block tall"></div>
+          <div class="ph-block thin" style="width:40%;margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="placeholder-card">
+        <div class="ph-text">
+          <div class="ph-block" style="width:52%;height:13px;"></div>
+          <div class="ph-block"></div>
+          <div class="ph-block" style="width:80%;"></div>
+          <div class="ph-block" style="width:90%;height:13px;margin-top:4px;"></div>
+          <div class="ph-block" style="width:60%;height:13px;"></div>
+          <div class="ph-block" style="width:75%;height:13px;"></div>
+        </div>
+        <div class="ph-art">
+          <div class="ph-block tall"></div>
+          <div class="ph-block thin" style="width:70%;margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="placeholder-card">
+        <div class="ph-text">
+          <div class="ph-block" style="width:42%;height:13px;"></div>
+          <div class="ph-block"></div>
+          <div class="ph-block" style="width:55%;"></div>
+          <div class="ph-block" style="width:85%;height:13px;margin-top:4px;"></div>
+          <div class="ph-block" style="width:70%;height:13px;"></div>
+        </div>
+        <div class="ph-art">
+          <div class="ph-block tall"></div>
+          <div class="ph-block thin" style="width:48%;margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="placeholder-card">
+        <div class="ph-text">
+          <div class="ph-block" style="width:48%;height:13px;"></div>
+          <div class="ph-block"></div>
+          <div class="ph-block" style="width:70%;"></div>
+          <div class="ph-block" style="width:88%;height:13px;margin-top:4px;"></div>
+          <div class="ph-block" style="width:55%;height:13px;"></div>
+        </div>
+        <div class="ph-art">
+          <div class="ph-block tall"></div>
+          <div class="ph-block thin" style="width:62%;margin-top:6px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="scroll-hint">↓ scroll to test sticky behavior</div>
+
+
+  <script>
+    // ── State ──────────────────────────────────────────────────────────────────
+    let _active       = false;   // bar is live (published)
+    let _publishedAt  = null;
+    let _expiresAt    = null;
+    let _duration     = 15;      // minutes; null = forever
+    let _barColor     = 'red';   // 'red' | 'black'
+    const _currentUser = 'Ben Rubenstein'; // simulated — will come from Supabase session in production
+    let _countdownTmr = null;
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
+    function escapeHtml(s) {
+      return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function getLabel() {
+      const v = document.getElementById('sp-label-select').value;
+      if (v === '__custom__') return document.getElementById('sp-custom-label').value.trim() || 'CUSTOM';
+      return v;
+    }
+    function fmtTime(d) {
+      return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+    function fmtCountdown(ms) {
+      if (ms <= 0) return 'Expiring…';
+      const s = Math.ceil(ms / 1000);
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return m > 0 ? `${m}m ${String(r).padStart(2,'0')}s` : `${r}s`;
+    }
+    function isAccordionOpen() {
+      return document.getElementById('bn-accordion').classList.contains('open');
+    }
+
+    // ── Render bar ─────────────────────────────────────────────────────────────
+    // Removes any existing bar/wrapper, then:
+    //   live      → appends bar directly (full-width, with close btn, animated if flag set)
+    //   preview   → appends wrapper > bar (dashed frame, no close btn, no animation)
+    //   otherwise → nothing
+    function renderBar(animate) {
+      const container = document.getElementById('masthead-area');
+
+      // Remove existing bar or wrapper
+      const existingWrapper = document.getElementById('bn-preview-wrapper');
+      const existingBar     = document.getElementById('breaking-news-bar');
+      if (existingWrapper) existingWrapper.remove();
+      else if (existingBar) existingBar.remove();
+
+      const showPreview = !_active && isAccordionOpen();
+      if (!_active && !showPreview) return;
+
+      const label = getLabel();
+      const text  = document.getElementById('sp-text').value.trim();
+      const url   = document.getElementById('sp-url').value.trim();
+
+      // Build bar element
+      const bar = document.createElement('div');
+      bar.id = 'breaking-news-bar';
+      bar.style.background = _barColor === 'black' ? '#111' : '#b30000';
+
+      const labelHtml = `<span class="bn-label">${escapeHtml(label)}</span>`;
+      const bodyHtml  = text ? `<span class="bn-sep">·</span><span class="bn-text">${escapeHtml(text)}</span>` : '';
+      const contentHtml = labelHtml + bodyHtml;
+
+      const inner = document.createElement('div');
+      inner.className = 'bn-inner';
+
+      const contentEl = document.createElement(url ? 'a' : 'div');
+      contentEl.className = url ? 'bn-content-link' : 'bn-content';
+      if (url) { contentEl.href = escapeHtml(url); contentEl.target = '_blank'; }
+      contentEl.innerHTML = contentHtml;
+      inner.appendChild(contentEl);
+
+      // Close button — visible for reference but non-functional in admin
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'bn-close';
+      closeBtn.setAttribute('aria-label', 'Dismiss (disabled in admin)');
+      closeBtn.textContent = '✕';
+      inner.appendChild(closeBtn);
+
+      bar.appendChild(inner);
+
+      if (showPreview) {
+        // Wrap in preview frame
+        const wrapper = document.createElement('div');
+        wrapper.id = 'bn-preview-wrapper';
+        const lbl = document.createElement('span');
+        lbl.className = 'bn-preview-label';
+        lbl.textContent = 'Preview';
+        wrapper.appendChild(lbl);
+        wrapper.appendChild(bar);
+        container.appendChild(wrapper);
+        // Show immediately (no entrance animation for preview)
+        bar.classList.add('bn-visible');
+      } else {
+        // Live: append bar directly
+        container.appendChild(bar);
+        if (animate) {
+          const stuck = container.classList.contains('stuck');
+          requestAnimationFrame(() => {
+            bar.classList.add('bn-visible');
+            if (stuck && window.scrollY > 60) {
+              window.scrollBy({ top: 44, behavior: 'instant' });
+            }
+          });
+        } else {
+          bar.classList.add('bn-visible');
+        }
+      }
+    }
+
+    // ── Remove bar ─────────────────────────────────────────────────────────────
+    function removeBar() {
+      _active      = false;
+      _publishedAt = null;
+      _expiresAt   = null;
+      clearTimeout(_countdownTmr);
+
+      // Close the accordion
+      document.getElementById('bn-accordion').classList.remove('open');
+
+      renderBar(false);
+      updateLog();
+      updateAccordionState();
+      document.getElementById('status-log').classList.remove('visible');
+      document.getElementById('bn-fields').classList.remove('fields-hidden');
+      document.getElementById('bn-live-banner').style.display = 'none';
+      updatePublishBtn();
+    }
+
+    // ── Accordion state ────────────────────────────────────────────────────────
+    function updateAccordionState() {
+      const acc    = document.getElementById('bn-accordion');
+      const isOpen = acc.classList.contains('open');
+      // Red header: only when live AND closed
+      acc.classList.toggle('live-closed', _active && !isOpen);
+      // Live dot: show inside header when live AND open
+      document.getElementById('bn-live-dot').classList.toggle('visible', _active && isOpen);
+      // Header timer chip: show when live AND closed
+      const timerEl = document.getElementById('bn-header-timer');
+      if (_active && !isOpen) {
+        timerEl.textContent = _expiresAt
+          ? fmtCountdown(Math.max(0, _expiresAt - Date.now()))
+          : 'LIVE';
+      }
+    }
+
+    // Toggle accordion open/close
+    document.getElementById('bn-header').addEventListener('click', () => {
+      const acc    = document.getElementById('bn-accordion');
+      const isOpen = acc.classList.toggle('open');
+
+      if (_active) {
+        // Bar is live — stays visible regardless; just update state indicators
+        updateAccordionState();
+      } else {
+        // Not live — preview appears when open, disappears when closed
+        if (isOpen) {
+          renderBar(false); // show preview
+        } else {
+          const w = document.getElementById('bn-preview-wrapper') || document.getElementById('breaking-news-bar');
+          if (w) w.remove();
+        }
+        updateAccordionState();
+      }
+    });
+
+    // ── Status log ─────────────────────────────────────────────────────────────
+    function updateLog() {
+      const log = document.getElementById('status-log');
+      if (!_active) { log.classList.remove('visible'); return; }
+      log.classList.add('visible');
+      document.getElementById('log-publisher').textContent = _currentUser;
+      document.getElementById('log-since').textContent = _publishedAt ? fmtTime(_publishedAt) : '—';
+      if (_expiresAt) {
+        document.getElementById('log-expires').textContent = fmtTime(_expiresAt);
+        document.getElementById('log-countdown-row').style.display = '';
+        tickCountdown();
+      } else {
+        document.getElementById('log-expires').textContent = 'No expiry — remove manually';
+        document.getElementById('log-countdown-row').style.display = 'none';
+      }
+    }
+    function tickCountdown() {
+      clearTimeout(_countdownTmr);
+      if (!_expiresAt) return;
+      const ms = _expiresAt - Date.now();
+      if (ms <= 0) { removeBar(); return; }
+      const fmt = fmtCountdown(ms);
+      document.getElementById('log-countdown').textContent = fmt;
+      // Also update header chip if accordion is closed
+      const acc = document.getElementById('bn-accordion');
+      if (!acc.classList.contains('open')) {
+        document.getElementById('bn-header-timer').textContent = fmt;
+      }
+      _countdownTmr = setTimeout(tickCountdown, 500);
+    }
+
+    // ── Duration buttons ───────────────────────────────────────────────────────
+    document.querySelectorAll('.dur-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _duration = btn.dataset.forever ? null : Number(btn.dataset.min);
+      });
+    });
+
+    // ── Label dropdown ─────────────────────────────────────────────────────────
+    // ── Bar color swatches ─────────────────────────────────────────────────────
+    document.querySelectorAll('.color-swatch').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _barColor = btn.dataset.color;
+        document.querySelectorAll('.color-swatch').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (_active || isAccordionOpen()) renderBar(false);
+      });
+    });
+
+    // ── Publish button validation ───────────────────────────────────────────────
+    function updatePublishBtn() {
+      if (_active) return; // already live — button stays disabled
+      const labelVal   = document.getElementById('sp-label-select').value;
+      const customText = document.getElementById('sp-custom-label').value.trim();
+      const bodyText   = document.getElementById('sp-text').value.trim();
+      const hasLabel   = labelVal !== '__custom__' || customText.length > 0;
+      const hasText    = bodyText.length > 0;
+      document.getElementById('publish-btn').disabled = !(hasLabel && hasText);
+    }
+
+    document.getElementById('sp-label-select').addEventListener('change', function () {
+      const wrap = document.getElementById('custom-label-wrap');
+      const isCustom = this.value === '__custom__';
+      wrap.classList.toggle('visible', isCustom);
+      if (isCustom) document.getElementById('sp-custom-label').focus();
+      if (_active || isAccordionOpen()) renderBar(false);
+      updatePublishBtn();
+    });
+    document.getElementById('sp-custom-label').addEventListener('input', () => {
+      if (_active || isAccordionOpen()) renderBar(false);
+      updatePublishBtn();
+    });
+
+    // Live-update bar on content changes
+    document.getElementById('sp-text').addEventListener('input', () => {
+      if (_active || isAccordionOpen()) renderBar(false);
+      updatePublishBtn();
+    });
+    document.getElementById('sp-url').addEventListener('input', () => {
+      if (_active || isAccordionOpen()) renderBar(false);
+    });
+
+    // ── Publish ────────────────────────────────────────────────────────────────
+    document.getElementById('publish-btn').addEventListener('click', () => {
+      const wasPreview = isAccordionOpen() && !_active;
+
+      _active      = true;
+      _publishedAt = new Date();
+      _expiresAt   = _duration ? new Date(Date.now() + _duration * 60 * 1000) : null;
+      clearTimeout(_countdownTmr);
+
+      // If bar was showing in preview state, transition to live (no re-animation needed)
+      // If bar was hidden (accordion was closed), animate it in
+      renderBar(!wasPreview);
+
+      updateLog();
+      updateAccordionState();
+      document.getElementById('publish-btn').disabled = true;
+      document.getElementById('bn-fields').classList.add('fields-hidden');
+      document.getElementById('bn-live-banner').style.display = '';
+    });
+
+    // ── Remove ─────────────────────────────────────────────────────────────────
+    document.getElementById('remove-btn').addEventListener('click', () => {
+      if (!confirm('Remove the breaking news bar? Readers will no longer see it.')) return;
+      removeBar();
+    });
+
+    // ── Clear all ──────────────────────────────────────────────────────────────
+    document.getElementById('clear-all-link').addEventListener('click', () => {
+      const msg = _active
+        ? 'Clear all fields and remove the live breaking news bar?'
+        : 'Clear all breaking news fields?';
+      if (!confirm(msg)) return;
+
+      // Reset fields
+      document.getElementById('sp-label-select').value = 'BREAKING NEWS';
+      document.getElementById('custom-label-wrap').classList.remove('visible');
+      document.getElementById('sp-custom-label').value = '';
+      document.getElementById('sp-text').value = '';
+      document.getElementById('sp-url').value = '';
+      document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('.dur-btn[data-min="15"]').classList.add('active');
+      _duration = 15;
+      _barColor = 'red';
+      document.querySelectorAll('.color-swatch').forEach(b => b.classList.remove('active'));
+      document.querySelector('.color-swatch[data-color="red"]').classList.add('active');
+
+      if (_active) removeBar();
+      else renderBar(false); // refresh preview with cleared fields
+    });
+
+    // ── Sticky scroll ──────────────────────────────────────────────────────────
+    const mastheadEl = document.getElementById('masthead-area');
+    const hintEl     = document.getElementById('scroll-hint');
+    window.addEventListener('scroll', () => {
+      mastheadEl.classList.toggle('stuck', window.scrollY > 8);
+      hintEl.classList.toggle('hidden', window.scrollY > 40);
+    }, { passive: true });
+
+    // ── Date ───────────────────────────────────────────────────────────────────
+    document.getElementById('wb-date').textContent = new Date().toLocaleDateString('en-US', {
+      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+    });
+
+    // ── Dark mode ──────────────────────────────────────────────────────────────
+    function applyDark(on) {
+      document.body.classList.toggle('dark-mode', on);
+      document.getElementById('dark-btn').classList.toggle('active', on);
+      localStorage.setItem('nb-dark-mode', on ? '1' : '0');
+    }
+    applyDark(localStorage.getItem('nb-dark-mode') === '1');
+    document.getElementById('dark-btn').addEventListener('click', () => {
+      applyDark(!document.body.classList.contains('dark-mode'));
+    });
+  </script>
+</body>
+</html>
