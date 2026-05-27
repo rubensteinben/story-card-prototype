@@ -368,10 +368,13 @@
       document.title = page.name + ' — Preview';
       document.getElementById('page-title').textContent = page.name;
 
-      // Render masthead first — always, independent of card count
+      // Render masthead and/or breaking news bar at top of page
       const mastheadArea  = document.getElementById('masthead-area');
       const stickyWrap    = document.getElementById('masthead-sticky-wrap');
-      if (page.masthead_url && page.show_masthead !== false && mastheadArea) {
+      const hasMasthead   = page.masthead_url && page.show_masthead !== false;
+      const hasBnBar      = page.show_breaking_news;
+
+      if (hasMasthead && mastheadArea) {
         const img = document.createElement('img');
         img.src = page.masthead_url;
         img.alt = page.name || 'Masthead';
@@ -379,22 +382,6 @@
         mastheadArea.style.display = '';
 
         if (page.show_weather_bar !== false) renderWeatherBar(mastheadArea);
-
-        if (page.show_breaking_news) {
-          const publishedAt = page.breaking_news_published_at || '';
-          const dismissKey  = 'bn-dismissed-' + slug + '-' + publishedAt;
-          // Append bar to the sticky WRAPPER (sibling of masthead-area),
-          // so it sits flush below the header at full viewport width.
-          renderBreakingNewsBar(stickyWrap, {
-            label:     page.breaking_news_label  || 'BREAKING NEWS',
-            text:      page.breaking_news_text   || '',
-            url:       page.breaking_news_url    || '',
-            color:     page.breaking_news_color  || 'red',
-            expiresAt: page.breaking_news_expires_at || null,
-            dismissKey,
-            animate:   false,
-          });
-        }
 
         // Shrink logo on scroll
         window.addEventListener('scroll', () => {
@@ -406,6 +393,22 @@
           if (mastheadArea.classList.contains('stuck')) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }
+        });
+      }
+
+      // Breaking news bar — shown with or without masthead
+      if (hasBnBar) {
+        const publishedAt = page.breaking_news_published_at || '';
+        const dismissKey  = 'bn-dismissed-' + slug + '-' + publishedAt;
+        stickyWrap.style.display = '';  // ensure wrapper is visible even with no masthead
+        renderBreakingNewsBar(stickyWrap, {
+          label:     page.breaking_news_label  || 'BREAKING NEWS',
+          text:      page.breaking_news_text   || '',
+          url:       page.breaking_news_url    || '',
+          color:     page.breaking_news_color  || 'red',
+          expiresAt: page.breaking_news_expires_at || null,
+          dismissKey,
+          animate:   false,
         });
       }
 

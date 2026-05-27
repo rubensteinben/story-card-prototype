@@ -2078,26 +2078,38 @@
       const page = appState.currentPage;
       const cardArea = document.getElementById('card-area');
       const isMobile = page && page.width === '1u';
-      const shouldShow = page && page.mastheadUrl && page.showMasthead !== false;
+      const shouldShowMasthead = page && page.mastheadUrl && page.showMasthead !== false;
+      const bnAccordionOpen    = appState.selectedCardIndex === -2;
+      const shouldShowBn       = page && (page.showBreakingNews || bnAccordionOpen);
 
-      if (!shouldShow) {
+      // On mobile both masthead and BN bar are rendered inside the phone scroll area
+      if (isMobile) {
         wrap.style.display = 'none';
         if (cardArea) { cardArea.style.marginTop = ''; cardArea.style.paddingTop = ''; cardArea.style.borderTop = ''; }
         return;
       }
 
-      // On mobile the masthead is rendered inside the phone scroll area by renderAllCards()
-      if (isMobile) {
+      // Nothing to show — hide wrapper and reset card area
+      if (!shouldShowMasthead && !shouldShowBn) {
         wrap.style.display = 'none';
+        el.innerHTML = '';
+        el.style.display = '';
+        if (cardArea) { cardArea.style.marginTop = ''; cardArea.style.paddingTop = ''; cardArea.style.borderTop = ''; }
         return;
       }
 
       wrap.style.display = '';
-      el.classList.toggle('masthead-selected', appState.selectedCardIndex === -1);
 
-      el.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Logo">`;
-
-      if (page.showWeatherBar !== false) renderWeatherBar(el);
+      // Render masthead image if enabled, otherwise hide the placeholder area
+      if (shouldShowMasthead) {
+        el.style.display = '';
+        el.classList.toggle('masthead-selected', appState.selectedCardIndex === -1);
+        el.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Logo">`;
+        if (page.showWeatherBar !== false) renderWeatherBar(el);
+      } else {
+        el.innerHTML = '';
+        el.style.display = 'none';
+      }
 
       // Clean up any existing preview wrapper + bar from the sticky wrap
       const existingPreviewWrap = wrap.querySelector('#bn-preview-wrapper');
@@ -2105,7 +2117,6 @@
       const existingBar = document.getElementById('breaking-news-bar');
       if (existingBar) existingBar.remove();
 
-      const bnAccordionOpen = appState.selectedCardIndex === -2;
       if (page.showBreakingNews) {
         // Live — append bar to the sticky WRAPPER (sibling of masthead, full width)
         renderBreakingNewsBar(wrap, {
