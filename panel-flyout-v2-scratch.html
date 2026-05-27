@@ -67,33 +67,46 @@
       flex: 1;
       background: #ebebeb;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 48px 52px;
       cursor: default;
     }
-    .canvas-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
+
+    /* ── Status note ── */
+    .status-note {
+      max-width: 420px;
       pointer-events: none;
       user-select: none;
     }
-    .canvas-card {
-      width: 460px;
-      height: 260px;
-      background: #fff;
-      border: 1px solid #d8d8d8;
-      border-radius: 3px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      display: flex;
-      flex-direction: column;
+    .status-note-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      background: #ddd;
+      border-radius: 2px;
+      padding: 3px 8px;
+      margin-bottom: 18px;
     }
-    .canvas-card-img { flex: 1; background: #e8e8e8; }
-    .canvas-card-text { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-    .canvas-card-headline { height: 20px; background: #ddd; border-radius: 2px; width: 80%; }
-    .canvas-card-blurb { height: 13px; background: #e8e8e8; border-radius: 2px; width: 55%; }
-    .canvas-label { font-size: 12px; color: #bbb; letter-spacing: 0.04em; }
+    .status-note-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .status-note-body {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #555;
+    }
+    .status-note-body p + p {
+      margin-top: 12px;
+    }
 
 
     /* ══════════════════════════════════════════
@@ -337,15 +350,15 @@
 
     <!-- Canvas (never moves) -->
     <div class="canvas-area" id="canvas-area">
-      <div class="canvas-placeholder">
-        <div class="canvas-card">
-          <div class="canvas-card-img"></div>
-          <div class="canvas-card-text">
-            <div class="canvas-card-headline"></div>
-            <div class="canvas-card-blurb"></div>
-          </div>
+      <div class="status-note">
+        <span class="status-note-tag">Experiment paused</span>
+        <div class="status-note-title">This one didn't work out the way we hoped.</div>
+        <div class="status-note-body">
+          <p>This prototype explored an interaction where selecting a card would slide the stack off to the right, revealing a full control panel from underneath — creating the impression that the panel was physically tucked behind the stack.</p>
+          <p>The concept was promising, but the animation and layering behavior proved too difficult to get right. After several attempts, we weren't able to nail it.</p>
+          <p>The idea may be worth revisiting in a future iteration with a different approach.</p>
+          <p><em>Note: The slide animation runs at 2 seconds — far slower than a real product. That was intentional. Slowing it down made it easier to watch exactly what was happening at each stage, catch layering problems, and focus on the details while iterating.</em></p>
         </div>
-        <span class="canvas-label">Card preview area</span>
       </div>
     </div>
 
