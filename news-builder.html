@@ -3725,8 +3725,8 @@
         .join(' ');
     }
 
-    // Known WaPo RSS section slugs
-    const WAPO_SECTIONS = new Set([
+    // Known RSS section slugs
+    const RSS_SECTIONS = new Set([
       'politics','national','world','business','sports','entertainment',
       'technology','lifestyle','local','opinions','opinion','health',
       'science','climate','education','immigration','economy','investigations',
@@ -3735,15 +3735,15 @@
     async function fetchRelatedArticles() {
       if (!state.lastImportedSection) return;
       try {
-        const section = WAPO_SECTIONS.has(state.lastImportedSection)
+        const section = RSS_SECTIONS.has(state.lastImportedSection)
           ? state.lastImportedSection : 'national';
-        const wapoRssUrl = 'https://feeds.washingtonpost.com/rss/' + section;
+        const rssUrl = 'https://feeds.washingtonpost.com/rss/' + section;
 
-        // Primary: WaPo native RSS via Vercel proxy (real WaPo URLs + titles)
+        // Primary: native RSS via Vercel proxy
         // Fallback: rss2json with same feed
-        const tryProxy = fetch('/api/rss?url=' + encodeURIComponent(wapoRssUrl))
+        const tryProxy = fetch('/api/rss?url=' + encodeURIComponent(rssUrl))
           .then(r => r.json()).then(j => j.items?.length ? j.items : null).catch(() => null);
-        const tryRss2json = fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(wapoRssUrl))
+        const tryRss2json = fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl))
           .then(r => r.json()).then(j => (j.status === 'ok' && j.items?.length)
             ? j.items.map(i => ({ title: i.title || '', link: i.link || '' })) : null).catch(() => null);
 
@@ -3754,7 +3754,7 @@
         const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter|latest from the post)[:\s,]?/i;
         const decodeEntities = s => s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
         const items = rawItems
-          .map(item => ({ title: decodeEntities((item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim()), link: item.link || '' }))
+          .map(item => ({ title: decodeEntities((item.title || '').trim()), link: item.link || '' }))
           .filter(({ title }) => title && !existing.has(title.toLowerCase()) && !NON_ARTICLE.test(title))
           .slice(0, 4);
         items.forEach(({ title, link }, i) => {
@@ -3769,7 +3769,7 @@
       } catch (e) { console.log('[suggest] outer error:', e.message); }
     }
 
-    function getWaPoSection(url) {
+    function getRssSection(url) {
       try {
         const path = new URL(url).pathname;
         return path.split('/').filter(Boolean)[0] || null;
@@ -3822,7 +3822,7 @@
         <div class="panel-section">
           <div class="panel-section-title">Import Article</div>
           <div class="control-row" style="margin-bottom:6px;">
-            <input class="control-input" id="import-url" type="text" placeholder="Paste WaPo article URL…" value="${state.articleUrl || ''}">
+            <input class="control-input" id="import-url" type="text" placeholder="Paste article URL…" value="${state.articleUrl || ''}">
           </div>
           <div class="control-row" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
             <button id="import-btn" style="flex-shrink:0;padding:0 12px;height:28px;background:#fff;color:#111;border:1px solid #555;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Import</button>
@@ -4222,7 +4222,7 @@
           if (description) { state.blurb = description; document.getElementById('input-blurb').value = description; }
           if (caption) { state.caption = caption; document.getElementById('input-caption').value = caption; }
           state.articleUrl = url;
-          state.lastImportedSection = getWaPoSection(url);
+          state.lastImportedSection = getRssSection(url);
           if (title) addRecentImport(url, title);
           // Text is ready — reveal it immediately, image skeleton stays
           importingText = false;

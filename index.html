@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WaPo Story Card Prototype</title>
+  <title>Story Card Designer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@300;400;900&display=swap" rel="stylesheet">
@@ -693,8 +693,8 @@
     const state = {
       headline: 'Lead headline goes here. The ideal length is between 50 and 100 characters.',
       blurb: 'Lead blurb here this is the blurb text. Blurbs appear with the lead story only. Lead blurb here this is the blurb text. Blurbs appear with the lead story only.',
-      imageUrl: 'https://picsum.photos/seed/wapo/628/419',
-      caption: '(Demetrius Freeman/The Post)',
+      imageUrl: 'https://picsum.photos/seed/news/628/419',
+      caption: 'Photographer name and photo credit go here. (Publication/Agency)',
       // Future properties — not yet wired
       width: '15u',
       mobilePresetWidth: 390,
@@ -710,7 +710,7 @@
       showBlurb: true,
       showTicker: false,
       tickerItems: [
-        { time: '2:47 p.m.', text: 'Harris leads Trump by six points in new post-debate poll, according to a Washington Post–ABC News survey...' },
+        { time: '2:47 p.m.', text: 'Harris leads Trump by six points in new post-debate poll, according to a new national survey...' },
         { time: '2:31 p.m.', text: 'When Biden announced he would not seek reelection, his closest allies scrambled to understand what the decision...' },
         { time: '2:18 p.m.', text: 'Senate Democrats are pushing for an emergency session to address the latest developments...' },
       ],
@@ -838,8 +838,8 @@
         .join(' ');
     }
 
-    // Known WaPo RSS section slugs
-    const WAPO_SECTIONS = new Set([
+    // Known RSS section slugs
+    const RSS_SECTIONS = new Set([
       'politics','national','world','business','sports','entertainment',
       'technology','lifestyle','local','opinions','opinion','health',
       'science','climate','education','immigration','economy','investigations',
@@ -848,15 +848,15 @@
     async function fetchRelatedArticles() {
       if (!state.lastImportedSection) return;
       try {
-        const section = WAPO_SECTIONS.has(state.lastImportedSection)
+        const section = RSS_SECTIONS.has(state.lastImportedSection)
           ? state.lastImportedSection : 'national';
-        const wapoRssUrl = 'https://feeds.washingtonpost.com/rss/' + section;
+        const rssUrl = 'https://feeds.washingtonpost.com/rss/' + section;
 
-        // Primary: WaPo native RSS via Vercel proxy (real WaPo URLs + titles)
+        // Primary: native RSS via Vercel proxy
         // Fallback: rss2json with same feed
-        const tryProxy = fetch('/api/rss?url=' + encodeURIComponent(wapoRssUrl))
+        const tryProxy = fetch('/api/rss?url=' + encodeURIComponent(rssUrl))
           .then(r => r.json()).then(j => j.items?.length ? j.items : null).catch(() => null);
-        const tryRss2json = fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(wapoRssUrl))
+        const tryRss2json = fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl))
           .then(r => r.json()).then(j => (j.status === 'ok' && j.items?.length)
             ? j.items.map(i => ({ title: i.title || '', link: i.link || '' })) : null).catch(() => null);
 
@@ -864,10 +864,10 @@
         const rawItems = results[0] || results[1];
         if (!rawItems) return;
         const existing = new Set([state.headline].map(t => (t || '').trim().toLowerCase()));
-        const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter|latest from the post)[:\s,]?/i;
+        const NON_ARTICLE = /^(watch|video|listen|podcast|gallery|photos?|opinion newsletter|the daily 202|the 7[:\s]|today'?s headlines|your evening|your morning|good morning|what to (know|read|watch)|newsletter)[:\s,]?/i;
         const decodeEntities = s => s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
         const items = rawItems
-          .map(item => ({ title: decodeEntities((item.title || '').replace(/\s*-\s*(The Washington Post|Washington Post)\s*$/i, '').trim()), link: item.link || '' }))
+          .map(item => ({ title: decodeEntities((item.title || '').trim()), link: item.link || '' }))
           .filter(({ title }) => title && !existing.has(title.toLowerCase()) && !NON_ARTICLE.test(title))
           .slice(0, 4);
         items.forEach(({ title, link }, i) => {
@@ -882,7 +882,7 @@
       } catch (e) { console.log('[suggest] outer error:', e.message); }
     }
 
-    function getWaPoSection(url) {
+    function getRssSection(url) {
       try {
         const path = new URL(url).pathname;
         return path.split('/').filter(Boolean)[0] || null;
@@ -1001,7 +1001,7 @@
             <div id="art-col" style="flex:${cfg.artFlex}">
               <div class="art-wrapper">
                 ${state.articleUrl ? `<a href="${state.articleUrl}" target="_blank" rel="noopener" style="display:block;line-height:0;">` : ''}
-                ${importingImage ? `<div class="card-skeleton art-image" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()};"></div>` : `<img class="art-image" src="${state.imageUrl}" alt="" onerror="this.onerror=null;this.src='https://picsum.photos/seed/wapo/628/419'" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()};${state.articleUrl ? 'cursor:pointer;' : ''}">`}
+                ${importingImage ? `<div class="card-skeleton art-image" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()};"></div>` : `<img class="art-image" src="${state.imageUrl}" alt="" onerror="this.onerror=null;this.src='https://picsum.photos/seed/news/628/419'" style="aspect-ratio:${(() => { const [w,h] = state.aspectRatio.split('/'); return state.portrait ? h+'/'+w : w+'/'+h; })()};${state.articleUrl ? 'cursor:pointer;' : ''}">`}
                 ${state.showOverlayButton ? `
                   <div class="art-overlay-btn">
                     <svg width="10" height="12" viewBox="0 0 10 12" fill="white" style="flex-shrink:0"><path d="M0 0 L10 6 L0 12 Z"/></svg>
@@ -1137,7 +1137,7 @@
         <div class="panel-section">
           <div class="panel-section-title">Import Article</div>
           <div class="control-row" style="margin-bottom:6px;">
-            <input class="control-input" id="import-url" type="text" placeholder="Paste WaPo article URL…">
+            <input class="control-input" id="import-url" type="text" placeholder="Paste article URL…">
           </div>
           <div class="control-row" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
             <button id="import-btn" style="flex-shrink:0;padding:0 12px;height:28px;background:#fff;color:#111;border:1px solid #555;border-radius:3px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Import</button>
@@ -1578,7 +1578,7 @@
           if (description) { state.blurb = description; document.getElementById('input-blurb').value = description; }
           if (caption) { state.caption = caption; document.getElementById('input-caption').value = caption; }
           state.articleUrl = url;
-          state.lastImportedSection = getWaPoSection(url);
+          state.lastImportedSection = getRssSection(url);
           if (title) addRecentImport(url, title);
           // Text is ready — reveal it immediately, image skeleton stays
           importingText = false;
