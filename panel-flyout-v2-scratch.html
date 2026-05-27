@@ -691,6 +691,7 @@
     cards.forEach((card, i) => {
       card.addEventListener('click', (e) => {
         if (e.target.closest('.stack-action-btn')) return;
+        e.stopPropagation(); // prevent bubbling up to stackPanel listener
         if (activeIndex === i) {
           closeControls();
         } else {
