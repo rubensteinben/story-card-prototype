@@ -18,7 +18,7 @@ const state = {
   headline: 'Lead headline goes here. The ideal length is between 50 and 100 characters.',
   blurb: 'Lead summary text goes here. The summary appears with the lead story only.',
   imageUrl: 'https://picsum.photos/seed/wapo/628/419',
-  caption: '(Demetrius Freeman/The Post)',
+  caption: 'Photographer name and photo credit go here. (Publication/Agency)',
   width: '15u',
   mobilePresetWidth: 390,
   phoneClip: true,
