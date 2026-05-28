@@ -107,12 +107,16 @@
       margin-bottom: 16px;
     }
     .status-note-body {
-      font-size: 14px;
+      font-size: 16px;
       line-height: 1.7;
       color: #555;
     }
     .status-note-body p + p {
       margin-top: 12px;
+    }
+    .status-note-body > p:first-child {
+      font-size: 19px;
+      margin-bottom: 16px;
     }
 
     /* ── Panel wrap — the key container ── */
@@ -467,11 +471,16 @@
     <div class="canvas-area">
       <div class="status-note">
         <span class="status-note-tag">Sandbox experiment</span>
-        <div class="status-note-title">What if the controls didn't expand downward?</div>
         <div class="status-note-body">
-          <p>The News Builder currently uses an accordion model — click a card and its controls expand inline, pushing everything else down. It works, but it has a cost: the stack shifts around as controls open and close, making it harder to navigate between cards.</p>
-          <p>This experiment explores an alternative. When you select a card, a control panel slides in from the left while the card stack stays exactly where it is. No pushing, no layout shifts.</p>
-          <p><em>Try it: click any card in the stack. The flyout opens to the left. Switch to another card and the panel updates in place — the stack never moves.</em></p>
+          <p><strong>A prototype of the card editor with a side panel instead of an accordion.</strong></p>
+          <ul>
+            <li>current model: click card → controls expand inline → pushes everything down (accordion)</li>
+            <li>problem: stack keeps jumping around as you open/close things, makes it hard to scan what's there</li>
+            <li>idea: what if selecting a card opened controls in a panel to the left instead? stack never moves</li>
+            <li>this is a scratch prototype of that — click any card, panel slides in from the left</li>
+            <li>switch between cards — panel updates but the stack stays put</li>
+            <li>open question: does this feel better or just different?</li>
+          </ul>
         </div>
       </div>
     </div>
