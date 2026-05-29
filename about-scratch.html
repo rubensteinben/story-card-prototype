@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — News Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: #ebebeb;
+      color: #111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Scratch badge ── */
+    #scratch-badge {
+      position: fixed;
+      top: 10px;
+      right: 14px;
+      z-index: 9999;
+      background: rgba(255, 80, 0, 0.85);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 3px 8px;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      background: #111;
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .site-header-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .site-header-title:hover { color: rgba(255,255,255,0.75); }
+
+    /* ── Page body ── */
+    .page-body {
+      flex: 1;
+      max-width: 640px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+    }
+
+    /* ── Eyebrow ── */
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 10px;
+    }
+
+    /* ── Section headings ── */
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.15;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 14px;
+      margin-top: 56px;
+    }
+
+    /* ── Body copy ── */
+    .body-copy p {
+      font-size: 16px;
+      line-height: 1.7;
+      color: #333;
+      margin-bottom: 18px;
+    }
+
+    .body-copy p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid #d0d0d0;
+      margin: 56px 0 0;
+    }
+
+    /* ── Contact block ── */
+    .contact-block {
+      margin-top: 56px;
+      background: #fff;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      padding: 24px 28px;
+    }
+
+    .contact-block p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #444;
+      margin-bottom: 14px;
+    }
+
+    .contact-block p:last-child {
+      margin-bottom: 0;
+    }
+
+    .contact-link {
+      display: inline-block;
+      font-size: 15px;
+      font-weight: 600;
+      color: #111;
+      text-decoration: none;
+      border-bottom: 2px solid #111;
+      padding-bottom: 1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .contact-link:hover {
+      color: #555;
+      border-color: #555;
+    }
+
+    /* ── Footer ── */
+    .site-footer {
+      background: #111;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="scratch-badge">Draft</div>
+
+  <header class="site-header">
+    <a class="site-header-title" href="/news-builder.html">News Builder</a>
+  </header>
+
+  <div class="page-body">
+
+    <p class="eyebrow">About</p>
+    <h1>What Is News Builder?</h1>
+
+    <div class="body-copy">
+      <p>News Builder is a content management system I designed for editorial teams. It's built around the idea that the people writing and editing the news shouldn't have to fight their tools to make something look great.</p>
+
+      <p>Right now it's a working prototype. A sandbox for ideas about layout, card design, and editorial workflow. The process is as interesting as the product, so I'm building it in the open.</p>
+    </div>
+
+    <h2>Who made it</h2>
+
+    <div class="body-copy">
+      <p>I'm Ben Rubenstein, a user experience designer with years of experience building editorial and publishing tools, most recently at The Washington Post. The problems that excite me most aren't the flashy ones. They're the unsexy, deeply practical ones. How does a producer move quickly on a breaking story? How do you make a complex layout decision feel obvious? That kind of thing.</p>
+
+      <p>I love designing tools and workflows, and I've spent a lot of my career thinking about how newsrooms can work faster and think clearer.</p>
+    </div>
+
+    <h2>How I built it</h2>
+
+    <div class="body-copy">
+      <p>News Builder started as an experiment. I wanted to understand what AI-assisted development actually felt like in practice, not the hype, but the day-to-day reality of building something real with it.</p>
+
+      <p>I used Claude Code to build this from scratch. It let me iterate on animation timing, fine-tune layout details, and push on interaction patterns in ways that would have taken me much longer on my own. I do the designing. Claude does the building. We argue about the details together.</p>
+
+      <p>GitHub was always something I knew existed but never really touched. Now I finally understand what it's all about, and it's changed how I think about what's possible for a designer working independently.</p>
+    </div>
+
+    <div class="contact-block">
+      <p>I'm currently exploring new opportunities. If you're working on something in design, editorial tools, or AI-assisted workflows, or if you just want to talk through an idea, I'd love to hear from you.</p>
+      <a class="contact-link" href="mailto:benrubenstein@me.com">benrubenstein@me.com</a>
+    </div>
+
+  </div>
+
+  <footer class="site-footer">
+    <span>News Builder is an experimental content management system built by Ben Rubenstein using Claude Code</span>
+  </footer>
+
+</body>
+</html>

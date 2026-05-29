@@ -122,6 +122,21 @@
       color: #666;
     }
 
+    .experiment-card-status {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .experiment-card-status.wip {
+      background: #fff8e6;
+      color: #a06010;
+      border: 1px solid #f0cc80;
+    }
+
     /* ── Footer ── */
     .site-footer {
       background: #111;
@@ -173,6 +188,14 @@
           <span class="experiment-card-arrow">→</span>
         </div>
         <p class="experiment-card-desc">When a card is selected, the stack slides off to the right and a wide control panel takes its place. The stack peeks on the right edge as a way back.</p>
+      </a>
+
+      <a class="experiment-card" href="/publish-workflow-scratch.html">
+        <div class="experiment-card-top">
+          <span class="experiment-card-title">Publishing Workflow</span>
+          <span class="experiment-card-status wip">Work in progress</span>
+        </div>
+        <p class="experiment-card-desc">Overview, flow diagram, wireframes, and an interactive prototype of the end-to-end publishing experience — changelog prompt, undo window, validation panel, and page title dropdown.</p>
       </a>
 
       <a class="experiment-card" href="/breaking-news-scratch.html">

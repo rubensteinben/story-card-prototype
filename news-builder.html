@@ -443,34 +443,60 @@
       flex-shrink: 0;
     }
 
-    .editor-page-name {
-      background: transparent;
-      border: none;
-      border-bottom: 1.5px solid transparent;
-      border-radius: 3px;
-      padding: 2px 6px;
-      margin: 0 -6px;
-      font-size: 13px;
-      font-weight: 700;
+    /* ── Page title dropdown ── */
+    .eh-title-wrap {
+      position: relative; flex: 1; min-width: 0;
+      display: flex; align-items: center;
+    }
+
+    .eh-title-btn {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.02em;
+      background: none; border: none; cursor: pointer;
+      padding: 4px 8px; border-radius: 3px; margin: 0 -8px;
+      font-family: inherit; white-space: nowrap;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+      transition: background 0.12s;
+    }
+    .eh-title-btn:hover { background: rgba(255,255,255,0.08); }
+    .eh-chevron { font-size: 10px; color: rgba(255,255,255,0.35); flex-shrink: 0; }
+
+    /* Hidden by default; shown during inline rename */
+    .eh-title-input {
+      display: none; flex: 1; min-width: 0;
+      background: #fff; color: #111;
+      border: none; border-radius: 3px;
+      padding: 4px 8px;
+      font-size: 13px; font-weight: 700; font-family: inherit; letter-spacing: 0.02em;
+    }
+    .eh-title-input:focus { outline: none; }
+    .eh-title-wrap.renaming .eh-title-btn   { display: none; }
+    .eh-title-wrap.renaming .eh-title-input { display: block; }
+
+    /* Dropdown */
+    .eh-dropdown {
+      position: absolute; top: calc(100% + 5px); left: -8px;
+      width: 224px;
+      background: #2b2b2b; border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 5px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+      z-index: 200; display: none; padding: 4px 0;
+    }
+    .eh-dropdown.open { display: block; }
+
+    .ehdd-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px; font-size: 13px; font-weight: 500;
+      color: rgba(255,255,255,0.82); cursor: pointer;
+      transition: background 0.1s;
+      border: none; background: none; width: 100%; text-align: left;
       font-family: inherit;
-      color: #fff;
-      letter-spacing: 0.02em;
-      flex: 1;
-      min-width: 0;
-      cursor: pointer;
-      transition: background 0.12s, border-color 0.12s;
     }
-    .editor-page-name:hover { background: rgba(255,255,255,0.08); }
-    .editor-page-name:focus {
-      outline: none;
-      cursor: text;
-      flex: none;
-      width: 450px;
-      background: #fff;
-      color: #111;
-      border-bottom-color: transparent;
-      border-radius: 3px;
-    }
+    .ehdd-item:hover { background: rgba(255,255,255,0.08); }
+    .ehdd-item.ehdd-red { color: #e57373; }
+    .ehdd-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; }
+    .ehdd-icon { width: 18px; text-align: center; font-size: 17px; flex-shrink: 0; opacity: 0.6; line-height: 1; }
+    .ehdd-item.ehdd-red .ehdd-icon { opacity: 1; font-size: 20px; }
     .save-status {
       font-size: 11px;
       color: rgba(255,255,255,0.4);
@@ -1512,6 +1538,91 @@
     body.dark-mode .bn-panel-live-banner { background: #8a0000; }
     body.dark-mode #bn-remove-btn { background: transparent; }
     body.dark-mode #bn-remove-btn:hover { background: #c00; color: #fff; }
+
+    /* ── Page settings modal ── */
+    .ps-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none; align-items: center; justify-content: center;
+      z-index: 600;
+    }
+    .ps-overlay.open { display: flex; }
+
+    .ps-modal {
+      background: #fff; border-radius: 6px;
+      width: 440px;
+      box-shadow: 0 16px 56px rgba(0,0,0,0.22);
+      overflow: hidden;
+    }
+    .ps-modal-header {
+      padding: 20px 24px 18px;
+      border-bottom: 1px solid #eee;
+    }
+    .ps-modal-title { font-size: 16px; font-weight: 700; color: #111; }
+
+    .ps-modal-body {
+      padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+
+    .ps-field { display: flex; flex-direction: column; gap: 6px; }
+    .ps-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #888;
+    }
+    .ps-input {
+      height: 36px; border: 1.5px solid #d8d8d8; border-radius: 3px;
+      padding: 0 10px; font-family: inherit; font-size: 14px; color: #111;
+      background: #fafafa; transition: border-color 0.12s; width: 100%;
+    }
+    .ps-input:focus { outline: none; border-color: #5566ff; background: #fff; }
+    .ps-input[readonly] {
+      background: #f5f5f5; color: #999; cursor: default; border-style: dashed;
+    }
+    .ps-input[readonly]:focus { border-color: #d8d8d8; }
+    .ps-slug-wrap { display: flex; align-items: center; gap: 0; }
+    .ps-slug-prefix {
+      font-size: 14px; color: #bbb; white-space: nowrap;
+      padding: 0 2px 0 0;
+    }
+    .ps-hint { font-size: 12px; color: #bbb; line-height: 1.55; }
+
+    .ps-divider { border: none; border-top: 1px solid #eee; }
+
+    .ps-wip-section {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .ps-wip-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border-radius: 3px;
+      background: #fafafa; border: 1px solid #eee;
+      font-size: 13px; color: #aaa;
+    }
+    .ps-wip-label { font-weight: 500; color: #999; }
+    .ps-wip-tag {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #c8c8c8;
+      background: #f0f0f0; border-radius: 2px; padding: 2px 6px;
+    }
+
+    .ps-modal-footer {
+      padding: 14px 24px; border-top: 1px solid #eee;
+      display: flex; justify-content: flex-end; gap: 8px;
+    }
+    .ps-cancel {
+      height: 34px; padding: 0 16px; border-radius: 3px;
+      background: transparent; border: 1px solid #d0d0d0; color: #555;
+      font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+      transition: background 0.12s;
+    }
+    .ps-cancel:hover { background: #f5f5f5; }
+    .ps-save {
+      height: 34px; padding: 0 18px; border-radius: 3px;
+      background: #111; border: none; color: #fff;
+      font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: background 0.12s;
+    }
+    .ps-save:hover { background: #333; }
   </style>
 </head>
 <body>
@@ -1599,7 +1710,19 @@
   <div id="view-editor" class="view">
     <div class="editor-header">
       <button class="btn-ghost" id="back-btn">← Back</button>
-      <input id="editor-page-name" class="editor-page-name" type="text" spellcheck="false">
+      <div class="eh-title-wrap" id="eh-title-wrap">
+        <button class="eh-title-btn" id="eh-title-btn">
+          <span id="eh-title-text"></span><span class="eh-chevron">▾</span>
+        </button>
+        <input id="editor-page-name" class="eh-title-input" type="text" spellcheck="false">
+        <div class="eh-dropdown" id="eh-dropdown">
+          <button class="ehdd-item" id="ehdd-settings"><span class="material-symbols-outlined ehdd-icon">settings</span>Page settings</button>
+          <button class="ehdd-item" id="ehdd-duplicate"><span class="material-symbols-outlined ehdd-icon">content_copy</span>Duplicate</button>
+          <button class="ehdd-item" id="ehdd-view"><span class="material-symbols-outlined ehdd-icon">open_in_new</span>View published page</button>
+          <div class="ehdd-divider"></div>
+          <button class="ehdd-item ehdd-red" id="ehdd-delete"><span class="material-symbols-outlined ehdd-icon">delete</span>Delete page</button>
+        </div>
+      </div>
       <span id="save-status" class="save-status"></span>
       <a id="preview-btn" class="preview-btn" target="_blank">Preview ↗</a>
     </div>
@@ -1640,6 +1763,55 @@
   <!-- Admin view (placeholder) -->
   <div id="view-admin" class="view">
     <div class="admin-placeholder">Admin panel coming in Phase G</div>
+  </div>
+
+  <!-- ── Page settings modal ── -->
+  <div class="ps-overlay" id="ps-overlay">
+    <div class="ps-modal">
+      <div class="ps-modal-header">
+        <div class="ps-modal-title">Page settings</div>
+      </div>
+      <div class="ps-modal-body">
+
+        <div class="ps-field">
+          <label class="ps-label" for="ps-name">Page name</label>
+          <input class="ps-input" id="ps-name" type="text" spellcheck="false">
+          <div class="ps-hint">Displayed in the editor and page list. Doesn't affect the URL.</div>
+        </div>
+
+        <div class="ps-field">
+          <label class="ps-label">URL slug</label>
+          <div class="ps-slug-wrap">
+            <span class="ps-slug-prefix">/p/</span>
+            <input class="ps-input" id="ps-slug" type="text" readonly>
+          </div>
+          <div class="ps-hint">Slug is set at creation and can't be changed — existing links would break.</div>
+        </div>
+
+        <hr class="ps-divider">
+
+        <div class="ps-wip-section">
+          <div class="ps-label">Coming soon</div>
+          <div class="ps-wip-row">
+            <span class="ps-wip-label">SEO title &amp; description</span>
+            <span class="ps-wip-tag">Not built</span>
+          </div>
+          <div class="ps-wip-row">
+            <span class="ps-wip-label">Social share image</span>
+            <span class="ps-wip-tag">Not built</span>
+          </div>
+          <div class="ps-wip-row">
+            <span class="ps-wip-label">Page visibility</span>
+            <span class="ps-wip-tag">Not built</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="ps-modal-footer">
+        <button class="ps-cancel" id="ps-cancel">Cancel</button>
+        <button class="ps-save" id="ps-save">Save</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -2210,6 +2382,7 @@
     function renderEditorHeader() {
       const page = appState.currentPage;
       document.getElementById('editor-page-name').value = page.name;
+      document.getElementById('eh-title-text').textContent = page.name;
       document.getElementById('preview-btn').href = `page.html?page=${page.slug}`;
 
       const widths = [
@@ -3396,8 +3569,58 @@
         if (!newName) { this.value = appState.currentPage.name; return; }
         if (newName !== appState.currentPage.name) {
           appState.currentPage.name = newName;
+          document.getElementById('eh-title-text').textContent = newName;
           scheduleSave();
         }
+      });
+    })();
+
+    // Page title dropdown
+    (function () {
+      const titleBtn = document.getElementById('eh-title-btn');
+      const dropdown = document.getElementById('eh-dropdown');
+
+      titleBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        dropdown.classList.toggle('open');
+      });
+      document.addEventListener('click', () => dropdown.classList.remove('open'));
+      dropdown.addEventListener('click', e => e.stopPropagation());
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') dropdown.classList.remove('open');
+      });
+
+      document.getElementById('ehdd-settings').addEventListener('click', () => {
+        dropdown.classList.remove('open');
+        openPageSettings();
+      });
+
+      document.getElementById('ehdd-duplicate').addEventListener('click', () => {
+        dropdown.classList.remove('open');
+        if (!appState.currentPage) return;
+        duplicatePage(appState.currentPage.slug, appState.currentPage.name);
+      });
+
+      document.getElementById('ehdd-view').addEventListener('click', () => {
+        dropdown.classList.remove('open');
+        const href = document.getElementById('preview-btn').href;
+        if (href) window.open(href, '_blank');
+      });
+
+      document.getElementById('ehdd-delete').addEventListener('click', async () => {
+        dropdown.classList.remove('open');
+        if (!appState.currentPage) return;
+        if (!confirm('Delete this page? This cannot be undone.')) return;
+        const id = appState.currentPage.id;
+        const { error } = await sb.from('pages').delete().eq('id', id);
+        if (error) { alert('Could not delete: ' + error.message); return; }
+        appState.pages = appState.pages.filter(p => p.id !== id);
+        clearTimeout(_saveTimer);
+        appState.currentPage = null;
+        appState.dirty = false;
+        history.pushState({}, '', window.location.pathname);
+        showView('list');
+        loadPages();
       });
     })();
 
@@ -4276,7 +4499,52 @@
       if (el) el.classList.toggle('stuck', document.querySelector('.editor-left').scrollTop > 8);
     });
 
+    // ── Page settings modal ──────────────────────────────────
+    function openPageSettings() {
+      if (!appState.currentPage) return;
+      document.getElementById('ps-name').value = appState.currentPage.name;
+      document.getElementById('ps-slug').value = appState.currentPage.slug;
+      document.getElementById('ps-overlay').classList.add('open');
+      setTimeout(() => {
+        const nameInput = document.getElementById('ps-name');
+        nameInput.focus();
+        nameInput.select();
+      }, 40);
+    }
+
+    function closePageSettings() {
+      document.getElementById('ps-overlay').classList.remove('open');
+    }
+
+    (function () {
+      document.getElementById('ps-cancel').addEventListener('click', closePageSettings);
+
+      document.getElementById('ps-overlay').addEventListener('click', e => {
+        if (e.target === document.getElementById('ps-overlay')) closePageSettings();
+      });
+
+      document.getElementById('ps-name').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('ps-save').click();
+        if (e.key === 'Escape') closePageSettings();
+      });
+
+      document.getElementById('ps-save').addEventListener('click', () => {
+        if (!appState.currentPage) return;
+        const newName = document.getElementById('ps-name').value.trim();
+        if (!newName) return;
+        if (newName !== appState.currentPage.name) {
+          appState.currentPage.name = newName;
+          document.getElementById('eh-title-text').textContent = newName;
+          document.getElementById('editor-page-name').value = newName;
+          scheduleSave();
+        }
+        closePageSettings();
+      });
+    })();
+
     initAuth();
   </script>
+
+
 </body>
 </html>
