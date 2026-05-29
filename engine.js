@@ -299,7 +299,7 @@ async function renderWeatherBar(containerEl) {
 
   try {
     const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000 })
+      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000, maximumAge: 300000 })
     );
     const { latitude: lat, longitude: lon } = pos.coords;
 
@@ -331,7 +331,7 @@ async function renderWeatherBar(containerEl) {
       <span class="wb-wx">${emoji} ${temp}°F in ${escapeHtml(loc)}</span>`;
 
   } catch (e) {
-    console.error('[weather]', e.message, e);
+    // Geo denied, outside US, or API error — date only, no broken UI
   }
 }
 
