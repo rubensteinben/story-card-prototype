@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publishing Workflow — Wireframe — Sandbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: #ebebeb;
+      color: #111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Sandbox header ── */
+    .sandbox-header {
+      height: 48px; background: #111;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 16px; flex-shrink: 0; border-bottom: 2px solid #222;
+    }
+    .sandbox-header-back {
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .sandbox-header-back:hover { color: #fff; }
+    .sandbox-header-name { font-size: 14px; font-weight: 600; color: #fff; flex: 1; }
+    .sandbox-header-tag {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 3px; padding: 3px 8px;
+    }
+
+    /* ── Tab bar ── */
+    .sandbox-tabs {
+      height: 40px; background: #fff; border-bottom: 1px solid #d0d0d0;
+      display: flex; align-items: flex-end; padding: 0 20px; flex-shrink: 0;
+    }
+    .sandbox-tab {
+      display: flex; align-items: center; height: 100%; padding: 0 16px;
+      font-size: 13px; font-weight: 600; color: #888; text-decoration: none;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 0.12s; white-space: nowrap;
+    }
+    .sandbox-tab:hover { color: #444; }
+    .sandbox-tab.active { color: #111; border-bottom-color: #5566ff; }
+
+    /* ── Page body ── */
+    .page-body {
+      flex: 1;
+      padding: 48px 52px 80px;
+      max-width: 760px;
+    }
+
+    /* ── Intro ── */
+    .intro { margin-bottom: 40px; }
+    .intro-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #999; margin-bottom: 8px;
+    }
+    .intro-text { font-size: 14px; line-height: 1.7; color: #555; max-width: 560px; }
+
+    /* ── Wireframe sections ── */
+    .wf-section { margin-bottom: 52px; }
+
+    .wf-section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #999; margin-bottom: 12px;
+    }
+
+    .wf-frame {
+      background: #fff; border: 1px solid #d0d0d0; border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .wf-caption {
+      font-size: 13px; line-height: 1.6; color: #666; margin-top: 10px;
+      padding-left: 2px; max-width: 580px;
+    }
+    .wf-caption strong { color: #333; font-weight: 700; }
+
+    /* ═══════════════════════════════
+       Wireframe mock elements
+    ═══════════════════════════════ */
+
+    /* Editor header bar */
+    .wf-header {
+      height: 48px; background: #1c1c1c;
+      display: flex; align-items: center;
+      padding: 0 16px; gap: 10px;
+    }
+    .wf-header-back { font-size: 12px; color: rgba(255,255,255,0.4); }
+    .wf-header-name {
+      font-size: 13px; font-weight: 600; color: #fff; flex: 1;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .wf-header-chevron { color: rgba(255,255,255,0.3); font-size: 11px; }
+    .wf-save-status { font-size: 11px; color: rgba(255,255,255,0.35); margin-right: 4px; }
+    .wf-preview-btn {
+      height: 30px; padding: 0 14px; border-radius: 2px;
+      background: transparent; color: rgba(255,255,255,0.6);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      font-size: 12px; font-weight: 600; cursor: default;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .wf-publish-btn {
+      height: 30px; padding: 0 16px; border-radius: 2px;
+      background: #fff; color: #111;
+      font-size: 12px; font-weight: 700; cursor: default;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .wf-published-state {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .wf-published-badge {
+      height: 26px; padding: 0 10px; border-radius: 2px;
+      background: rgba(56,142,60,0.25); border: 1px solid rgba(56,142,60,0.5);
+      color: #81c784; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; gap: 5px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: rgba(129,199,132,0.4);
+      text-underline-offset: 2px;
+    }
+    .wf-header-icon-btn {
+      height: 28px; padding: 0 10px; border-radius: 2px;
+      border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.45);
+      font-size: 11px; font-weight: 600; display: flex; align-items: center;
+      cursor: default; white-space: nowrap;
+    }
+    .wf-last-pub { font-size: 11px; color: rgba(255,255,255,0.3); }
+
+    /* State divider within frame */
+    .wf-state-divider {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 16px; background: #f5f5f5; border-top: 1px solid #e8e8e8;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    .wf-state-label { font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #aaa; }
+    .wf-state-rule { flex: 1; height: 1px; background: #e0e0e0; }
+
+    /* Modal */
+    .wf-modal-backdrop {
+      background: rgba(0,0,0,0.03); padding: 40px;
+      display: flex; justify-content: center; align-items: flex-start;
+    }
+    .wf-modal {
+      background: #fff; border: 1px solid #ccc; border-radius: 4px;
+      padding: 24px 28px; width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+    .wf-modal-title { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 4px; }
+    .wf-modal-sub { font-size: 13px; color: #777; margin-bottom: 20px; }
+    .wf-modal-label { font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; }
+    .wf-modal-input {
+      width: 100%; height: 68px; background: #f5f5f5;
+      border: 1px solid #d8d8d8; border-radius: 3px; margin-bottom: 6px;
+    }
+    .wf-modal-hint { font-size: 11px; color: #aaa; margin-bottom: 20px; }
+    .wf-modal-actions {
+      display: flex; justify-content: flex-end; gap: 8px;
+      padding-top: 16px; border-top: 1px solid #efefef;
+    }
+    .wf-btn {
+      height: 34px; padding: 0 18px; border-radius: 3px;
+      font-size: 13px; font-weight: 600; cursor: default;
+      display: inline-flex; align-items: center;
+    }
+    .wf-btn.ghost { background: transparent; border: 1px solid #d0d0d0; color: #555; }
+    .wf-btn.primary { background: #111; color: #fff; }
+
+    /* Toast */
+    .wf-toast-wrap {
+      background: #ebebeb; padding: 60px 24px 0;
+      position: relative; min-height: 100px; overflow: hidden;
+    }
+    .wf-toast-context {
+      text-align: center; font-size: 12px; color: #bbb; margin-bottom: 24px;
+    }
+    .wf-toast {
+      background: #1a1a1a; border-radius: 4px 4px 0 0;
+      padding: 13px 20px; display: flex; align-items: center; gap: 10px;
+    }
+    .wf-toast-check { color: #66bb6a; font-size: 15px; flex-shrink: 0; }
+    .wf-toast-text { font-size: 13px; color: rgba(255,255,255,0.85); flex: 1; }
+    .wf-toast-view {
+      font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6);
+      text-decoration: underline; text-decoration-color: rgba(255,255,255,0.25);
+      text-underline-offset: 2px; flex-shrink: 0; cursor: pointer;
+    }
+    .wf-toast-divider { color: rgba(255,255,255,0.15); flex-shrink: 0; }
+    .wf-toast-countdown { font-size: 11px; color: rgba(255,255,255,0.35); flex-shrink: 0; }
+    .wf-toast-undo {
+      height: 28px; padding: 0 12px; border-radius: 2px;
+      border: 1.5px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.65);
+      font-size: 12px; font-weight: 700; cursor: default;
+      display: flex; align-items: center;
+    }
+
+    /* Validation panel */
+    .wf-validation-wrap {
+      padding: 0;
+    }
+    .wf-validation-header {
+      padding: 16px 20px; border-bottom: 1px solid #eee;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .wf-validation-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .wf-validation-title { font-size: 15px; font-weight: 700; color: #111; margin-bottom: 2px; }
+    .wf-validation-sub { font-size: 12px; color: #888; }
+    .wf-issue-list { padding: 14px 20px; display: flex; flex-direction: column; gap: 8px; }
+    .wf-issue {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      background: #f9f9f9; border: 1px solid #eee; border-radius: 3px;
+    }
+    .wf-issue-text { font-size: 13px; color: #333; flex: 1; line-height: 1.4; }
+    .wf-issue-badge {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 2px; flex-shrink: 0;
+    }
+    .wf-issue-badge.error { background: #fde8e8; color: #c62828; }
+    .wf-issue-badge.warn  { background: #fff8e6; color: #e65100; }
+    .wf-validation-footer {
+      padding: 14px 20px; border-top: 1px solid #eee;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .wf-validation-footer-note { font-size: 12px; color: #aaa; font-style: italic; }
+    .wf-validation-actions { display: flex; gap: 8px; }
+    .wf-btn.override { background: transparent; border: 1px solid #d0d0d0; color: #777; }
+    .wf-btn.fix { background: #111; color: #fff; }
+
+    /* Page title dropdown */
+    .wf-dropdown-frame {
+      padding: 0;
+      position: relative;
+    }
+    .wf-dropdown-header-wrap {
+      position: relative;
+    }
+    .wf-page-title-menu {
+      position: absolute;
+      top: 48px; left: 56px;
+      width: 220px;
+      background: #2a2a2a;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 4px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      overflow: hidden;
+      z-index: 10;
+    }
+    .wf-menu-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px; font-size: 13px; font-weight: 500;
+      color: rgba(255,255,255,0.82); cursor: default;
+    }
+    .wf-menu-item:hover { background: rgba(255,255,255,0.07); }
+    .wf-menu-item.amber { color: #f0a040; }
+    .wf-menu-item.red   { color: #e57373; }
+    .wf-menu-divider {
+      height: 1px; background: rgba(255,255,255,0.1);
+      margin: 3px 0;
+    }
+    .wf-menu-icon {
+      font-size: 14px; opacity: 0.55; width: 16px;
+      text-align: center; flex-shrink: 0;
+    }
+    .wf-menu-item.amber .wf-menu-icon { opacity: 0.8; }
+    .wf-menu-item.red   .wf-menu-icon { opacity: 0.8; }
+    .wf-menu-item-note {
+      font-size: 10px; color: rgba(255,255,255,0.3);
+      margin-left: auto; font-weight: 400;
+    }
+    .wf-dropdown-spacer {
+      height: 240px; /* space for the dropdown to render below the header */
+    }
+    .wf-header-name-active {
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      padding: 2px 6px;
+    }
+
+    /* Stub note */
+    .wf-stub-note {
+      margin: 0 20px 14px; padding: 10px 14px;
+      background: #f0f2ff; border: 1px solid #c8ccff; border-radius: 3px;
+      font-size: 12px; color: #3344cc; line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="sandbox-header">
+    <a class="sandbox-header-back" href="/sandbox.html">← Sandbox</a>
+    <span class="sandbox-header-name">Publishing Workflow</span>
+    <span class="sandbox-header-tag">Sandbox</span>
+  </header>
+
+  <nav class="sandbox-tabs">
+    <a class="sandbox-tab" href="/publish-workflow-scratch.html">Overview</a>
+    <a class="sandbox-tab" href="/publish-flow-scratch.html">Flow</a>
+    <a class="sandbox-tab active" href="/publish-wireframe-scratch.html">Wireframe</a>
+    <a class="sandbox-tab" href="/publish-hifi-scratch.html">Prototype</a>
+  </nav>
+
+  <div class="page-body">
+
+    <div class="intro">
+      <div class="intro-eyebrow">Low-fidelity wireframes</div>
+      <p class="intro-text">Happy path first. These frames cover the core publish flow — where the button lives, the changelog prompt, and the undo window. One stubbed validation scenario is included to establish the panel layout. Validation logic is a separate design sprint.</p>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         Frame A: Publish button + post-publish state
+    ───────────────────────────────────────── -->
+    <div class="wf-section">
+      <div class="wf-section-label">A — Publish button &amp; post-publish header state</div>
+      <div class="wf-frame">
+
+        <div class="wf-state-divider">
+          <span class="wf-state-label">Before publishing</span>
+          <div class="wf-state-rule"></div>
+        </div>
+        <div class="wf-header">
+          <span class="wf-header-back">← Back</span>
+          <span class="wf-header-name">
+            Times of Reston · Homepage
+            <span class="wf-header-chevron">▾</span>
+          </span>
+          <span class="wf-save-status">Saved</span>
+          <div class="wf-preview-btn">Preview ↗</div>
+          <div class="wf-publish-btn">Publish →</div>
+        </div>
+
+        <div class="wf-state-divider">
+          <span class="wf-state-label">After publishing</span>
+          <div class="wf-state-rule"></div>
+        </div>
+        <div class="wf-header">
+          <span class="wf-header-back">← Back</span>
+          <span class="wf-header-name">
+            Times of Reston · Homepage
+            <span class="wf-header-chevron">▾</span>
+          </span>
+          <div class="wf-published-state">
+            <span class="wf-last-pub">Published 2 min ago</span>
+            <div class="wf-published-badge">✓ Live</div>
+<div class="wf-preview-btn">Preview ↗</div>
+            <div class="wf-publish-btn">Publish →</div>
+          </div>
+        </div>
+
+      </div>
+      <p class="wf-caption">
+        <strong>Publish button</strong> lives at the far right of the editor header — the primary action. Preview sits immediately to its left as a secondary action. After publishing, the button stays as "Publish" and a <strong>✓ Live badge</strong> appears — clicking it opens the published page in a new tab. The badge is the persistent, always-visible link to the live version. The page title (▾) opens the page settings dropdown per KAN-8.
+      </p>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         Frame B: Changelog prompt
+    ───────────────────────────────────────── -->
+    <div class="wf-section">
+      <div class="wf-section-label">B — Changelog prompt (appears on Publish click)</div>
+      <div class="wf-frame">
+        <div class="wf-modal-backdrop">
+          <div class="wf-modal">
+            <div class="wf-modal-title">Ready to publish?</div>
+            <div class="wf-modal-sub">Times of Reston · Homepage</div>
+            <div class="wf-modal-label">What changed? <span style="color:#bbb;font-weight:400">(optional)</span></div>
+            <div class="wf-modal-input"></div>
+            <div class="wf-modal-hint">This note will appear in the publishing history.</div>
+            <div class="wf-modal-actions">
+              <div class="wf-btn ghost">Cancel</div>
+              <div class="wf-btn primary">Publish →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="wf-caption">
+        <strong>Lightweight modal</strong> — not a heavy confirmation dialog, just a low-friction prompt for a changelog note. The note is optional so editors aren't blocked. Clicking Publish here immediately puts the page live and starts the undo window.
+      </p>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         Frame C: Undo window toast
+    ───────────────────────────────────────── -->
+    <div class="wf-section">
+      <div class="wf-section-label">C — Undo window (15 seconds after publishing)</div>
+      <div class="wf-frame">
+        <div class="wf-toast-wrap">
+          <div class="wf-toast-context">← Page is live · Editor view continues normally above</div>
+          <div class="wf-toast">
+            <span class="wf-toast-check">✓</span>
+            <span class="wf-toast-text">Published — Times of Reston · Homepage</span>
+            <span class="wf-toast-view">View live page ↗</span>
+            <span class="wf-toast-divider">·</span>
+            <span class="wf-toast-countdown">12s</span>
+            <div class="wf-toast-undo">Undo</div>
+          </div>
+        </div>
+      </div>
+      <p class="wf-caption">
+        <strong>Anchored to the bottom of the screen</strong>, not blocking anything. "View live page ↗" is right there for the most common post-publish action. The countdown is visible but quiet. Clicking Undo immediately reverses the publish. After 15 seconds the toast fades — the ✓ Live badge in the header takes over as the persistent link to the published page.
+      </p>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         Frame D: Validation panel (stubbed)
+    ───────────────────────────────────────── -->
+    <div class="wf-section">
+      <div class="wf-section-label">D — Validation panel (stubbed — one scenario)</div>
+      <div class="wf-frame">
+        <div class="wf-validation-wrap">
+          <div class="wf-validation-header">
+            <span class="wf-validation-icon">⚠️</span>
+            <div>
+              <div class="wf-validation-title">A few things to check before publishing.</div>
+              <div class="wf-validation-sub">You can fix these now, or publish anyway and address them after.</div>
+            </div>
+          </div>
+          <div class="wf-issue-list">
+            <div class="wf-issue">
+              <div class="wf-issue-text">Card 2 has no headline</div>
+              <span class="wf-issue-badge error">Error</span>
+            </div>
+            <div class="wf-issue">
+              <div class="wf-issue-text">Card 3 is using a placeholder image URL</div>
+              <span class="wf-issue-badge error">Error</span>
+            </div>
+            <div class="wf-issue">
+              <div class="wf-issue-text">Cards 1 and 4 link to the same article</div>
+              <span class="wf-issue-badge warn">Warning</span>
+            </div>
+          </div>
+          <div class="wf-stub-note">
+            Stub only — the actual detection logic, AI briefing approach, and error taxonomy are part of a separate validation design sprint.
+          </div>
+          <div class="wf-validation-footer">
+            <span class="wf-validation-footer-note">2 errors, 1 warning</span>
+            <div class="wf-validation-actions">
+              <div class="wf-btn override">Publish anyway</div>
+              <div class="wf-btn fix">Fix issues</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="wf-caption">
+        <strong>Appears instead of the changelog prompt</strong> when issues are detected. Errors are things that will definitely look broken to readers. Warnings are things that might be intentional. Both can be overridden — this is never a hard block. The full validation design (AI briefing, detection logic, error taxonomy) is a separate sprint.
+      </p>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         Frame E: Page title dropdown
+    ───────────────────────────────────────── -->
+    <div class="wf-section">
+      <div class="wf-section-label">E — Page title dropdown (KAN-8)</div>
+      <div class="wf-frame wf-dropdown-frame">
+        <div class="wf-dropdown-header-wrap">
+          <div class="wf-header">
+            <span class="wf-header-back">← Back</span>
+            <span class="wf-header-name">
+              <span class="wf-header-name-active">Times of Reston · Homepage <span class="wf-header-chevron">▾</span></span>
+            </span>
+            <span class="wf-last-pub">Published 2 min ago</span>
+            <div class="wf-published-badge">✓ Live</div>
+            <div class="wf-preview-btn">Preview ↗</div>
+            <div class="wf-publish-btn">Publish →</div>
+          </div>
+
+          <!-- Dropdown anchored below the page title -->
+          <div class="wf-page-title-menu">
+            <div class="wf-menu-item">
+              <span class="wf-menu-icon">✏</span>
+              Rename
+            </div>
+            <div class="wf-menu-item">
+              <span class="wf-menu-icon">⚙</span>
+              Page settings
+            </div>
+            <div class="wf-menu-item">
+              <span class="wf-menu-icon">⧉</span>
+              Duplicate
+            </div>
+            <div class="wf-menu-item">
+              <span class="wf-menu-icon">↗</span>
+              View published page
+            </div>
+            <div class="wf-menu-divider"></div>
+            <div class="wf-menu-item amber">
+              <span class="wf-menu-icon">↺</span>
+              Revert to published
+              <span class="wf-menu-item-note">if published</span>
+            </div>
+            <div class="wf-menu-divider"></div>
+            <div class="wf-menu-item red">
+              <span class="wf-menu-icon">✕</span>
+              Delete page
+            </div>
+          </div>
+        </div>
+        <div class="wf-dropdown-spacer"></div>
+      </div>
+      <p class="wf-caption">
+        <strong>Page title is the natural home</strong> for page-level actions — clicking the name already signals "I want to do something with this page." Rename, settings, and duplicate are everyday actions. <strong>Revert to published</strong> sits below a divider in amber — visible but not casual; it only appears once the page has been published at least once. Delete is at the bottom in red, behind a confirmation dialog (KAN-6).
+      </p>
+    </div>
+
+  </div>
+
+</body>
+</html>

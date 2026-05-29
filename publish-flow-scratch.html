@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publishing Workflow — Flow — Sandbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: #ebebeb;
+      color: #111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Sandbox header ── */
+    .sandbox-header {
+      height: 48px; background: #111;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 16px; flex-shrink: 0; border-bottom: 2px solid #222;
+    }
+    .sandbox-header-back {
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .sandbox-header-back:hover { color: #fff; }
+    .sandbox-header-name { font-size: 14px; font-weight: 600; color: #fff; flex: 1; }
+    .sandbox-header-tag {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 3px; padding: 3px 8px;
+    }
+
+    /* ── Tab bar ── */
+    .sandbox-tabs {
+      height: 40px; background: #fff; border-bottom: 1px solid #d0d0d0;
+      display: flex; align-items: flex-end; padding: 0 20px; flex-shrink: 0;
+    }
+    .sandbox-tab {
+      display: flex; align-items: center; height: 100%; padding: 0 16px;
+      font-size: 13px; font-weight: 600; color: #888; text-decoration: none;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 0.12s; white-space: nowrap;
+    }
+    .sandbox-tab:hover { color: #444; }
+    .sandbox-tab.active { color: #111; border-bottom-color: #5566ff; }
+
+    /* ── Page body ── */
+    .page-body {
+      flex: 1;
+      padding: 48px 52px 72px;
+    }
+
+    /* ── Flow diagram ── */
+    .flow-wrap {
+      display: flex;
+      gap: 72px;
+      align-items: flex-start;
+    }
+
+    .flow-column {
+      display: flex;
+      flex-direction: column;
+      min-width: 360px;
+    }
+
+    .flow-column-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #999; margin-bottom: 24px;
+    }
+
+    /* ── Flow node row ── */
+    .flow-node-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .step-num {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #5566ff; color: #fff;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-num.revert {
+      background: #888;
+      font-size: 14px;
+    }
+
+    /* ── Flow nodes ── */
+    .flow-node {
+      padding: 10px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .flow-node.state {
+      background: #f0f0f0;
+      border: 1.5px solid #bbb;
+      color: #444;
+    }
+    .flow-node.action {
+      background: #e8eaff;
+      border: 1.5px solid #5566ff;
+      color: #2233aa;
+    }
+    .flow-node.process {
+      background: #fff;
+      border: 1.5px dashed #5566ff;
+      color: #333;
+    }
+    .flow-node.warning {
+      background: #fff8e6;
+      border: 1.5px solid #e6a020;
+      color: #7a4f0a;
+    }
+    .flow-node.success {
+      background: #e8f5e9;
+      border: 2px solid #388e3c;
+      color: #1b5e20;
+      padding: 12px 20px;
+      font-size: 14px;
+    }
+
+    /* ── Vertical connector ── */
+    .flow-connector {
+      width: 2px;
+      height: 24px;
+      background: #d0d0d0;
+      margin-left: 12px; /* center under step-num */
+      flex-shrink: 0;
+    }
+
+    /* ── Branch callout ── */
+    .flow-callout {
+      margin-left: 38px; /* step-num (26px) + gap (12px) */
+      margin-top: 10px;
+      margin-bottom: 2px;
+      border-left: 3px solid #e0e0e0;
+      padding: 12px 16px;
+      background: #f8f8f8;
+      border-radius: 0 4px 4px 0;
+    }
+    .callout-header {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #aaa; margin-bottom: 10px;
+    }
+    .callout-items {
+      display: flex; flex-direction: column; gap: 7px;
+    }
+    .callout-item {
+      font-size: 13px; line-height: 1.5; color: #555;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .callout-item::before {
+      content: '·'; color: #ccc; flex-shrink: 0;
+      font-size: 16px; line-height: 1.2;
+    }
+    .ref-back { color: #d32f2f; font-weight: 600; font-style: normal; }
+    .ref-fwd  { color: #5566ff; font-weight: 600; font-style: normal; }
+
+    /* ── Divider ── */
+    .flow-divider {
+      border: none; border-top: 1px solid #d0d0d0;
+      margin: 48px 0 32px;
+    }
+
+    .flow-section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #999; margin-bottom: 20px;
+    }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 20px; background: #fff; border: 1px solid #e0e0e0;
+      border-radius: 4px; width: 200px; flex-shrink: 0;
+    }
+    .legend-title {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #999; margin-bottom: 4px;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .legend-swatch {
+      width: 36px; height: 22px; border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .legend-swatch.state   { background: #f0f0f0; border: 1.5px solid #bbb; }
+    .legend-swatch.action  { background: #e8eaff; border: 1.5px solid #5566ff; }
+    .legend-swatch.process { background: #fff; border: 1.5px dashed #5566ff; }
+    .legend-swatch.warning { background: #fff8e6; border: 1.5px solid #e6a020; }
+    .legend-swatch.success { background: #e8f5e9; border: 2px solid #388e3c; }
+    .legend-label { font-size: 12px; color: #555; }
+  </style>
+</head>
+<body>
+
+  <header class="sandbox-header">
+    <a class="sandbox-header-back" href="/sandbox.html">← Sandbox</a>
+    <span class="sandbox-header-name">Publishing Workflow</span>
+    <span class="sandbox-header-tag">Sandbox</span>
+  </header>
+
+  <nav class="sandbox-tabs">
+    <a class="sandbox-tab" href="/publish-workflow-scratch.html">Overview</a>
+    <a class="sandbox-tab active" href="/publish-flow-scratch.html">Flow</a>
+    <a class="sandbox-tab" href="/publish-wireframe-scratch.html">Wireframe</a>
+    <a class="sandbox-tab" href="/publish-hifi-scratch.html">Prototype</a>
+  </nav>
+
+  <div class="page-body">
+    <div class="flow-wrap">
+
+      <!-- Main flow column -->
+      <div class="flow-column">
+        <div class="flow-column-title">Main publishing flow</div>
+
+        <!-- Step 1 -->
+        <div class="flow-node-row">
+          <div class="step-num">1</div>
+          <div class="flow-node state">Draft</div>
+        </div>
+        <div class="flow-connector"></div>
+
+        <!-- Step 2 -->
+        <div class="flow-node-row">
+          <div class="step-num">2</div>
+          <div class="flow-node action">Editor clicks Publish</div>
+        </div>
+        <div class="flow-connector"></div>
+
+        <!-- Step 3 -->
+        <div class="flow-node-row">
+          <div class="step-num">3</div>
+          <div class="flow-node process">Pre-publish validation runs</div>
+        </div>
+        <div class="flow-callout">
+          <div class="callout-header">If issues are found</div>
+          <div class="callout-items">
+            <div class="callout-item">Validation panel opens</div>
+            <div class="callout-item">AI briefing surfaces issues in plain language</div>
+            <div class="callout-item">Editor fixes issues → <em class="ref-back">return to step 1</em></div>
+            <div class="callout-item">Editor overrides and publishes anyway → <em class="ref-fwd">skip to step 4</em></div>
+          </div>
+        </div>
+        <div class="flow-connector"></div>
+
+        <!-- Step 4 -->
+        <div class="flow-node-row">
+          <div class="step-num">4</div>
+          <div class="flow-node process">Page goes live</div>
+        </div>
+        <div class="flow-connector"></div>
+
+        <!-- Step 5 -->
+        <div class="flow-node-row">
+          <div class="step-num">5</div>
+          <div class="flow-node warning">⏱ Undo window — 15 seconds</div>
+        </div>
+        <div class="flow-callout">
+          <div class="callout-header">If cancel is clicked</div>
+          <div class="callout-items">
+            <div class="callout-item">Publish is reversed immediately</div>
+            <div class="callout-item">Page returns to draft state → <em class="ref-back">return to step 1</em></div>
+          </div>
+        </div>
+        <div class="flow-connector"></div>
+
+        <!-- Step 6 -->
+        <div class="flow-node-row">
+          <div class="step-num">6</div>
+          <div class="flow-node success">✓ Published</div>
+        </div>
+
+        <hr class="flow-divider">
+
+        <!-- Revert flow -->
+        <div class="flow-section-label">Revert flow — available any time after publishing</div>
+
+        <div class="flow-node-row">
+          <div class="step-num revert">↺</div>
+          <div class="flow-node state">Editor clicks "Revert to published"</div>
+        </div>
+        <div class="flow-callout">
+          <div class="callout-header">What happens</div>
+          <div class="callout-items">
+            <div class="callout-item">Current draft is overwritten with the last published state</div>
+            <div class="callout-item">Editor lands back in draft with published content loaded</div>
+            <div class="callout-item">Useful when a draft is a mess, or another editor has published and your version is outdated</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Legend -->
+      <div class="legend">
+        <div class="legend-title">Legend</div>
+        <div class="legend-item">
+          <div class="legend-swatch state"></div>
+          <span class="legend-label">System state</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch action"></div>
+          <span class="legend-label">Editor action</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch process"></div>
+          <span class="legend-label">System process</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch warning"></div>
+          <span class="legend-label">Time-sensitive</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch success"></div>
+          <span class="legend-label">End state</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

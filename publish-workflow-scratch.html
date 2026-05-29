@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publishing Workflow — Sandbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: #ebebeb;
+      color: #111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Sandbox header ── */
+    .sandbox-header {
+      height: 48px; background: #111;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 16px; flex-shrink: 0; border-bottom: 2px solid #222;
+    }
+    .sandbox-header-back {
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .sandbox-header-back:hover { color: #fff; }
+    .sandbox-header-name { font-size: 14px; font-weight: 600; color: #fff; flex: 1; }
+    .sandbox-header-tag {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 3px; padding: 3px 8px;
+    }
+
+    /* ── Tab bar ── */
+    .sandbox-tabs {
+      height: 40px; background: #fff; border-bottom: 1px solid #d0d0d0;
+      display: flex; align-items: flex-end; padding: 0 20px; flex-shrink: 0;
+    }
+    .sandbox-tab {
+      display: flex; align-items: center; height: 100%; padding: 0 16px;
+      font-size: 13px; font-weight: 600; color: #888; text-decoration: none;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 0.12s; white-space: nowrap;
+    }
+    .sandbox-tab:hover { color: #444; }
+    .sandbox-tab.active { color: #111; border-bottom-color: #5566ff; }
+
+    /* ── Page body ── */
+    .page-body {
+      flex: 1;
+      padding: 48px 52px;
+      max-width: 680px;
+    }
+
+    .status-tag {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #888; background: #ddd;
+      border-radius: 2px; padding: 3px 8px; margin-bottom: 18px;
+    }
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 700; color: #111;
+      line-height: 1.2; margin-bottom: 16px;
+    }
+    .page-body-text {
+      font-size: 14px; line-height: 1.7; color: #555;
+    }
+    .page-body-text p + p { margin-top: 12px; }
+
+    /* ── Section ── */
+    .section { margin-top: 40px; }
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #999; margin-bottom: 16px;
+    }
+
+    /* ── Feature list ── */
+    .feature-list { display: flex; flex-direction: column; gap: 10px; }
+    .feature-item { display: flex; gap: 12px; align-items: flex-start; }
+    .feature-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #5566ff; flex-shrink: 0; margin-top: 6px;
+    }
+    .feature-text { font-size: 14px; line-height: 1.55; color: #444; }
+    .feature-text strong { color: #111; font-weight: 700; }
+
+    /* ── Phases grid ── */
+    .phases-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    }
+    .phase-card {
+      background: #fff; border: 1px solid #d0d0d0; border-radius: 4px;
+      padding: 16px; text-decoration: none; color: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      display: flex; flex-direction: column;
+    }
+    .phase-card:hover { border-color: #999; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+    .phase-card-name { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 6px; }
+    .phase-card-desc { font-size: 12px; line-height: 1.5; color: #666; margin-bottom: 12px; flex: 1; }
+    .phase-status {
+      display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 2px 7px; border-radius: 2px; width: fit-content;
+    }
+    .phase-status.active   { background: #e8eaff; color: #3344cc; }
+    .phase-status.todo     { background: #f0f0f0; color: #999; }
+    .phase-status.complete { background: #e8f5e9; color: #2e7d32; }
+
+    /* ── Ticket links ── */
+    .ticket-list { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ticket-link {
+      display: inline-flex; align-items: center;
+      font-size: 12px; font-weight: 600; color: #5566ff;
+      text-decoration: none; border: 1px solid #c8ccff;
+      background: #f0f2ff; border-radius: 3px; padding: 4px 10px;
+      transition: background 0.12s;
+    }
+    .ticket-link:hover { background: #e0e3ff; }
+  </style>
+</head>
+<body>
+
+  <header class="sandbox-header">
+    <a class="sandbox-header-back" href="/sandbox.html">← Sandbox</a>
+    <span class="sandbox-header-name">Publishing Workflow</span>
+    <span class="sandbox-header-tag">Sandbox</span>
+  </header>
+
+  <nav class="sandbox-tabs">
+    <a class="sandbox-tab active" href="/publish-workflow-scratch.html">Overview</a>
+    <a class="sandbox-tab" href="/publish-flow-scratch.html">Flow</a>
+    <a class="sandbox-tab" href="/publish-wireframe-scratch.html">Wireframe</a>
+    <a class="sandbox-tab" href="/publish-hifi-scratch.html">Prototype</a>
+  </nav>
+
+  <div class="page-body">
+
+    <span class="status-tag">Design exploration</span>
+    <h1 class="page-title">Designing the path from draft to live.</h1>
+
+    <div class="page-body-text">
+      <p>News Builder currently has no way to publish a page. Editors can build content, configure cards, and preview the result — but there's no action that puts it in front of readers. This experiment designs that workflow end to end.</p>
+      <p>Publishing is one of the highest-stakes interactions in any CMS. Get it right and it's nearly invisible — fast, confident, with just enough protection against mistakes. Get it wrong and editors either publish by accident or feel paralyzed about whether something is actually live.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">What we're designing</div>
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text"><strong>Publish button</strong> — The action itself and what happens when you click it.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text"><strong>Pre-publish validation</strong> — Catching dummy content, empty fields, and duplicate stories before they go live.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text"><strong>AI editorial review</strong> — A plain-language briefing that surfaces issues and lets editors respond naturally, rather than reading through a checklist.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text"><strong>Undo window</strong> — Publish optimistically with a 15-second cancel window. No confirmation dialog, real safety net.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text"><strong>Publishing changelog</strong> — A quick "what changed?" note logged with every publish event.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text"><strong>Revert to published</strong> — Pull the last published state back over a broken or outdated draft.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-dot"></div>
+          <div class="feature-text"><strong>Freshness nudges</strong> — After publishing, the admin quietly monitors story age and nudges editors when content is getting stale.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Phases in this experiment</div>
+      <div class="phases-grid">
+        <a class="phase-card" href="/publish-flow-scratch.html">
+          <div class="phase-card-name">Flow diagram</div>
+          <div class="phase-card-desc">The full decision tree — every state, action, and branch in the publishing workflow.</div>
+          <span class="phase-status complete">Complete</span>
+        </a>
+        <a class="phase-card" href="/publish-wireframe-scratch.html">
+          <div class="phase-card-name">Wireframe</div>
+          <div class="phase-card-desc">Low-fidelity UI sketches. Where does the Publish button live? What does the validation panel look like?</div>
+          <span class="phase-status complete">Complete</span>
+        </a>
+        <a class="phase-card" href="/publish-hifi-scratch.html">
+          <div class="phase-card-name">Prototype</div>
+          <div class="phase-card-desc">High-fidelity interactive mockup. Test the full flow before building it into the admin.</div>
+          <span class="phase-status active">In progress</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Related tickets</div>
+      <div class="ticket-list">
+        <a class="ticket-link" href="https://benrubenstein.atlassian.net/browse/KAN-7" target="_blank">KAN-7 — Publishing workflow</a>
+        <a class="ticket-link" href="https://benrubenstein.atlassian.net/browse/KAN-8" target="_blank">KAN-8 — Page title dropdown &amp; settings</a>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
