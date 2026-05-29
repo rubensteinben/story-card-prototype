@@ -331,7 +331,7 @@ async function renderWeatherBar(containerEl) {
       <span class="wb-wx">${emoji} ${temp}°F in ${escapeHtml(loc)}</span>`;
 
   } catch (e) {
-    // Geo denied, outside US, or API error — date only, no broken UI
+    console.error('[weather]', e.message, e);
   }
 }
 
