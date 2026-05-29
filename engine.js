@@ -297,13 +297,23 @@ async function renderWeatherBar(containerEl) {
     return;
   }
 
+  // Reston, VA fallback coordinates — used if geolocation is unavailable
+  const RESTON = { lat: 38.9586, lon: -77.3570 };
+
+  let lat, lon;
   try {
     const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000, maximumAge: 300000 })
+      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 6000, maximumAge: 300000 })
     );
-    const { latitude: lat, longitude: lon } = pos.coords;
+    lat = pos.coords.latitude;
+    lon = pos.coords.longitude;
+  } catch (e) {
+    // Geolocation unavailable — fall back to Reston
+    lat = RESTON.lat;
+    lon = RESTON.lon;
+  }
 
-    // NWS step 1: get grid point + city/state (US government API — no key, great CORS)
+  try {
     const hdrs = { 'User-Agent': 'Times-of-Reston-prototype/1.0 (benrubenstein@me.com)' };
     const ptRes = await fetch(`https://api.weather.gov/points/${lat.toFixed(4)},${lon.toFixed(4)}`, { headers: hdrs });
     if (!ptRes.ok) throw new Error('NWS points ' + ptRes.status);
@@ -314,13 +324,12 @@ async function renderWeatherBar(containerEl) {
     const state = ptData.properties.relativeLocation?.properties?.state || '';
     const loc   = [city, state].filter(Boolean).join(', ');
 
-    // NWS step 2: get current hourly period
     const fcRes = await fetch(forecastUrl, { headers: hdrs });
     if (!fcRes.ok) throw new Error('NWS forecast ' + fcRes.status);
     const fcData = await fcRes.json();
     const period = fcData.properties.periods[0];
 
-    const temp  = period.temperature; // already °F
+    const temp  = period.temperature;
     const emoji = forecastToEmoji(period.shortForecast);
 
     _weatherCache = { ts: now, loc, emoji, temp };
@@ -331,7 +340,7 @@ async function renderWeatherBar(containerEl) {
       <span class="wb-wx">${emoji} ${temp}°F in ${escapeHtml(loc)}</span>`;
 
   } catch (e) {
-    // Geo denied, outside US, or API error — date only, no broken UI
+    // NWS API error — date only, no broken UI
   }
 }
 
