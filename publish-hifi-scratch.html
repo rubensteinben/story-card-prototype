@@ -94,7 +94,7 @@
     .eh-chevron { font-size: 10px; color: rgba(255,255,255,0.32); flex-shrink: 0; }
 
     .eh-save  { font-size: 11px; color: rgba(255,255,255,0.28); white-space: nowrap; flex-shrink: 0; }
-    .eh-pub-at { font-size: 11px; color: rgba(255,255,255,0.28); white-space: nowrap; flex-shrink: 0; }
+    .eh-pub-at { font-size: 11px; color: rgba(255,255,255,0.65); white-space: nowrap; flex-shrink: 0; }
 
     .eh-live-badge {
       height: 26px; padding: 0 10px; border-radius: 2px;
@@ -124,12 +124,24 @@
     .eh-publish-btn {
       height: 30px; padding: 0 16px; border-radius: 2px;
       background: #fff; color: #111; border: none;
-      font-size: 12px; font-weight: 700; cursor: pointer;
+      font-size: 12px; font-weight: 600; cursor: pointer;
       display: flex; align-items: center; gap: 5px;
-      transition: background 0.12s;
+      transition: background 0.12s, opacity 0.12s;
       white-space: nowrap; font-family: inherit; flex-shrink: 0;
     }
-    .eh-publish-btn:hover { background: #e8e8e8; }
+    .eh-publish-btn:hover:not(:disabled) { background: #e8e8e8; }
+    .eh-publish-btn:disabled {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.28);
+      border: 1px solid rgba(255,255,255,0.1);
+      cursor: not-allowed;
+    }
+
+    .eh-pending {
+      font-size: 11px; font-weight: 600; color: #f0a040;
+      white-space: nowrap; flex-shrink: 0; display: none;
+    }
+    .eh-pending.shown { display: block; }
 
     /* ── Page title dropdown ── */
     .page-dropdown {
@@ -409,7 +421,7 @@
     .pub-toast {
       position: fixed;
       top: 148px; left: 50%; transform: translateX(-50%);
-      min-width: 520px;
+      width: 460px;
       background: #fff;
       border-radius: 8px;
       padding: 13px 20px;
@@ -420,6 +432,33 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.07);
     }
     .pub-toast.visible { opacity: 1; pointer-events: auto; }
+
+    /* Caret pointing up at the Live badge */
+    .pub-toast::before,
+    .pub-toast::after {
+      content: '';
+      position: absolute;
+      left: var(--caret-x, 50%);
+      transform: translateX(-50%);
+      border-style: solid;
+      border-left-color: transparent;
+      border-right-color: transparent;
+      border-top: 0;
+      opacity: 0;
+      transition: opacity 0.22s ease;
+    }
+    .pub-toast::before {
+      top: -9px;
+      border-width: 0 9px 9px 9px;
+      border-bottom-color: rgba(0,0,0,0.09);
+    }
+    .pub-toast::after {
+      top: -7px;
+      border-width: 0 7px 7px 7px;
+      border-bottom-color: #fff;
+    }
+    .pub-toast.show-caret::before,
+    .pub-toast.show-caret::after { opacity: 1; }
 
     .pt-icon { font-size: 15px; flex-shrink: 0; }
     .pt-icon.ok     { color: #388e3c; }
@@ -476,6 +515,7 @@
     <a class="sandbox-tab" href="/publish-flow-scratch.html">Flow</a>
     <a class="sandbox-tab" href="/publish-wireframe-scratch.html">Wireframe</a>
     <a class="sandbox-tab active" href="/publish-hifi-scratch.html">Prototype</a>
+    <a class="sandbox-tab" href="/publish-states-scratch.html">Editor States</a>
   </nav>
 
   <!-- ════════════════════════════════════════
@@ -514,6 +554,7 @@
       </div>
       <span class="eh-save" id="eh-save">Saved</span>
       <span class="eh-pub-at" id="eh-pub-at"></span>
+      <span class="eh-pending" id="eh-pending">● Unpublished changes</span>
       <div class="eh-live-badge" id="eh-live-badge">✓ Live</div>
       <button class="eh-preview-btn" id="eh-preview-btn">Preview ↗</button>
       <button class="eh-publish-btn" id="eh-publish-btn">Publish →</button>
@@ -529,6 +570,7 @@
           <!-- Dev tools -->
           <div class="dev-bar">
             <span class="dev-bar-label">Prototype dev tools</span>
+            <button class="dev-bar-btn" id="btn-sim-edit">✏ Simulate edit</button>
             <button class="dev-bar-btn" id="btn-sim-validation">⚠ Simulate validation issues</button>
           </div>
 
@@ -676,8 +718,8 @@
   <div class="pub-toast" id="pub-toast">
     <span class="pt-icon ok" id="pt-icon">✓</span>
     <span class="pt-text" id="pt-text">Published — Times of Reston · Homepage</span>
-    <button class="pt-view" id="pt-view">View live page ↗</button>
-    <span class="pt-sep" id="pt-sep">·</span>
+    <button class="pt-view" id="pt-view" style="display:none">View live page ↗</button>
+    <span class="pt-sep" id="pt-sep" style="display:none">·</span>
     <span class="pt-countdown" id="pt-countdown">10s</span>
     <button class="pt-undo" id="pt-undo">Undo</button>
     <button class="pt-close" id="pt-close" aria-label="Dismiss">✕</button>
@@ -686,28 +728,49 @@
   <script>
     // ─── State ────────────────────────────────────────────────
     const S = {
-      publishCount:      0,
+      publishCount:       0,
       currentlyPublished: false,
-      dropdownOpen:      false,
-      modalOpen:         null,  // null | 'changelog' | 'revert'
-      toastPhase:        null,  // null | 'published' | 'undone-first' | 'undone-prev' | 'reverted'
-      toastCountdown:    15,
-      validationOpen:    false,
-      _timer:            null,
-      _autoHide:         null,
+      hasPendingChanges:  false,
+      dropdownOpen:       false,
+      modalOpen:          null,  // null | 'changelog' | 'revert'
+      toastPhase:         null,  // null | 'published' | 'undone-first' | 'undone-prev' | 'reverted'
+      toastCountdown:     15,
+      validationOpen:     false,
+      _timer:             null,
+      _autoHide:          null,
     };
 
     // ─── Render ───────────────────────────────────────────────
     function render() {
-      // Header: save status vs. published-at
-      document.getElementById('eh-save').style.display   = S.currentlyPublished ? 'none' : '';
-      document.getElementById('eh-pub-at').style.display = S.currentlyPublished ? '' : 'none';
-      if (S.currentlyPublished) {
-        document.getElementById('eh-pub-at').textContent = 'Published just now';
-      }
+      // ── Header state machine ──────────────────────────────
+      // State 1: never published       (!currentlyPublished && publishCount === 0)
+      // State 2: up to date            (currentlyPublished && !hasPendingChanges)
+      // State 3: unpublished changes   (currentlyPublished && hasPendingChanges)
+      // State 4: publishing            (modal handles it; header stays as State 3)
+      // State 5: just published        (same as State 2, different timestamp text)
+
+      const neverPublished = !S.currentlyPublished && S.publishCount === 0;
+      const upToDate       = S.currentlyPublished && !S.hasPendingChanges;
+      const hasChanges     = S.currentlyPublished && S.hasPendingChanges;
+
+      // Status text visibility
+      document.getElementById('eh-save').style.display    = neverPublished ? '' : 'none';
+      document.getElementById('eh-pub-at').style.display  = upToDate ? '' : 'none';
+      document.getElementById('eh-pending').classList.toggle('shown', hasChanges);
+      if (upToDate) document.getElementById('eh-pub-at').textContent = 'Published just now';
 
       // Live badge
       document.getElementById('eh-live-badge').classList.toggle('shown', S.currentlyPublished);
+
+      // Publish button label + enabled/disabled
+      const pubBtn = document.getElementById('eh-publish-btn');
+      pubBtn.textContent = hasChanges ? 'Publish changes →' : 'Publish →';
+      pubBtn.disabled    = upToDate;
+
+      // Simulate edit button
+      const simEditBtn = document.getElementById('btn-sim-edit');
+      simEditBtn.textContent = S.hasPendingChanges ? '✕ Clear edit' : '✏ Simulate edit';
+      simEditBtn.classList.toggle('active', S.hasPendingChanges);
 
       // Dropdown
       document.getElementById('page-dropdown').classList.toggle('open', S.dropdownOpen);
@@ -741,8 +804,6 @@
         icon.className = 'pt-icon ' + (isPublished ? 'ok' : 'revert');
         icon.textContent = isPublished ? '✓' : '↩';
 
-        document.getElementById('pt-view').style.display     = isPublished ? '' : 'none';
-        document.getElementById('pt-sep').style.display      = isPublished ? '' : 'none';
         document.getElementById('pt-countdown').style.display = isPublished ? '' : 'none';
         document.getElementById('pt-undo').style.display     = isPublished ? '' : 'none';
 
@@ -768,9 +829,34 @@
 
     // ─── Actions ──────────────────────────────────────────────
 
+    function positionToast() {
+      const badge = document.getElementById('eh-live-badge');
+      const toast = document.getElementById('pub-toast');
+      const rect  = badge.getBoundingClientRect();
+      const badgeCenterX = rect.left + rect.width / 2;
+      const toastW = 460;
+      const margin = 16;
+      const left = Math.max(margin, Math.min(badgeCenterX - toastW / 2, window.innerWidth - toastW - margin));
+      const caretX = badgeCenterX - left;
+      toast.style.top       = (rect.bottom + 14) + 'px';
+      toast.style.left      = left + 'px';
+      toast.style.transform = 'none';
+      toast.style.setProperty('--caret-x', caretX + 'px');
+      toast.classList.add('show-caret');
+    }
+
+    function resetToastPosition() {
+      const toast = document.getElementById('pub-toast');
+      toast.style.top       = '148px';
+      toast.style.left      = '50%';
+      toast.style.transform = 'translateX(-50%)';
+      toast.classList.remove('show-caret');
+    }
+
     function openChangelog() {
       S.modalOpen = 'changelog';
       S.dropdownOpen = false;
+      document.getElementById('changelog-note').value = '';
       render();
       setTimeout(() => document.getElementById('changelog-note').focus(), 40);
     }
@@ -784,11 +870,13 @@
       clearInterval(S._timer);
       clearTimeout(S._autoHide);
       S.publishCount++;
-      S.currentlyPublished = true;
+      S.currentlyPublished  = true;
+      S.hasPendingChanges   = false;
       S.modalOpen = null;
       S.toastPhase = 'published';
       S.toastCountdown = 10;
       render();
+      positionToast();
 
       S._timer = setInterval(() => {
         S.toastCountdown--;
@@ -851,12 +939,15 @@
       const wasFirst = S.publishCount === 1;
       S.publishCount--;
       if (wasFirst) {
-        S.currentlyPublished = false;
+        S.currentlyPublished  = false;
+        S.hasPendingChanges   = false;
         S.toastPhase = 'undone-first';
       } else {
-        // Previous published version is still live — the page never went dark
+        // Previous published version is still live — draft now differs from it
+        S.hasPendingChanges   = true;
         S.toastPhase = 'undone-prev';
       }
+      resetToastPosition();
       render();
       S._autoHide = setTimeout(() => { S.toastPhase = null; render(); }, 4000);
     }
@@ -906,6 +997,7 @@
     document.getElementById('dd-view-pub').addEventListener('click', () => {
       if (!S.currentlyPublished) return;
       closeDropdown();
+      window.open('#', '_blank');
     });
     document.getElementById('dd-revert').addEventListener('click', () => {
       if (!S.currentlyPublished) return;
@@ -915,12 +1007,15 @@
 
     // Header buttons
     document.getElementById('eh-publish-btn').addEventListener('click', openChangelog);
-    document.getElementById('eh-preview-btn').addEventListener('click', () => {});
-    document.getElementById('eh-live-badge').addEventListener('click', () => {});
+    document.getElementById('eh-preview-btn').addEventListener('click', () => { window.open('#', '_blank'); });
+    document.getElementById('eh-live-badge').addEventListener('click', () => { window.open('#', '_blank'); });
 
     // Changelog modal
     document.getElementById('changelog-cancel').addEventListener('click', () => { resetPublishBtn(); closeModal(); });
     document.getElementById('changelog-submit').addEventListener('click', startPublish);
+    document.getElementById('changelog-note').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); startPublish(); }
+    });
     document.getElementById('modal-changelog').addEventListener('click', e => {
       if (e.target === e.currentTarget) closeModal();
     });
@@ -934,11 +1029,18 @@
 
     // Toast
     document.getElementById('pt-undo').addEventListener('click', clickUndo);
-    document.getElementById('pt-view').addEventListener('click', () => {});
+    document.getElementById('pt-view').addEventListener('click', () => { window.open('#', '_blank'); });
     document.getElementById('pt-close').addEventListener('click', () => {
       clearInterval(S._timer);
       clearTimeout(S._autoHide);
       S.toastPhase = null;
+      resetToastPosition();
+      render();
+    });
+
+    // Edit simulation
+    document.getElementById('btn-sim-edit').addEventListener('click', () => {
+      S.hasPendingChanges = !S.hasPendingChanges;
       render();
     });
 
