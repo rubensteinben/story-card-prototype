@@ -353,7 +353,19 @@
       background: #fff; border-radius: 6px;
       padding: 28px 32px; width: 400px;
       box-shadow: 0 16px 56px rgba(0,0,0,0.32);
+      position: relative; overflow: hidden;
     }
+
+    /* Progress bar — sweeps across bottom of modal on publish */
+    .modal-progress-bar {
+      position: absolute; bottom: 0; left: 0;
+      height: 3px; width: 0;
+      background: #4caf50;
+      transition: width 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .modal-submit.publishing { background: #555; cursor: default; }
+    .modal-submit.success    { background: #388e3c; transition: background 0.15s; }
+    .modal-cancel:disabled   { opacity: 0.35; pointer-events: none; }
     .modal-title { font-size: 18px; font-weight: 700; color: #111; margin-bottom: 4px; }
     .modal-sub   { font-size: 13px; color: #888; margin-bottom: 24px; }
     .modal-label { font-size: 12px; font-weight: 600; color: #444; margin-bottom: 7px; }
@@ -638,6 +650,7 @@
         <button class="modal-cancel" id="changelog-cancel">Cancel</button>
         <button class="modal-submit" id="changelog-submit">Publish →</button>
       </div>
+      <div class="modal-progress-bar" id="modal-progress-bar"></div>
     </div>
   </div>
 
@@ -787,6 +800,51 @@
       }, 1000);
     }
 
+    function startPublish() {
+      const submitBtn = document.getElementById('changelog-submit');
+      const cancelBtn = document.getElementById('changelog-cancel');
+      const bar       = document.getElementById('modal-progress-bar');
+
+      // Lock UI
+      submitBtn.disabled = true;
+      submitBtn.classList.add('publishing');
+      submitBtn.textContent = 'Publishing…';
+      cancelBtn.disabled = true;
+
+      // Kick off progress bar (double rAF ensures transition fires)
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        bar.style.width = '100%';
+      }));
+
+      // Success state after bar completes
+      setTimeout(() => {
+        submitBtn.classList.remove('publishing');
+        submitBtn.classList.add('success');
+        submitBtn.textContent = '✓ Published';
+      }, 680);
+
+      // Close modal and fire toast
+      setTimeout(() => {
+        resetPublishBtn();
+        confirmPublish();
+      }, 1050);
+    }
+
+    function resetPublishBtn() {
+      const submitBtn = document.getElementById('changelog-submit');
+      const cancelBtn = document.getElementById('changelog-cancel');
+      const bar       = document.getElementById('modal-progress-bar');
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('publishing', 'success');
+      submitBtn.textContent = 'Publish →';
+      cancelBtn.disabled = false;
+      bar.style.transition = 'none';
+      bar.style.width = '0';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        bar.style.transition = '';
+      }));
+    }
+
     function clickUndo() {
       clearInterval(S._timer);
       clearTimeout(S._autoHide);
@@ -861,8 +919,8 @@
     document.getElementById('eh-live-badge').addEventListener('click', () => {});
 
     // Changelog modal
-    document.getElementById('changelog-cancel').addEventListener('click', closeModal);
-    document.getElementById('changelog-submit').addEventListener('click', confirmPublish);
+    document.getElementById('changelog-cancel').addEventListener('click', () => { resetPublishBtn(); closeModal(); });
+    document.getElementById('changelog-submit').addEventListener('click', startPublish);
     document.getElementById('modal-changelog').addEventListener('click', e => {
       if (e.target === e.currentTarget) closeModal();
     });
