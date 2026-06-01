@@ -206,16 +206,16 @@
     .btn-primary:hover { background: #e8e8e8; }
 
     .btn-ghost {
-      height: 32px;
+      height: 28px;
       padding: 0 14px;
       background: transparent;
       color: rgba(255,255,255,0.6);
       border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 2px;
+      border-radius: 3px;
       font-family: inherit;
       font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
-      letter-spacing: 0.02em;
     }
 
     .btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,0.7); }
@@ -443,6 +443,82 @@
       flex-shrink: 0;
     }
 
+    /* ── Canvas toolbar ── */
+    .canvas-toolbar {
+      height: 52px;
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .ct-left  { display: flex; align-items: center; gap: 3px; }
+    .ct-right { display: flex; align-items: center; gap: 3px; margin-left: auto; }
+    .ct-divider { width: 1px; height: 20px; background: #e0e0e0; margin: 0 8px; flex-shrink: 0; }
+
+    /* Width selector buttons — no border inactive, solid black active */
+    .ct-width-btn {
+      height: 28px; padding: 0 10px; border-radius: 3px;
+      font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+      border: 1px solid transparent; color: #888; background: transparent;
+      transition: background 0.1s, color 0.1s;
+    }
+    .ct-width-btn:hover  { background: #f0f0f0; color: #333; }
+    .ct-width-btn.active { background: #111; color: #fff; }
+
+    /* Grid / Dark / tool buttons — outlined */
+    .ct-tool-btn {
+      height: 28px; padding: 0 10px; border-radius: 3px;
+      font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+      border: 1px solid #d0d0d0; color: #666; background: transparent;
+      display: flex; align-items: center; gap: 5px;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .ct-tool-btn:hover  { background: #f0f0f0; color: #333; border-color: #bbb; }
+    .ct-tool-btn.active { background: #e8e8e8; color: #222; border-color: #999; }
+    .ct-tool-btn .material-symbols-outlined { font-size: 16px; }
+
+    .ct-ai-btn {
+      height: 28px; padding: 0 12px; border-radius: 3px;
+      font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+      border: 1px solid #c8ccff; background: #f0f2ff; color: #3344cc;
+      display: flex; align-items: center; gap: 6px;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .ct-ai-btn:hover { background: #e4e7ff; border-color: #a8b0ff; }
+    .ct-ai-btn .material-symbols-outlined { font-size: 15px; }
+
+    /* AI review tooltip */
+    .ct-ai-tooltip {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 16px;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 12px; color: #555; line-height: 1.5;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+      width: 240px;
+      display: none;
+      z-index: 100;
+    }
+    .ct-ai-tooltip.visible { display: block; }
+    .ct-ai-tooltip strong { color: #111; }
+
+    body.dark-mode .canvas-toolbar { background: #1a1a1a; border-bottom-color: #2a2a2a; }
+    body.dark-mode .ct-width-btn { color: #666; }
+    body.dark-mode .ct-width-btn:hover  { background: rgba(255,255,255,0.06); color: #ccc; }
+    body.dark-mode .ct-width-btn.active { background: #fff; color: #111; }
+    body.dark-mode .ct-tool-btn  { color: #666; border-color: #333; }
+    body.dark-mode .ct-tool-btn:hover  { background: rgba(255,255,255,0.06); color: #ccc; border-color: #444; }
+    body.dark-mode .ct-tool-btn.active { background: rgba(255,255,255,0.12); color: #e0e0e0; border-color: #555; }
+    body.dark-mode .ct-divider { background: #2a2a2a; }
+    body.dark-mode .ct-ai-tooltip { background: #1a1a1a; border-color: #2a2a2a; color: #aaa; }
+    body.dark-mode .ct-ai-tooltip strong { color: #e0e0e0; }
+
     /* ── Page title dropdown ── */
     .eh-title-wrap {
       position: relative; flex: 1; min-width: 0;
@@ -515,9 +591,8 @@
       border-radius: 3px;
       color: rgba(255,255,255,0.7);
       font-family: inherit;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
+      font-size: 12px;
+      font-weight: 600;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
@@ -530,7 +605,12 @@
       background: rgba(255,255,255,0.08);
     }
 
-    .width-selector,
+    .width-selector {
+      display: flex;
+      gap: 3px;
+    }
+
+    /* Phone-specific width picker — stays as grouped button bar in canvas */
     .mobile-width-selector {
       display: flex;
       gap: 1px;
@@ -539,8 +619,6 @@
       border-radius: 3px;
       padding: 2px;
     }
-
-    .width-btn,
     .mobile-width-btn {
       height: 26px;
       padding: 0 10px;
@@ -555,12 +633,9 @@
       letter-spacing: 0.03em;
       text-transform: uppercase;
     }
-
-    .width-btn:hover,
     .mobile-width-btn:hover { color: #111; }
-
-    .width-btn.active,
     .mobile-width-btn.active { background: #111; color: #fff; }
+
 
     .phone-frame-label {
       display: flex;
@@ -618,23 +693,6 @@
       gap: 4px;
     }
 
-    .canvas-ctrl-btn {
-      height: 22px;
-      padding: 0 8px;
-      background: rgba(0, 0, 0, 0.32);
-      border: none;
-      border-radius: 3px;
-      color: rgba(255, 255, 255, 0.55);
-      font-family: inherit;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-    }
-    .canvas-ctrl-btn:hover { background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.85); }
-    .canvas-ctrl-btn.active { background: rgba(85, 102, 255, 0.8); color: #fff; }
 
     #card-area {
       position: relative;
@@ -1150,9 +1208,9 @@
     /* Grid overlay */
     #page-grid-overlay {
       position: absolute;
-      inset: 0;
+      top: 0; left: 0; right: 0;
+      /* height set by JS to match content */
       pointer-events: none;
-      overflow: hidden;
       z-index: 500;
     }
 
@@ -1274,28 +1332,11 @@
       background: #333;
       border-color: #222;
     }
-    body.dark-mode .width-btn,
-    body.dark-mode .mobile-width-btn {
-      color: #888;
-    }
-    body.dark-mode .width-btn:hover,
+    body.dark-mode .mobile-width-selector { background: #333; border-color: #222; }
+    body.dark-mode .mobile-width-btn { color: #888; }
     body.dark-mode .mobile-width-btn:hover { color: #eee; }
-    body.dark-mode .width-btn.active,
     body.dark-mode .mobile-width-btn.active { background: #fff; color: #111; }
     body.dark-mode .phone-frame-label { color: #666; }
-    /* Canvas control buttons in dark mode */
-    body.dark-mode .canvas-ctrl-btn {
-      background: rgba(255, 255, 255, 0.1);
-      color: rgba(255, 255, 255, 0.4);
-    }
-    body.dark-mode .canvas-ctrl-btn:hover {
-      background: rgba(255, 255, 255, 0.18);
-      color: rgba(255, 255, 255, 0.85);
-    }
-    body.dark-mode .canvas-ctrl-btn.active {
-      background: rgba(85, 102, 255, 0.8);
-      color: #fff;
-    }
     /* Right panel */
     body.dark-mode .editor-right {
       background: #1e1e1e;
@@ -1726,14 +1767,32 @@
       <span id="save-status" class="save-status"></span>
       <a id="preview-btn" class="preview-btn" target="_blank">Preview ↗</a>
     </div>
-    <div class="editor-body">
-      <div id="canvas-controls">
-        <button id="grid-toggle" class="canvas-ctrl-btn" title="Toggle column grid">Grid</button>
-        <button id="dark-toggle" class="canvas-ctrl-btn" title="Toggle dark mode">Dark</button>
+
+    <!-- ── Canvas toolbar ── -->
+    <div class="canvas-toolbar" id="canvas-toolbar">
+      <div class="ct-left" id="ct-width-group">
+        <div class="width-selector" id="width-selector"></div>
       </div>
+      <div class="ct-right">
+        <button class="ct-tool-btn" id="ct-grid-btn">
+          <span class="material-symbols-outlined">grid_on</span> Grid
+        </button>
+        <button class="ct-tool-btn" id="ct-dark-btn">
+          <span class="material-symbols-outlined">dark_mode</span> Dark
+        </button>
+        <div class="ct-divider"></div>
+        <button class="ct-ai-btn" id="ct-ai-btn">
+          <span class="material-symbols-outlined">auto_awesome</span> AI review
+        </button>
+      </div>
+      <div class="ct-ai-tooltip" id="ct-ai-tooltip">
+        <strong>Coming soon.</strong> AI editorial review will scan your draft and surface issues before you publish.
+      </div>
+    </div>
+
+    <div class="editor-body">
       <div class="editor-left">
-        <div class="preview-toolbar">
-          <div class="width-selector" id="width-selector"></div>
+        <div class="preview-toolbar" id="preview-toolbar">
           <div class="mobile-width-selector" id="mobile-width-selector"></div>
           <div id="phone-frame-control" style="display:none;"></div>
         </div>
@@ -2393,9 +2452,9 @@
       ];
       const wSel = document.getElementById('width-selector');
       wSel.innerHTML = widths.map(({ value, label }) =>
-        `<button class="width-btn${page.width === value ? ' active' : ''}" data-width="${value}">${label}</button>`
+        `<button class="ct-width-btn${page.width === value ? ' active' : ''}" data-width="${value}">${label}</button>`
       ).join('');
-      wSel.querySelectorAll('.width-btn').forEach(btn =>
+      wSel.querySelectorAll('.ct-width-btn').forEach(btn =>
         btn.addEventListener('click', () => setPageWidth(btn.dataset.width)));
 
       const mobilePxs = [375, 390, 430];
@@ -2406,6 +2465,8 @@
       mSel.querySelectorAll('.mobile-width-btn').forEach(btn =>
         btn.addEventListener('click', () => setMobilePreviewWidth(Number(btn.dataset.px))));
       mSel.style.display = page.width === '1u' ? 'flex' : 'none';
+      const previewToolbar = document.getElementById('preview-toolbar');
+      if (previewToolbar) previewToolbar.style.display = page.width === '1u' ? '' : 'none';
 
       const pfCtrl = document.getElementById('phone-frame-control');
       pfCtrl.innerHTML = `<label class="phone-frame-label"><input type="checkbox" id="phone-frame-toggle"${page.showPhoneFrame ? ' checked' : ''}> Phone frame</label>`;
@@ -3511,6 +3572,19 @@
       renderMasthead();
     }
 
+    // ── Canvas toolbar ─────────────────────────────────
+
+    (function() {
+      const aiBtn     = document.getElementById('ct-ai-btn');
+      const aiTooltip = document.getElementById('ct-ai-tooltip');
+
+      aiBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        aiTooltip.classList.toggle('visible');
+      });
+      document.addEventListener('click', () => aiTooltip.classList.remove('visible'));
+    })();
+
     // ── Editor event listeners ─────────────────────────
 
     document.getElementById('back-btn').addEventListener('click', async () => {
@@ -3625,7 +3699,7 @@
     })();
 
     // Grid toggle
-    document.getElementById('grid-toggle').addEventListener('click', () => {
+    document.getElementById('ct-grid-btn').addEventListener('click', () => {
       if (!appState.currentPage) return;
       appState.currentPage.showGrid = !appState.currentPage.showGrid;
       renderPageGrid();
@@ -3633,7 +3707,7 @@
 
     // Dark mode toggle
     (function () {
-      const btn = document.getElementById('dark-toggle');
+      const btn = document.getElementById('ct-dark-btn');
       function applyDark(on) {
         document.body.classList.toggle('dark-mode', on);
         btn.classList.toggle('active', on);
@@ -3653,7 +3727,7 @@
       if (existing) existing.remove();
 
       // Update button state
-      const btn = document.getElementById('grid-toggle');
+      const btn = document.getElementById('ct-grid-btn');
       const showGrid = appState.currentPage?.showGrid;
       if (btn) btn.classList.toggle('active', !!showGrid);
 
@@ -3674,12 +3748,16 @@
       }
       inner += '<div class="grid-margin"></div>';
 
+      const editorLeft = document.querySelector('.editor-left');
+      const container = editorLeft || cardArea;
+      // Measure content height BEFORE appending so the overlay doesn't extend it
+      const contentH = container.scrollHeight;
+
       const overlay = document.createElement('div');
       overlay.id = 'page-grid-overlay';
-      overlay.innerHTML = `<div class="page-grid-inner" style="width:${width}px">${inner}</div>`;
-      // Append to editor-left so the overlay covers both masthead and cards
-      const editorLeft = document.querySelector('.editor-left');
-      (editorLeft || cardArea).appendChild(overlay);
+      overlay.style.height = contentH + 'px';
+      overlay.innerHTML = `<div class="page-grid-inner" style="width:${width}px;height:100%">${inner}</div>`;
+      container.appendChild(overlay);
     }
 
 
