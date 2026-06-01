@@ -519,10 +519,15 @@
     body.dark-mode .ct-ai-tooltip { background: #1a1a1a; border-color: #2a2a2a; color: #aaa; }
     body.dark-mode .ct-ai-tooltip strong { color: #e0e0e0; }
 
+    .eh-left  { flex: 1; display: flex; align-items: center; }
+    .eh-right { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+
     /* ── Page title dropdown ── */
     .eh-title-wrap {
-      position: relative; flex: 1; min-width: 0;
+      flex: 0 0 auto;
+      position: relative;
       display: flex; align-items: center;
+      max-width: 40%;
     }
 
     .eh-title-btn {
@@ -1744,7 +1749,9 @@
   <!-- Editor view -->
   <div id="view-editor" class="view">
     <div class="editor-header">
-      <button class="btn-ghost" id="back-btn">← Back</button>
+      <div class="eh-left">
+        <button class="btn-ghost" id="back-btn">← Back</button>
+      </div>
       <div class="eh-title-wrap" id="eh-title-wrap">
         <button class="eh-title-btn" id="eh-title-btn">
           <span id="eh-title-text"></span><span class="eh-chevron">▾</span>
@@ -1758,8 +1765,10 @@
           <button class="ehdd-item ehdd-red" id="ehdd-delete"><span class="material-symbols-outlined ehdd-icon">delete</span>Delete page</button>
         </div>
       </div>
-      <span id="save-status" class="save-status"></span>
-      <a id="preview-btn" class="preview-btn" target="_blank">Preview ↗</a>
+      <div class="eh-right">
+        <span id="save-status" class="save-status"></span>
+        <a id="preview-btn" class="preview-btn" target="_blank">Preview ↗</a>
+      </div>
     </div>
 
     <!-- ── Canvas toolbar ── -->
