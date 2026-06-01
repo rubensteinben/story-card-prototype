@@ -1326,12 +1326,6 @@
     body.dark-mode .card-area-placeholder {
       color: #444;
     }
-    /* Toolbar in dark mode */
-    body.dark-mode .width-selector,
-    body.dark-mode .mobile-width-selector {
-      background: #333;
-      border-color: #222;
-    }
     body.dark-mode .mobile-width-selector { background: #333; border-color: #222; }
     body.dark-mode .mobile-width-btn { color: #888; }
     body.dark-mode .mobile-width-btn:hover { color: #eee; }
@@ -3107,8 +3101,9 @@
         if (page && page.mastheadUrl && page.showMasthead !== false) {
           const mastheadDiv = document.createElement('div');
           const maxW = Math.round(mobilePx * 0.55);
-          mastheadDiv.style.cssText = `background:#fff;padding:20px 16px 16px;width:${mobilePx}px;`;
-          mastheadDiv.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Masthead" style="max-width:${maxW}px;width:100%;height:auto;display:block;margin:0 auto;">`;
+          const isDark = document.body.classList.contains('dark-mode');
+          mastheadDiv.style.cssText = `background:${isDark ? '#1a1a1a' : '#fff'};padding:20px 16px 16px;width:${mobilePx}px;`;
+          mastheadDiv.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Masthead" style="max-width:${maxW}px;width:100%;height:auto;display:block;margin:0 auto;${isDark ? 'filter:invert(1);' : ''}">`;
           scrollArea.appendChild(mastheadDiv);
         }
 
