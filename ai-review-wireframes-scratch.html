@@ -154,6 +154,7 @@
       numRow.querySelectorAll('.nav-num').forEach((b, idx) =>
         b.classList.toggle('active', idx === i)
       );
+      history.replaceState(null, '', '#' + (i + 1));
     }
 
     btnPrev.addEventListener('click', () => { if (current > 0) goTo(current - 1); });
@@ -165,8 +166,9 @@
       if (e.key === 'ArrowRight' && current < slides.length - 1) goTo(current + 1);
     });
 
-    // Init
-    goTo(0);
+    // Init — restore from URL hash if present
+    const hashSlide = parseInt(window.location.hash.replace('#', '')) - 1;
+    goTo((hashSlide >= 0 && hashSlide < slides.length) ? hashSlide : 0);
   </script>
 
 </body>
