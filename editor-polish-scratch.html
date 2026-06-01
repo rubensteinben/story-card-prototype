@@ -238,14 +238,14 @@
 
     /* Pinned items — FLAT rows, no box borders */
     .pinned-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 9px 16px; cursor: default;
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 12px; padding-left: 40px; cursor: default;
       border-bottom: 1px solid #f0f0f0;
       transition: background 0.1s;
     }
     .pinned-item:hover { background: #f9f9f9; }
     .pinned-icon {
-      width: 30px; height: 30px; border-radius: 4px;
+      width: 28px; height: 28px; border-radius: 4px;
       background: #f2f2f2; display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
@@ -276,12 +276,12 @@
     .card-row.sortable-chosen { background: #f8f8f8; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
     .card-row-thumb {
-      width: 32px; height: 26px; border-radius: 3px; flex-shrink: 0;
+      width: 28px; height: 28px; border-radius: 3px; flex-shrink: 0;
       object-fit: cover;
     }
 
     .card-row-label {
-      font-size: 12px; font-weight: 500; color: #444;
+      font-size: 12px; font-weight: 600; color: #444;
       flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       line-height: 1.3;
     }
@@ -474,7 +474,7 @@
       listEl.insertAdjacentHTML('beforeend', `
         <div class="card-row" data-id="${c.id}">
           <div class="card-row-drag"><span class="material-symbols-outlined">drag_indicator</span></div>
-          <img class="card-row-thumb" src="https://picsum.photos/id/${c.photo}/64/52" alt="">
+          <img class="card-row-thumb" src="https://picsum.photos/id/${c.photo}/56/56" alt="">
           <span class="card-row-label">${c.label}</span>
           <div class="card-row-actions">
             <button class="card-action-btn"><span class="material-symbols-outlined">content_copy</span></button>
