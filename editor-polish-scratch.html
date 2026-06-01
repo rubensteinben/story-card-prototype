@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor Visual Polish — Sandbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: #ebebeb;
+      color: #111;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Sandbox header ── */
+    .sandbox-header {
+      height: 48px; background: #111;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 16px; flex-shrink: 0;
+    }
+    .sandbox-header-back {
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .sandbox-header-back:hover { color: #fff; }
+    .sandbox-header-name { font-size: 14px; font-weight: 600; color: #fff; flex: 1; }
+    .sandbox-header-tag {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 3px; padding: 3px 8px;
+    }
+
+    /* ══════════════════════════════════
+       Editor chrome
+    ══════════════════════════════════ */
+    .editor-root {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* ── Editor header ── */
+    .editor-header {
+      height: 52px; background: #1c1c1c;
+      display: flex; align-items: center;
+      padding: 0 16px;
+      flex-shrink: 0; position: relative; z-index: 50;
+    }
+    .eh-left  { flex: 1; display: flex; align-items: center; }
+    .eh-right { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+    .eh-back  { font-size: 12px; color: rgba(255,255,255,0.32); font-weight: 600; }
+    .eh-title-wrap {
+      flex: 0 0 auto; display: flex; align-items: center; max-width: 40%;
+    }
+    .eh-title {
+      font-size: 14px; font-weight: 600; color: #fff;
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 8px; border-radius: 3px; cursor: default;
+    }
+    .eh-chevron { font-size: 10px; color: rgba(255,255,255,0.35); }
+    .eh-save { font-size: 11px; color: rgba(255,255,255,0.28); }
+    .eh-preview {
+      height: 28px; padding: 0 12px; border-radius: 3px;
+      background: transparent; border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 600;
+      font-family: inherit; text-decoration: none;
+      display: flex; align-items: center;
+    }
+    .eh-publish {
+      height: 28px; padding: 0 16px; border-radius: 3px;
+      background: #fff; border: none; color: #111;
+      font-size: 12px; font-weight: 600; cursor: default;
+      font-family: inherit;
+    }
+
+    /* ── Canvas toolbar ── */
+    .canvas-toolbar {
+      height: 52px; background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex; align-items: center;
+      padding: 0 16px; flex-shrink: 0;
+    }
+    .ct-left  { display: flex; align-items: center; gap: 3px; }
+    .ct-right { display: flex; align-items: center; gap: 3px; margin-left: auto; }
+    .ct-divider { width: 1px; height: 20px; background: #e0e0e0; margin: 0 8px; }
+
+    .ct-width-btn {
+      height: 28px; padding: 0 10px; border-radius: 3px;
+      font-size: 12px; font-weight: 600; cursor: default; font-family: inherit;
+      border: 1px solid transparent; color: #888; background: transparent;
+    }
+    .ct-width-btn.active { background: #111; color: #fff; }
+
+    .ct-tool-btn {
+      height: 28px; padding: 0 10px; border-radius: 3px;
+      font-size: 12px; font-weight: 600; cursor: default; font-family: inherit;
+      border: 1px solid #d0d0d0; color: #666; background: transparent;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .ct-tool-btn .material-symbols-outlined { font-size: 16px; }
+
+    .ct-ai-btn {
+      height: 28px; padding: 0 12px; border-radius: 3px;
+      font-size: 12px; font-weight: 600; cursor: default; font-family: inherit;
+      border: 1px solid #c8ccff; background: #f0f2ff; color: #3344cc;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ct-ai-btn .material-symbols-outlined { font-size: 15px; }
+
+    /* ── Editor body ── */
+    .editor-body { flex: 1; display: flex; overflow: hidden; }
+
+    /* ── Canvas — POLISHED ── */
+    .editor-canvas {
+      flex: 1; overflow-y: auto;
+      background: #e8e8e8;   /* ← gray, was #fff */
+      padding: 24px 24px 48px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    /* Page preview card container — NEW */
+    .page-card {
+      width: 100%;
+      max-width: 990px;  /* matches real desktop (15u) width */
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    /* Masthead inside card */
+    .page-masthead {
+      padding: 20px 24px 14px;
+      text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .masthead-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px; font-weight: 700; color: #111; letter-spacing: -0.02em;
+    }
+    .masthead-strip {
+      font-size: 11px; color: #aaa; margin-top: 5px; letter-spacing: 0.03em;
+    }
+
+    /* Story cards — matched to real News Builder layout */
+    .story-card {
+      display: flex; border-bottom: 1px solid #f0f0f0; cursor: default;
+      transition: background 0.1s; min-height: 180px;
+    }
+    .story-card:last-child { border-bottom: none; }
+    .story-card:hover { background: #fafafa; }
+    .story-card.selected {
+      outline: 2px solid #5566ff;
+      outline-offset: -2px;
+    }
+    /* Text on LEFT */
+    .sc-body { padding: 18px 16px 18px 20px; flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
+    .sc-kicker {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #c00; margin-bottom: 8px;
+    }
+    .sc-hed {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px; font-weight: 700; color: #111; line-height: 1.25; margin-bottom: 10px;
+    }
+    .sc-blurb { font-size: 13px; color: #555; line-height: 1.6; }
+    /* Photo on RIGHT — 3:2 aspect ratio, not flush to edge */
+    .sc-photo-wrap { width: 44%; flex-shrink: 0; display: flex; flex-direction: column; padding: 16px 16px 0 0; }
+    .sc-photo {
+      aspect-ratio: 3 / 2;
+      width: 100%;
+    }
+    .sc-photo.blue  { background: #c8d8f0; }
+    .sc-photo.green { background: #c0dfc8; }
+    .sc-photo.peach { background: #f0d8c8; }
+    .sc-credit { font-size: 10px; color: #aaa; padding: 4px 0; }
+
+    /* ── Right panel — POLISHED ── */
+    .editor-right {
+      width: 300px; flex-shrink: 0;
+      border-left: 1px solid #e8e8e8;  /* ← lighter, was 2px solid #222 */
+      background: #fff;
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+
+    /* Section header */
+    .rp-section-hd {
+      padding: 12px 16px 8px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .rp-section-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #bbb;
+    }
+    .rp-add-btn {
+      height: 24px; padding: 0 10px; border-radius: 3px;
+      background: #111; border: none; color: #fff;
+      font-size: 11px; font-weight: 700; cursor: default; font-family: inherit;
+    }
+
+    /* Separator between sections */
+    .rp-sep { height: 1px; background: #f0f0f0; margin: 4px 0; }
+
+    /* Pinned items — FLAT rows, no box borders */
+    .pinned-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px; cursor: default;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background 0.1s;
+    }
+    .pinned-item:hover { background: #f9f9f9; }
+    .pinned-icon {
+      width: 30px; height: 30px; border-radius: 4px;
+      background: #f2f2f2; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .pinned-icon .material-symbols-outlined { font-size: 16px; color: #888; }
+    .pinned-icon.red { background: #fff0f0; }
+    .pinned-icon.red .material-symbols-outlined { color: #d32f2f; }
+    .pinned-label { font-size: 13px; font-weight: 600; color: #333; }
+
+    /* Card list rows — FLAT, no accordion boxes */
+    .card-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 12px 7px 16px; cursor: default;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background 0.1s;
+    }
+    .card-row:hover { background: #f9f9f9; }
+    .card-row.selected { background: #f0f2ff; }
+
+    .card-row-drag {
+      color: #ccc; flex-shrink: 0; display: flex; align-items: center;
+      cursor: grab;
+    }
+    .card-row-drag:active { cursor: grabbing; }
+    .card-row-drag .material-symbols-outlined { font-size: 16px; }
+
+    /* SortableJS states */
+    .card-row.sortable-ghost  { opacity: 0.35; background: #f0f2ff; }
+    .card-row.sortable-chosen { background: #f8f8f8; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+    .card-row-thumb {
+      width: 32px; height: 26px; border-radius: 3px; flex-shrink: 0;
+    }
+    .card-row-thumb.blue  { background: #c8d8f0; }
+    .card-row-thumb.green { background: #c0dfc8; }
+    .card-row-thumb.peach { background: #f0d8c8; }
+
+    .card-row-label {
+      font-size: 12px; font-weight: 500; color: #444;
+      flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+
+    .card-row-actions {
+      display: flex; gap: 2px; align-items: center; flex-shrink: 0;
+      opacity: 0; transition: opacity 0.1s;
+    }
+    .card-row:hover .card-row-actions { opacity: 1; }
+
+    .card-action-btn {
+      width: 24px; height: 24px; border-radius: 3px;
+      background: none; border: none; cursor: default;
+      display: flex; align-items: center; justify-content: center;
+      color: #bbb; transition: background 0.1s, color 0.1s;
+    }
+    .card-action-btn:hover { background: #f0f0f0; color: #555; }
+    .card-action-btn .material-symbols-outlined { font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <header class="sandbox-header">
+    <a class="sandbox-header-back" href="/sandbox.html">← Sandbox</a>
+    <span class="sandbox-header-name">Editor Visual Polish</span>
+    <span class="sandbox-header-tag">Sandbox</span>
+  </header>
+
+  <div class="editor-root">
+
+    <!-- Dark header -->
+    <div class="editor-header">
+      <div class="eh-left">
+        <span class="eh-back">← Back</span>
+      </div>
+      <div class="eh-title-wrap">
+        <span class="eh-title">Memorial Day Page <span class="eh-chevron">▾</span></span>
+      </div>
+      <div class="eh-right">
+        <span class="eh-save">Saved</span>
+        <a class="eh-preview">Preview ↗</a>
+        <button class="eh-publish">Publish →</button>
+      </div>
+    </div>
+
+    <!-- Canvas toolbar -->
+    <div class="canvas-toolbar">
+      <div class="ct-left">
+        <button class="ct-width-btn">Mobile</button>
+        <button class="ct-width-btn">Tablet</button>
+        <button class="ct-width-btn">Laptop</button>
+        <button class="ct-width-btn active">Desktop</button>
+      </div>
+      <div class="ct-right">
+        <button class="ct-tool-btn">
+          <span class="material-symbols-outlined">grid_on</span> Grid
+        </button>
+        <button class="ct-tool-btn">
+          <span class="material-symbols-outlined">dark_mode</span> Dark
+        </button>
+        <div class="ct-divider"></div>
+        <button class="ct-ai-btn">
+          <span class="material-symbols-outlined">auto_awesome</span> AI review
+        </button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="editor-body">
+
+      <!-- Canvas — gray bg, white card container -->
+      <div class="editor-canvas">
+        <div class="page-card">
+
+          <div class="page-masthead">
+            <div class="masthead-logo">The Times of Reston</div>
+            <div class="masthead-strip">Monday, June 1, 2026 &nbsp;·&nbsp; ☀ 59°F in Reston, VA</div>
+          </div>
+
+          <div id="canvas-cards">
+            <div class="story-card selected" data-id="card-1">
+              <div class="sc-body">
+                <div class="sc-kicker">Local Government</div>
+                <div class="sc-hed">Council approves $42M budget with new parks funding</div>
+                <div class="sc-blurb">After three hours of public testimony, the Reston Town Council passed its fiscal year budget Tuesday night, including $4.2 million earmarked for trail maintenance.</div>
+              </div>
+              <div class="sc-photo-wrap">
+                <div class="sc-photo blue"></div>
+                <div class="sc-credit">Photographer name and photo credit go here. (Publication/Agency)</div>
+              </div>
+            </div>
+
+            <div class="story-card" data-id="card-2">
+              <div class="sc-body">
+                <div class="sc-kicker">Community</div>
+                <div class="sc-hed">Farmers Market returns to Lake Anne Plaza this weekend</div>
+                <div class="sc-blurb">More than 40 local vendors will set up along the waterfront starting Saturday morning.</div>
+              </div>
+              <div class="sc-photo-wrap">
+                <div class="sc-photo green"></div>
+                <div class="sc-credit">Photographer name and photo credit go here. (Publication/Agency)</div>
+              </div>
+            </div>
+
+            <div class="story-card" data-id="card-3">
+              <div class="sc-body">
+                <div class="sc-kicker">Arts &amp; Culture</div>
+                <div class="sc-hed">Community center pool extends summer hours through Labor Day</div>
+              </div>
+              <div class="sc-photo-wrap">
+                <div class="sc-photo peach"></div>
+                <div class="sc-credit">Photographer name and photo credit go here. (Publication/Agency)</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right panel — refined -->
+      <div class="editor-right">
+
+        <!-- Pinned section -->
+        <div class="rp-section-hd">
+          <span class="rp-section-label">Pinned</span>
+        </div>
+
+        <div class="pinned-item">
+          <div class="pinned-icon">
+            <span class="material-symbols-outlined">image</span>
+          </div>
+          <span class="pinned-label">Masthead</span>
+        </div>
+
+        <div class="pinned-item">
+          <div class="pinned-icon red">
+            <span class="material-symbols-outlined">crisis_alert</span>
+          </div>
+          <span class="pinned-label">Breaking News Bar</span>
+        </div>
+
+        <!-- Story cards section -->
+        <div class="rp-section-hd">
+          <span class="rp-section-label">Story Cards</span>
+          <button class="rp-add-btn">+ Add</button>
+        </div>
+
+        <div id="card-list">
+          <div class="card-row selected" data-id="card-1">
+            <div class="card-row-drag"><span class="material-symbols-outlined">drag_indicator</span></div>
+            <div class="card-row-thumb blue"></div>
+            <span class="card-row-label">Council approves $42M budget…</span>
+            <div class="card-row-actions">
+              <button class="card-action-btn"><span class="material-symbols-outlined">content_copy</span></button>
+              <button class="card-action-btn"><span class="material-symbols-outlined">delete</span></button>
+            </div>
+          </div>
+
+          <div class="card-row" data-id="card-2">
+            <div class="card-row-drag"><span class="material-symbols-outlined">drag_indicator</span></div>
+            <div class="card-row-thumb green"></div>
+            <span class="card-row-label">Farmers Market returns to Lake Anne…</span>
+            <div class="card-row-actions">
+              <button class="card-action-btn"><span class="material-symbols-outlined">content_copy</span></button>
+              <button class="card-action-btn"><span class="material-symbols-outlined">delete</span></button>
+            </div>
+          </div>
+
+          <div class="card-row" data-id="card-3">
+            <div class="card-row-drag"><span class="material-symbols-outlined">drag_indicator</span></div>
+            <div class="card-row-thumb peach"></div>
+            <span class="card-row-label">Community center pool extends summer…</span>
+            <div class="card-row-actions">
+              <button class="card-action-btn"><span class="material-symbols-outlined">content_copy</span></button>
+              <button class="card-action-btn"><span class="material-symbols-outlined">delete</span></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    Sortable.create(document.getElementById('card-list'), {
+      handle: '.card-row-drag',
+      animation: 150,
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      onEnd(evt) {
+        // Mirror the new order into the canvas
+        const ids = [...document.querySelectorAll('#card-list .card-row')]
+          .map(r => r.dataset.id);
+        const canvas = document.getElementById('canvas-cards');
+        ids.forEach(id => {
+          canvas.appendChild(canvas.querySelector(`[data-id="${id}"]`));
+        });
+      }
+    });
+  </script>
+</body>
+</html>
