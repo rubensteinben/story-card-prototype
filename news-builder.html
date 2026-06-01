@@ -669,13 +669,12 @@
 
     .editor-left {
       flex: 1;
-      overflow-y: auto;
-      background: #ffffff;
+      overflow: hidden;
+      background: #e8e8e8;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 0 24px 32px;
-      scroll-padding-bottom: 60px;
+      padding: 0 24px 0;
       position: relative;
     }
 
@@ -699,12 +698,28 @@
     }
 
 
+    #page-card {
+      width: 100%;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-top: 24px;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+    #page-card[data-width="15u"] { max-width: 1050px; }
+    #page-card[data-width="12u"] { max-width: 850px; }
+    #page-card[data-width="10u"] { max-width: 728px; }
+    #page-card[data-width="1u"]  { background: transparent; box-shadow: none; border-radius: 0; margin-top: 0; }
+
     #card-area {
       position: relative;
       width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding-bottom: 48px;
     }
 
     .card-area-placeholder {
@@ -729,11 +744,13 @@
       align-items: center;
       padding: 28px 24px 20px;
       border-bottom: 1px solid transparent;
-      transition: padding 0.35s ease, border-color 0.35s ease;
+      border-radius: 6px 6px 0 0;
+      transition: padding 0.35s ease, border-color 0.35s ease, border-radius 0.35s ease;
     }
     #masthead-placeholder.stuck {
       padding: 10px 24px;
       border-bottom-color: #e0e0e0;
+      border-radius: 0;
     }
     #masthead-placeholder img {
       max-width: 440px;
@@ -1320,10 +1337,16 @@
     body.dark-mode .editor-header {
       border-bottom: 1px solid rgba(255,255,255,0.15);
     }
-    body.dark-mode .card-wrapper + .card-wrapper { border-top-color: #444; }
+    body.dark-mode .card-wrapper + .card-wrapper { border-top-color: rgba(255,255,255,0.08); }
     body.dark-mode .phone-card-slot + .phone-card-slot { border-top-color: #444; }
+    body.dark-mode #page-card {
+      background: #252525;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    }
+    body.dark-mode #page-card[data-width="1u"] { background: transparent; box-shadow: none; }
+    body.dark-mode .editor-left.is-mobile-preview { background: #252525; }
     body.dark-mode #masthead-placeholder { background: transparent; }
-    body.dark-mode #masthead-placeholder.stuck { background: #1a1a1a; border-bottom-color: rgba(255,255,255,0.1); }
+    body.dark-mode #masthead-placeholder.stuck { background: #252525; border-bottom-color: rgba(255,255,255,0.1); }
     body.dark-mode #masthead-placeholder img { filter: invert(1); }
     body.dark-mode .editor-left {
       background: #1a1a1a;
@@ -1799,10 +1822,12 @@
           <div class="mobile-width-selector" id="mobile-width-selector"></div>
           <div id="phone-frame-control" style="display:none;"></div>
         </div>
-        <div id="masthead-sticky-wrap" style="display:none"><div id="masthead-placeholder"></div></div>
-        <input type="file" accept="image/*" id="masthead-file-input" style="display:none">
-        <div id="card-area">
-          <div class="card-area-placeholder">Add a card to get started</div>
+        <div id="page-card">
+          <div id="masthead-sticky-wrap" style="display:none"><div id="masthead-placeholder"></div></div>
+          <input type="file" accept="image/*" id="masthead-file-input" style="display:none">
+          <div id="card-area">
+            <div class="card-area-placeholder">Add a card to get started</div>
+          </div>
         </div>
       </div>
       <div class="editor-right" id="panel">
@@ -2328,6 +2353,7 @@
       renderCardStack();
       renderMasthead();
       clearCardEditor();
+      applyPageCardWidth(appState.currentPage.width);
     }
 
     // ── Masthead ───────────────────────────────────────
@@ -2486,6 +2512,14 @@
       renderEditorHeader();
       renderAllCards();
       renderMasthead();
+      applyPageCardWidth(width);
+    }
+
+    function applyPageCardWidth(width) {
+      const pc = document.getElementById('page-card');
+      if (pc) pc.dataset.width = width;
+      const el = document.querySelector('.editor-left');
+      if (el) el.classList.toggle('is-mobile-preview', width === '1u');
     }
 
     function setMobilePreviewWidth(px) {
@@ -3110,10 +3144,20 @@
         if (page && page.mastheadUrl && page.showMasthead !== false) {
           const mastheadDiv = document.createElement('div');
           const maxW = Math.round(mobilePx * 0.55);
+          const minW = Math.round(mobilePx * 0.30);
           const isDark = document.body.classList.contains('dark-mode');
-          mastheadDiv.style.cssText = `background:${isDark ? '#1a1a1a' : '#fff'};padding:20px 16px 16px;width:${mobilePx}px;`;
-          mastheadDiv.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Masthead" style="max-width:${maxW}px;width:100%;height:auto;display:block;margin:0 auto;${isDark ? 'filter:invert(1);' : ''}">`;
+          mastheadDiv.id = 'nb-mobile-masthead';
+          mastheadDiv.style.cssText = `background:${isDark ? '#1a1a1a' : '#fff'};padding:20px 16px 16px;width:${mobilePx}px;position:sticky;top:0;z-index:10;border-bottom:1px solid transparent;transition:padding 0.35s ease,border-color 0.35s ease;`;
+          mastheadDiv.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Masthead" style="max-width:${maxW}px;width:100%;height:auto;display:block;margin:0 auto;transition:max-width 0.35s ease;${isDark ? 'filter:invert(1);' : ''}">`;
           scrollArea.appendChild(mastheadDiv);
+
+          // Compact transition on scroll
+          scrollArea.addEventListener('scroll', () => {
+            const stuck = scrollArea.scrollTop > 8;
+            mastheadDiv.style.padding = stuck ? '8px 16px' : '20px 16px 16px';
+            mastheadDiv.style.borderBottomColor = stuck ? (isDark ? 'rgba(255,255,255,0.1)' : '#e0e0e0') : 'transparent';
+            mastheadDiv.querySelector('img').style.maxWidth = stuck ? minW + 'px' : maxW + 'px';
+          });
         }
 
         // Inject breaking news bar — independent of masthead visibility
@@ -4576,9 +4620,9 @@
     /* ── End Story Card Engine ───────────────────────────────────────── */
 
     // ── Logo sticky scroll behavior ────────────────────
-    document.querySelector('.editor-left').addEventListener('scroll', () => {
+    document.getElementById('page-card').addEventListener('scroll', () => {
       const el = document.getElementById('masthead-placeholder');
-      if (el) el.classList.toggle('stuck', document.querySelector('.editor-left').scrollTop > 8);
+      if (el) el.classList.toggle('stuck', document.getElementById('page-card').scrollTop > 8);
     });
 
     // ── Page settings modal ──────────────────────────────────
