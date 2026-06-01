@@ -114,11 +114,11 @@
     .ct-ai-btn .material-symbols-outlined { font-size: 15px; }
 
     /* ── Editor body ── */
-    .editor-body { flex: 1; display: flex; overflow: hidden; }
+    .editor-body { flex: 1; display: flex; overflow: hidden; min-height: 0; }
 
     /* ── Canvas — POLISHED ── */
     .editor-canvas {
-      flex: 1; overflow-y: auto;
+      flex: 1; overflow-y: auto; min-height: 0;
       background: #e8e8e8;   /* ← gray, was #fff */
       padding: 24px 24px 48px;
       display: flex; flex-direction: column; align-items: center;
@@ -131,7 +131,6 @@
       background: #fff;
       border-radius: 6px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      overflow: hidden;
     }
 
     /* Masthead inside card */
@@ -175,20 +174,49 @@
     .sc-photo {
       aspect-ratio: 3 / 2;
       width: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 2px;
     }
-    .sc-photo.blue  { background: #c8d8f0; }
-    .sc-photo.green { background: #c0dfc8; }
-    .sc-photo.peach { background: #f0d8c8; }
     .sc-credit { font-size: 10px; color: #aaa; padding: 4px 0; }
 
+    /* ── Dev mode toggle bar ── */
     /* ── Right panel — POLISHED ── */
     .editor-right {
       width: 300px; flex-shrink: 0;
-      border-left: 1px solid #e8e8e8;  /* ← lighter, was 2px solid #222 */
+      border-left: 1px solid #e8e8e8;
       background: #fff;
       display: flex; flex-direction: column;
       overflow-y: auto;
+      position: relative;
     }
+
+    /* ── Controls panel ── */
+    .controls-panel {
+      display: none; flex-direction: column; flex: 1;
+    }
+    .controls-panel.open { display: flex; }
+    .cp-header {
+      height: 44px; padding: 0 14px; border-bottom: 1px solid #f0f0f0;
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .cp-title { font-size: 12px; font-weight: 700; color: #333; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cp-back {
+      background: none; border: none; cursor: pointer; color: #bbb;
+      font-size: 16px; line-height: 1; padding: 4px; display: flex; align-items: center;
+      border-radius: 3px; transition: background 0.1s, color 0.1s; flex-shrink: 0;
+    }
+    .cp-back:hover { background: #f0f0f0; color: #555; }
+    .cp-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; flex: 1; }
+    .cp-field { display: flex; flex-direction: column; gap: 5px; }
+    .cp-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #bbb; }
+    .cp-input {
+      width: 100%; border: 1.5px solid #e8e8e8; border-radius: 3px;
+      padding: 7px 10px; font-family: inherit; font-size: 13px; color: #333;
+      background: #fafafa; transition: border-color 0.12s;
+    }
+    .cp-input:focus { outline: none; border-color: #5566ff; background: #fff; }
+    .cp-textarea { resize: none; height: 68px; }
 
     /* Section header */
     .rp-section-hd {
@@ -249,10 +277,8 @@
 
     .card-row-thumb {
       width: 32px; height: 26px; border-radius: 3px; flex-shrink: 0;
+      object-fit: cover;
     }
-    .card-row-thumb.blue  { background: #c8d8f0; }
-    .card-row-thumb.green { background: #c0dfc8; }
-    .card-row-thumb.peach { background: #f0d8c8; }
 
     .card-row-label {
       font-size: 12px; font-weight: 500; color: #444;
@@ -304,10 +330,10 @@
     <!-- Canvas toolbar -->
     <div class="canvas-toolbar">
       <div class="ct-left">
-        <button class="ct-width-btn">Mobile</button>
-        <button class="ct-width-btn">Tablet</button>
-        <button class="ct-width-btn">Laptop</button>
-        <button class="ct-width-btn active">Desktop</button>
+        <button class="ct-width-btn" data-width="375">Mobile</button>
+        <button class="ct-width-btn" data-width="660">Tablet</button>
+        <button class="ct-width-btn" data-width="792">Laptop</button>
+        <button class="ct-width-btn active" data-width="990">Desktop</button>
       </div>
       <div class="ct-right">
         <button class="ct-tool-btn">
@@ -335,48 +361,30 @@
             <div class="masthead-strip">Monday, June 1, 2026 &nbsp;·&nbsp; ☀ 59°F in Reston, VA</div>
           </div>
 
-          <div id="canvas-cards">
-            <div class="story-card selected" data-id="card-1">
-              <div class="sc-body">
-                <div class="sc-kicker">Local Government</div>
-                <div class="sc-hed">Council approves $42M budget with new parks funding</div>
-                <div class="sc-blurb">After three hours of public testimony, the Reston Town Council passed its fiscal year budget Tuesday night, including $4.2 million earmarked for trail maintenance.</div>
-              </div>
-              <div class="sc-photo-wrap">
-                <div class="sc-photo blue"></div>
-                <div class="sc-credit">Photographer name and photo credit go here. (Publication/Agency)</div>
-              </div>
-            </div>
-
-            <div class="story-card" data-id="card-2">
-              <div class="sc-body">
-                <div class="sc-kicker">Community</div>
-                <div class="sc-hed">Farmers Market returns to Lake Anne Plaza this weekend</div>
-                <div class="sc-blurb">More than 40 local vendors will set up along the waterfront starting Saturday morning.</div>
-              </div>
-              <div class="sc-photo-wrap">
-                <div class="sc-photo green"></div>
-                <div class="sc-credit">Photographer name and photo credit go here. (Publication/Agency)</div>
-              </div>
-            </div>
-
-            <div class="story-card" data-id="card-3">
-              <div class="sc-body">
-                <div class="sc-kicker">Arts &amp; Culture</div>
-                <div class="sc-hed">Community center pool extends summer hours through Labor Day</div>
-              </div>
-              <div class="sc-photo-wrap">
-                <div class="sc-photo peach"></div>
-                <div class="sc-credit">Photographer name and photo credit go here. (Publication/Agency)</div>
-              </div>
-            </div>
-          </div>
+          <div id="canvas-cards"></div>
 
         </div>
       </div>
 
       <!-- Right panel — refined -->
       <div class="editor-right">
+
+        <!-- Controls panel (replaces card list when a card is selected) -->
+        <div class="controls-panel" id="controls-panel">
+          <div class="cp-header">
+            <span class="cp-title" id="cp-title">Card controls</span>
+            <button class="cp-back" id="cp-back">✕</button>
+          </div>
+          <div class="cp-body">
+            <div class="cp-field"><label class="cp-label">Headline</label><textarea class="cp-input cp-textarea" id="cp-headline"></textarea></div>
+            <div class="cp-field"><label class="cp-label">Blurb</label><textarea class="cp-input cp-textarea" id="cp-blurb"></textarea></div>
+            <div class="cp-field"><label class="cp-label">Photo URL</label><input class="cp-input" type="text" placeholder="https://…"></div>
+            <div class="cp-field"><label class="cp-label">Link URL</label><input class="cp-input" type="text" placeholder="https://…"></div>
+          </div>
+        </div>
+
+        <!-- Normal card list content -->
+        <div id="rail-content">
 
         <!-- Pinned section -->
         <div class="rp-section-hd">
@@ -404,56 +412,139 @@
         </div>
 
         <div id="card-list">
-          <div class="card-row selected" data-id="card-1">
-            <div class="card-row-drag"><span class="material-symbols-outlined">drag_indicator</span></div>
-            <div class="card-row-thumb blue"></div>
-            <span class="card-row-label">Council approves $42M budget…</span>
-            <div class="card-row-actions">
-              <button class="card-action-btn"><span class="material-symbols-outlined">content_copy</span></button>
-              <button class="card-action-btn"><span class="material-symbols-outlined">delete</span></button>
-            </div>
-          </div>
+        </div><!-- /card-list filled by JS -->
 
-          <div class="card-row" data-id="card-2">
-            <div class="card-row-drag"><span class="material-symbols-outlined">drag_indicator</span></div>
-            <div class="card-row-thumb green"></div>
-            <span class="card-row-label">Farmers Market returns to Lake Anne…</span>
-            <div class="card-row-actions">
-              <button class="card-action-btn"><span class="material-symbols-outlined">content_copy</span></button>
-              <button class="card-action-btn"><span class="material-symbols-outlined">delete</span></button>
-            </div>
-          </div>
-
-          <div class="card-row" data-id="card-3">
-            <div class="card-row-drag"><span class="material-symbols-outlined">drag_indicator</span></div>
-            <div class="card-row-thumb peach"></div>
-            <span class="card-row-label">Community center pool extends summer…</span>
-            <div class="card-row-actions">
-              <button class="card-action-btn"><span class="material-symbols-outlined">content_copy</span></button>
-              <button class="card-action-btn"><span class="material-symbols-outlined">delete</span></button>
-            </div>
-          </div>
-        </div>
+        </div><!-- /rail-content -->
 
       </div>
 
     </div>
   </div>
 
+
   <script>
+    // ── Width switching ──────────────────────────────────
+    document.querySelectorAll('.ct-width-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.ct-width-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelector('.page-card').style.maxWidth = btn.dataset.width + 'px';
+      });
+    });
+
+    // ── Card data (15 cards) ─────────────────────────────
+    const cards = [
+      { id:'card-1',  photo:'1029', kicker:'Local Government', label:'Council approves $42M budget…',            headline:'Council approves $42M budget with new parks funding',                   blurb:'After three hours of public testimony, the Reston Town Council passed its fiscal year budget Tuesday night.' },
+      { id:'card-2',  photo:'225',  kicker:'Community',        label:'Farmers Market returns to Lake Anne…',      headline:'Farmers Market returns to Lake Anne Plaza this weekend',                blurb:'More than 40 local vendors will set up along the waterfront starting Saturday morning.' },
+      { id:'card-3',  photo:'431',  kicker:'Arts & Culture',   label:'Community center pool extends summer…',     headline:'Community center pool extends summer hours through Labor Day',          blurb:'' },
+      { id:'card-4',  photo:'355',  kicker:'Sports',           label:'Reston FC advances to regional finals…',    headline:'Reston FC advances to regional finals after stunning comeback win',     blurb:'A second-half hat trick from midfielder Dani Reyes sealed a 4–3 victory over rivals Springfield United.' },
+      { id:'card-5',  photo:'167',  kicker:'Education',        label:'School board approves new STEM plan…',      headline:'School board approves new STEM curriculum for fall semester',           blurb:'The 7–2 vote paves the way for updated science and coding courses across all middle schools.' },
+      { id:'card-6',  photo:'490',  kicker:'Health',           label:'New urgent care clinic opens on Sunrise…',  headline:'New urgent care clinic opens on Sunrise Valley Drive',                  blurb:'The facility will be open seven days a week and accepts most major insurance plans.' },
+      { id:'card-7',  photo:'164',  kicker:'Real Estate',      label:'Housing prices in Reston up 8%…',           headline:'Housing prices in Reston up 8% compared to this time last year',        blurb:'Inventory remains tight, with the average home spending just nine days on the market.' },
+      { id:'card-8',  photo:'180',  kicker:'Business',         label:'Local tech startup secures $12M…',          headline:'Local tech startup secures $12M in Series A funding round',             blurb:'Reston-based Claravox plans to double its engineering headcount over the next 18 months.' },
+      { id:'card-9',  photo:'404',  kicker:'Traffic',          label:'Route 28 widening project delayed…',        headline:'Route 28 widening project delayed by supply chain issues',               blurb:'VDOT says the project is now expected to resume in October, pushing completion to 2027.' },
+      { id:'card-10', photo:'240',  kicker:'Environment',      label:'Chesapeake Bay cleanup shows progress…',    headline:'Chesapeake Bay cleanup efforts show measurable progress this spring',   blurb:'Nitrogen levels in the Potomac watershed have dropped to their lowest point in a decade.' },
+      { id:'card-11', photo:'365',  kicker:'Crime & Safety',   label:'Police arrest suspect in thefts…',          headline:'Police arrest suspect in string of catalytic converter thefts',          blurb:'A 34-year-old Herndon man faces 12 counts of grand larceny following a two-month investigation.' },
+      { id:'card-12', photo:'453',  kicker:'Politics',         label:'County supervisor announces senate bid…',   headline:'County supervisor announces bid for state senate seat',                 blurb:'Patricia Okafor, who has represented the Reston district since 2018, filed paperwork Tuesday.' },
+      { id:'card-13', photo:'338',  kicker:'Obituaries',       label:'Former Reston mayor Patterson dies…',       headline:'Former Reston mayor James Patterson dies at 78',                       blurb:'Patterson served three terms and was credited with expanding the town\'s trail network.' },
+      { id:'card-14', photo:'541',  kicker:'Weather',          label:'Severe thunderstorm watch issued…',         headline:'Severe thunderstorm watch issued for Fairfax County through midnight',  blurb:'The National Weather Service warns of hail up to one inch and wind gusts exceeding 60 mph.' },
+      { id:'card-15', photo:'431',  kicker:'Food & Drink',     label:'New Vietnamese restaurant opens…',          headline:'New Vietnamese restaurant opens in Reston Town Center this week',       blurb:'Phở Reston is the first restaurant from chef Linh Nguyen, who trained in Hanoi and Chicago.' },
+    ];
+
+    // Build canvas cards
+    const canvasEl = document.getElementById('canvas-cards');
+    cards.forEach(c => {
+      canvasEl.insertAdjacentHTML('beforeend', `
+        <div class="story-card" data-id="${c.id}">
+          <div class="sc-body">
+            <div class="sc-kicker">${c.kicker}</div>
+            <div class="sc-hed">${c.headline}</div>
+            ${c.blurb ? `<div class="sc-blurb">${c.blurb}</div>` : ''}
+          </div>
+          <div class="sc-photo-wrap">
+            <img class="sc-photo" src="https://picsum.photos/id/${c.photo}/880/587" alt="">
+            <div class="sc-credit">Photo: Lorem Picsum</div>
+          </div>
+        </div>`);
+    });
+
+    // Build right panel card list
+    const listEl = document.getElementById('card-list');
+    cards.forEach(c => {
+      listEl.insertAdjacentHTML('beforeend', `
+        <div class="card-row" data-id="${c.id}">
+          <div class="card-row-drag"><span class="material-symbols-outlined">drag_indicator</span></div>
+          <img class="card-row-thumb" src="https://picsum.photos/id/${c.photo}/64/52" alt="">
+          <span class="card-row-label">${c.label}</span>
+          <div class="card-row-actions">
+            <button class="card-action-btn"><span class="material-symbols-outlined">content_copy</span></button>
+            <button class="card-action-btn"><span class="material-symbols-outlined">delete</span></button>
+          </div>
+        </div>`);
+    });
+
+    // card data lookup for controls panel
+    const cardData = Object.fromEntries(cards.map(c => [c.id, { title: c.label, headline: c.headline, blurb: c.blurb }]));
+
+    // ── Deselect / close ────────────────────────────────
+    function deselectAll() {
+      document.querySelectorAll('.card-row').forEach(r => r.classList.remove('selected'));
+      document.querySelectorAll('#canvas-cards .story-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('controls-panel').classList.remove('open');
+      document.getElementById('rail-content').style.display = '';
+    }
+
+    // ── Open controls for a card ─────────────────────────
+    function openControls(id) {
+      const data = cardData[id] || {};
+      document.getElementById('cp-title').textContent = data.title || 'Card controls';
+      document.getElementById('cp-headline').value = data.headline || '';
+      document.getElementById('cp-blurb').value = data.blurb || '';
+      document.getElementById('rail-content').style.display = 'none';
+      document.getElementById('controls-panel').classList.add('open');
+      document.querySelector('.editor-right').scrollTop = 0;
+    }
+
+    // ── Card selection ───────────────────────────────────
+    document.querySelectorAll('.card-row').forEach(row => {
+      row.addEventListener('click', e => {
+        if (e.target.closest('.card-action-btn')) return;
+        const id = row.dataset.id;
+        const wasSelected = row.classList.contains('selected');
+        deselectAll();
+        if (!wasSelected) {
+          row.classList.add('selected');
+          const canvasCard = document.querySelector(`#canvas-cards [data-id="${id}"]`);
+          if (canvasCard) { canvasCard.classList.add('selected'); canvasCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+          openControls(id);
+        }
+      });
+    });
+
+    document.getElementById('cp-back').addEventListener('click', deselectAll);
+
+    // ── Click background to deselect ────────────────────
+    document.querySelector('.editor-canvas').addEventListener('click', e => {
+      if (!e.target.closest('.story-card')) deselectAll();
+    });
+    document.querySelector('.editor-right').addEventListener('click', e => {
+      if (!e.target.closest('.card-row') && !e.target.closest('.pinned-item') &&
+          !e.target.closest('.controls-panel')) deselectAll();
+    });
+    document.querySelectorAll('.pinned-item').forEach(item => {
+      item.addEventListener('click', deselectAll);
+    });
+
+    // ── SortableJS drag-to-reorder ───────────────────────
     Sortable.create(document.getElementById('card-list'), {
       handle: '.card-row-drag',
       animation: 150,
       ghostClass: 'sortable-ghost',
       chosenClass: 'sortable-chosen',
-      onEnd(evt) {
-        // Mirror the new order into the canvas
-        const ids = [...document.querySelectorAll('#card-list .card-row')]
-          .map(r => r.dataset.id);
+      onEnd() {
+        const ids = [...document.querySelectorAll('#card-list .card-row')].map(r => r.dataset.id);
         const canvas = document.getElementById('canvas-cards');
-        ids.forEach(id => {
-          canvas.appendChild(canvas.querySelector(`[data-id="${id}"]`));
-        });
+        ids.forEach(id => canvas.appendChild(canvas.querySelector(`[data-id="${id}"]`)));
       }
     });
   </script>
