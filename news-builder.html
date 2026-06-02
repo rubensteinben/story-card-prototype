@@ -659,6 +659,52 @@
       display: inline-flex;
     }
 
+    /* ── Custom confirm popover (replaces browser confirm()) ── */
+    #custom-confirm-popover {
+      position: fixed;
+      background: #fff;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+      padding: 14px 16px;
+      width: 230px;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity 0.14s, transform 0.14s;
+    }
+    #custom-confirm-popover.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    #custom-confirm-popover .ccp-title {
+      font-size: 13px; font-weight: 700; color: #111; margin-bottom: 4px;
+    }
+    #custom-confirm-popover .ccp-body {
+      font-size: 12px; color: #777; line-height: 1.5; margin-bottom: 12px;
+    }
+    #custom-confirm-popover .ccp-actions {
+      display: flex; gap: 6px;
+    }
+    #custom-confirm-popover .ccp-btn-cancel {
+      flex: 1; height: 28px;
+      background: none; border: 1px solid #d0d0d0; border-radius: 3px;
+      font-size: 12px; font-weight: 600; color: #666;
+      cursor: pointer; font-family: inherit;
+      transition: border-color 0.12s, color 0.12s;
+    }
+    #custom-confirm-popover .ccp-btn-cancel:hover { border-color: #999; color: #111; }
+    #custom-confirm-popover .ccp-btn-confirm {
+      flex: 1; height: 28px;
+      background: #111; border: none; border-radius: 3px;
+      font-size: 12px; font-weight: 600; color: #fff;
+      cursor: pointer; font-family: inherit;
+      transition: background 0.12s;
+    }
+    #custom-confirm-popover .ccp-btn-confirm:hover { background: #333; }
+
     .width-selector {
       display: flex;
       gap: 3px;
@@ -2199,7 +2245,7 @@
       grid.querySelectorAll('.page-row-delete-btn').forEach(btn => {
         btn.addEventListener('click', e => {
           e.stopPropagation();
-          deletePage(btn.dataset.id);
+          deletePage(btn.dataset.id, btn);
         });
       });
 
@@ -2267,8 +2313,8 @@
       if (newRow) newRow.classList.add('page-row-new');
     }
 
-    async function deletePage(id) {
-      if (!confirm('Delete this page? This cannot be undone.')) return;
+    async function deletePage(id, anchorEl) {
+      if (!await showConfirm(anchorEl, { title: 'Delete this page?', body: 'This cannot be undone.', confirmLabel: 'Delete' })) return;
       const { error } = await sb.from('pages').delete().eq('id', id);
       if (error) { alert('Could not delete: ' + error.message); return; }
       appState.pages = appState.pages.filter(p => p.id !== id);
@@ -2697,7 +2743,7 @@
           e.stopPropagation();
           const idx = Number(btn.dataset.index);
           if (btn.dataset.action === 'dup') duplicateCard(idx);
-          else if (btn.dataset.action === 'remove') removeCard(idx);
+          else if (btn.dataset.action === 'remove') removeCard(idx, btn);
         });
       });
 
@@ -2936,8 +2982,8 @@
       });
     }
 
-    function removeCard(index) {
-      if (!confirm('Remove this card?')) return;
+    async function removeCard(index, anchorEl) {
+      if (!await showConfirm(anchorEl, { title: 'Remove this card?', confirmLabel: 'Remove' })) return;
 
       const cards  = appState.currentPage.cards;
       const list   = document.getElementById('card-stack-list');
@@ -3279,8 +3325,8 @@
           </div>`;
 
         // Wire remove
-        document.getElementById('bn-remove-btn').addEventListener('click', () => {
-          if (!confirm('Remove the breaking news bar? Readers will no longer see it.')) return;
+        document.getElementById('bn-remove-btn').addEventListener('click', async function() {
+          if (!await showConfirm(this, { title: 'Remove the breaking news bar?', body: 'Readers will no longer see it.', confirmLabel: 'Remove' })) return;
           clearTimeout(_bnCountdownTimer);
           page.showBreakingNews = false;
           page.breakingNewsExpiresAt = null;
@@ -3437,8 +3483,8 @@
         });
 
         // Clear all
-        document.getElementById('bn-clear-all').addEventListener('click', () => {
-          if (!confirm('Clear all breaking news fields?')) return;
+        document.getElementById('bn-clear-all').addEventListener('click', async function() {
+          if (!await showConfirm(this, { title: 'Clear all breaking news fields?', confirmLabel: 'Clear all' })) return;
           page.breakingNewsLabel = 'BREAKING NEWS';
           page.breakingNewsText = '';
           page.breakingNewsUrl = '';
@@ -3575,6 +3621,71 @@
       document.addEventListener('click', () => aiTooltip.classList.remove('visible'));
     })();
 
+    // ── Custom confirm popover ─────────────────────────
+    const showConfirm = (() => {
+      const el = document.createElement('div');
+      el.id = 'custom-confirm-popover';
+      el.innerHTML = `
+        <div class="ccp-title" id="ccp-title"></div>
+        <div class="ccp-body" id="ccp-body"></div>
+        <div class="ccp-actions">
+          <button class="ccp-btn-cancel" id="ccp-cancel">Cancel</button>
+          <button class="ccp-btn-confirm" id="ccp-confirm">Confirm</button>
+        </div>`;
+      document.body.appendChild(el);
+
+      const titleEl   = el.querySelector('#ccp-title');
+      const bodyEl    = el.querySelector('#ccp-body');
+      const cancelBtn = el.querySelector('#ccp-cancel');
+      const confirmBtn = el.querySelector('#ccp-confirm');
+      let _resolve = null;
+
+      function close(result) {
+        el.classList.remove('open');
+        document.removeEventListener('keydown', onKey);
+        document.removeEventListener('mousedown', onOutside);
+        if (_resolve) { _resolve(result); _resolve = null; }
+      }
+      function onKey(e) {
+        if (e.key === 'Enter')  { e.preventDefault(); close(true); }
+        if (e.key === 'Escape') { e.preventDefault(); close(false); }
+      }
+      function onOutside(e) {
+        if (!el.contains(e.target)) close(false);
+      }
+      cancelBtn.addEventListener('click',  () => close(false));
+      confirmBtn.addEventListener('click', () => close(true));
+
+      return function(anchorEl, { title, body = '', confirmLabel = 'Confirm' }) {
+        return new Promise(resolve => {
+          _resolve = resolve;
+          titleEl.textContent   = title;
+          bodyEl.textContent    = body;
+          bodyEl.style.display  = body ? '' : 'none';
+          confirmBtn.textContent = confirmLabel;
+
+          // Position: right-align to anchor, flip up if near viewport bottom
+          const r   = anchorEl.getBoundingClientRect();
+          const w   = 230;
+          let left  = Math.max(8, r.right - w);
+          el.style.left = left + 'px';
+          if (window.innerHeight - r.bottom < 160) {
+            el.style.top    = '';
+            el.style.bottom = (window.innerHeight - r.top + 6) + 'px';
+          } else {
+            el.style.bottom = '';
+            el.style.top    = (r.bottom + 6) + 'px';
+          }
+
+          el.classList.add('open');
+          setTimeout(() => {
+            document.addEventListener('keydown', onKey);
+            document.addEventListener('mousedown', onOutside);
+          }, 0);
+        });
+      };
+    })();
+
     // ── Editor event listeners ─────────────────────────
 
     // Publish button — placeholder popover
@@ -3702,7 +3813,7 @@
       document.getElementById('ehdd-delete').addEventListener('click', async () => {
         dropdown.classList.remove('open');
         if (!appState.currentPage) return;
-        if (!confirm('Delete this page? This cannot be undone.')) return;
+        if (!await showConfirm(document.getElementById('ehdd-delete'), { title: 'Delete this page?', body: 'This cannot be undone.', confirmLabel: 'Delete' })) return;
         const id = appState.currentPage.id;
         const { error } = await sb.from('pages').delete().eq('id', id);
         if (error) { alert('Could not delete: ' + error.message); return; }
