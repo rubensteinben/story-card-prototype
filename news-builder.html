@@ -2480,10 +2480,10 @@
       document.getElementById('preview-btn').href = `page.html?page=${page.slug}`;
 
       const widths = [
-        { value: '1u',  label: 'Mobile'  },
-        { value: '10u', label: 'Tablet'  },
-        { value: '12u', label: 'Laptop'  },
         { value: '15u', label: 'Desktop' },
+        { value: '12u', label: 'Laptop'  },
+        { value: '10u', label: 'Tablet'  },
+        { value: '1u',  label: 'Mobile'  },
       ];
       const wSel = document.getElementById('width-selector');
       wSel.innerHTML = widths.map(({ value, label }) =>
