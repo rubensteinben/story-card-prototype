@@ -611,6 +611,54 @@
       background: rgba(255,255,255,0.08);
     }
 
+    .eh-publish-btn {
+      flex-shrink: 0;
+      height: 30px;
+      padding: 0 16px;
+      border-radius: 2px;
+      background: #fff;
+      color: #111;
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      font-family: inherit;
+      transition: background 0.12s;
+    }
+    .eh-publish-btn:hover { background: #e8e8e8; }
+
+    .publish-popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: #222;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.5;
+      padding: 10px 14px;
+      border-radius: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity 0.15s, transform 0.15s;
+      z-index: 200;
+    }
+    .publish-popover.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .publish-popover-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+
     .width-selector {
       display: flex;
       gap: 3px;
@@ -1797,6 +1845,10 @@
       <div class="eh-right">
         <span id="save-status" class="save-status"></span>
         <a id="preview-btn" class="preview-btn" target="_blank">Preview ↗</a>
+        <div class="publish-popover-wrap">
+          <button class="eh-publish-btn" id="publish-btn">Publish →</button>
+          <div class="publish-popover" id="publish-popover">Publishing is coming soon —<br>this feature is in development.</div>
+        </div>
       </div>
     </div>
 
@@ -3524,6 +3576,28 @@
     })();
 
     // ── Editor event listeners ─────────────────────────
+
+    // Publish button — placeholder popover
+    (() => {
+      const btn = document.getElementById('publish-btn');
+      const pop = document.getElementById('publish-popover');
+      let hideTimer;
+      btn.addEventListener('click', () => {
+        clearTimeout(hideTimer);
+        if (pop.classList.contains('visible')) {
+          pop.classList.remove('visible');
+        } else {
+          pop.classList.add('visible');
+          hideTimer = setTimeout(() => pop.classList.remove('visible'), 3500);
+        }
+      });
+      document.addEventListener('click', e => {
+        if (!e.target.closest('.publish-popover-wrap')) {
+          clearTimeout(hideTimer);
+          pop.classList.remove('visible');
+        }
+      });
+    })();
 
     document.getElementById('back-btn').addEventListener('click', async () => {
       clearTimeout(_saveTimer);
