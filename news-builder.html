@@ -1786,6 +1786,19 @@
       transition: background 0.12s;
     }
     .ps-save:hover { background: #333; }
+
+    .ps-danger-section { display: flex; flex-direction: column; gap: 10px; }
+    .ps-danger-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .ps-danger-label { font-size: 13px; font-weight: 600; color: #cc3333; margin-bottom: 3px; }
+    .ps-delete-btn {
+      flex-shrink: 0; height: 32px; padding: 0 14px; border-radius: 3px;
+      background: transparent; border: 1px solid #cc3333; color: #cc3333;
+      font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+      transition: background 0.12s, color 0.12s; white-space: nowrap;
+    }
+    .ps-delete-btn:hover { background: #cc3333; color: #fff; }
   </style>
 </head>
 <body>
@@ -1884,8 +1897,6 @@
           <button class="ehdd-item" id="ehdd-settings"><span class="material-symbols-outlined ehdd-icon">settings</span>Page settings</button>
           <button class="ehdd-item" id="ehdd-duplicate"><span class="material-symbols-outlined ehdd-icon">content_copy</span>Duplicate</button>
           <button class="ehdd-item" id="ehdd-view"><span class="material-symbols-outlined ehdd-icon">open_in_new</span>View published page</button>
-          <div class="ehdd-divider"></div>
-          <button class="ehdd-item ehdd-red" id="ehdd-delete"><span class="material-symbols-outlined ehdd-icon">delete</span>Delete page</button>
         </div>
       </div>
       <div class="eh-right">
@@ -1994,6 +2005,18 @@
           <div class="ps-wip-row">
             <span class="ps-wip-label">Page visibility</span>
             <span class="ps-wip-tag">Not built</span>
+          </div>
+        </div>
+
+        <hr class="ps-divider">
+
+        <div class="ps-danger-section">
+          <div class="ps-danger-row">
+            <div>
+              <div class="ps-danger-label">Delete this page</div>
+              <div class="ps-hint">Permanently removes this page and all its cards. Cannot be undone.</div>
+            </div>
+            <button class="ps-delete-btn" id="ps-delete-page">Delete page</button>
           </div>
         </div>
 
@@ -3810,21 +3833,6 @@
         if (href) window.open(href, '_blank');
       });
 
-      document.getElementById('ehdd-delete').addEventListener('click', async () => {
-        dropdown.classList.remove('open');
-        if (!appState.currentPage) return;
-        if (!await showConfirm(document.getElementById('ehdd-delete'), { title: 'Delete this page?', body: 'This cannot be undone.', confirmLabel: 'Delete' })) return;
-        const id = appState.currentPage.id;
-        const { error } = await sb.from('pages').delete().eq('id', id);
-        if (error) { alert('Could not delete: ' + error.message); return; }
-        appState.pages = appState.pages.filter(p => p.id !== id);
-        clearTimeout(_saveTimer);
-        appState.currentPage = null;
-        appState.dirty = false;
-        history.pushState({}, '', window.location.pathname);
-        showView('list');
-        loadPages();
-      });
     })();
 
     // Grid toggle
@@ -4746,6 +4754,22 @@
           scheduleSave();
         }
         closePageSettings();
+      });
+
+      document.getElementById('ps-delete-page').addEventListener('click', async function() {
+        if (!appState.currentPage) return;
+        if (!await showConfirm(this, { title: 'Delete this page?', body: 'Permanently removes this page and all its cards.', confirmLabel: 'Delete' })) return;
+        closePageSettings();
+        const id = appState.currentPage.id;
+        const { error } = await sb.from('pages').delete().eq('id', id);
+        if (error) { alert('Could not delete: ' + error.message); return; }
+        appState.pages = appState.pages.filter(p => p.id !== id);
+        clearTimeout(_saveTimer);
+        appState.currentPage = null;
+        appState.dirty = false;
+        history.pushState({}, '', window.location.pathname);
+        showView('list');
+        loadPages();
       });
     })();
 
