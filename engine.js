@@ -272,7 +272,10 @@ function forecastToEmoji(text) {
 
 let _weatherCache = null; // { ts, loc, emoji, temp }
 
-async function renderWeatherBar(containerEl) {
+async function renderWeatherBar(containerEl, opts = {}) {
+  const showDate    = opts.showDate    !== false;
+  const showWeather = opts.showWeather !== false;
+
   const existing = containerEl.querySelector('#weather-bar');
   if (existing) existing.remove();
 
@@ -284,18 +287,25 @@ async function renderWeatherBar(containerEl) {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
   });
 
+  function buildBarHTML(wx) {
+    const parts = [];
+    if (showDate) parts.push(`<span class="wb-date">${longDate}</span>`);
+    if (showWeather && wx) parts.push(`<span class="wb-wx">${wx.emoji} ${wx.temp}°F in ${escapeHtml(wx.loc)}</span>`);
+    return parts.join('<span class="wb-sep">·</span>');
+  }
+
   // Show date immediately while weather loads
-  bar.innerHTML = `<span class="wb-date">${longDate}</span>`;
+  if (showDate) bar.innerHTML = `<span class="wb-date">${longDate}</span>`;
 
   // Use cache if fresh (10 min)
   const now = Date.now();
   if (_weatherCache && (now - _weatherCache.ts) < 10 * 60 * 1000) {
-    bar.innerHTML = `
-      <span class="wb-date">${longDate}</span>
-      <span class="wb-sep">·</span>
-      <span class="wb-wx">${_weatherCache.emoji} ${_weatherCache.temp}°F in ${escapeHtml(_weatherCache.loc)}</span>`;
+    bar.innerHTML = buildBarHTML(_weatherCache);
     return;
   }
+
+  // No weather needed — date is already shown, nothing more to fetch
+  if (!showWeather) return;
 
   // Reston, VA fallback coordinates — used if geolocation is unavailable
   const RESTON = { lat: 38.9586, lon: -77.3570 };
@@ -334,10 +344,7 @@ async function renderWeatherBar(containerEl) {
 
     _weatherCache = { ts: now, loc, emoji, temp };
 
-    bar.innerHTML = `
-      <span class="wb-date">${longDate}</span>
-      <span class="wb-sep">·</span>
-      <span class="wb-wx">${emoji} ${temp}°F in ${escapeHtml(loc)}</span>`;
+    bar.innerHTML = buildBarHTML({ loc, emoji, temp });
 
   } catch (e) {
     // NWS API error — date only, no broken UI

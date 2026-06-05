@@ -862,6 +862,17 @@
       outline-offset: 4px;
       border-radius: 2px;
     }
+    .masthead-page-title {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 700;
+      font-size: 48px;
+      line-height: 60px;
+      color: #111111;
+      padding: 16px 20px 12px;
+    }
+    @media (max-width: 600px) {
+      .masthead-page-title { font-size: 28px; line-height: 36px; }
+    }
 
     .masthead-item {
       cursor: default !important;
@@ -2353,7 +2364,7 @@
       }
       const { data, error } = await sb
         .from('pages')
-        .insert({ name: name.trim(), slug, cards: [], owner_id: appState.session.user.id, width: '15u', mobile_preview_width: 390, masthead_url: '/logo-times-of-reston-trans.png', show_weather_bar: true })
+        .insert({ name: name.trim(), slug, cards: [], owner_id: appState.session.user.id, width: '15u', mobile_preview_width: 390, masthead_url: '/logo-times-of-reston-trans.png', show_weather_bar: true, masthead_type: 'logo', masthead_title: null, show_date: true })
         .select()
         .single();
       if (error) { alert('Could not create page: ' + error.message); return; }
@@ -2452,6 +2463,7 @@
     async function savePage() {
       if (!appState.session || !appState.currentPage) return;
       const { id, name, cards, width, mobilePreviewWidth, showPhoneFrame, mastheadUrl, showMasthead, showWeatherBar,
+              mastheadType, mastheadTitle, showDate,
               showBreakingNews, breakingNewsLabel, breakingNewsText, breakingNewsUrl, breakingNewsColor,
               breakingNewsExpiresAt, breakingNewsPublishedAt, breakingNewsPublishedBy } = appState.currentPage;
       const { error } = await sb.from('pages').update({
@@ -2463,6 +2475,9 @@
         masthead_url: mastheadUrl || null,
         show_masthead: showMasthead !== false,
         show_weather_bar: showWeatherBar !== false,
+        masthead_type: mastheadType || 'logo',
+        masthead_title: mastheadTitle || null,
+        show_date: showDate !== false,
         show_breaking_news: showBreakingNews || false,
         breaking_news_label: breakingNewsLabel || null,
         breaking_news_text: breakingNewsText || null,
@@ -2517,6 +2532,9 @@
         mastheadUrl: page.masthead_url || null,
         showMasthead: page.show_masthead !== false,
         showWeatherBar: page.show_weather_bar !== false,
+        mastheadType: page.masthead_type || 'logo',
+        mastheadTitle: page.masthead_title || '',
+        showDate: page.show_date !== false,
         showBreakingNews: page.show_breaking_news || false,
         breakingNewsLabel: page.breaking_news_label || 'BREAKING NEWS',
         breakingNewsText: page.breaking_news_text || '',
@@ -2553,7 +2571,8 @@
       const page = appState.currentPage;
       const cardArea = document.getElementById('card-area');
       const isMobile = page && page.width === '1u';
-      const shouldShowMasthead = page && page.mastheadUrl && page.showMasthead !== false;
+      const isTitle = page && page.mastheadType === 'title';
+      const shouldShowMasthead = page && page.showMasthead !== false && (isTitle || page.mastheadUrl);
       const bnAccordionOpen    = appState.selectedCardIndex === -2;
       const shouldShowBn       = page && (page.showBreakingNews || bnAccordionOpen);
 
@@ -2579,8 +2598,18 @@
       if (shouldShowMasthead) {
         el.style.display = '';
         el.classList.toggle('masthead-selected', appState.selectedCardIndex === -1);
-        el.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Logo">`;
-        if (page.showWeatherBar !== false) renderWeatherBar(el);
+        if (isTitle) {
+          if (page.mastheadTitle && page.mastheadTitle.trim()) {
+            el.innerHTML = `<div class="masthead-page-title">${escapeHtml(page.mastheadTitle)}</div>`;
+          } else {
+            el.innerHTML = '<div style="height:40px;"></div>';
+          }
+        } else {
+          el.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Logo">`;
+        }
+        const showDate    = page.showDate !== false;
+        const showWeather = page.showWeatherBar !== false;
+        if (showDate || showWeather) renderWeatherBar(el, { showDate, showWeather });
       } else {
         el.innerHTML = '';
         el.style.display = 'none';
@@ -3198,23 +3227,34 @@
         const page = appState.currentPage;
 
         // Inject masthead at top of scroll area if set and visible
-        if (page && page.mastheadUrl && page.showMasthead !== false) {
-          const mastheadDiv = document.createElement('div');
-          const maxW = Math.round(mobilePx * 0.55);
-          const minW = Math.round(mobilePx * 0.30);
+        if (page && page.showMasthead !== false && (page.mastheadType === 'title' || page.mastheadUrl)) {
           const isDark = document.body.classList.contains('dark-mode');
-          mastheadDiv.id = 'nb-mobile-masthead';
-          mastheadDiv.style.cssText = `background:${isDark ? '#1a1a1a' : '#fff'};padding:20px 16px 16px;width:${mobilePx}px;position:sticky;top:0;z-index:10;border-bottom:1px solid transparent;transition:padding 0.35s ease,border-color 0.35s ease;`;
-          mastheadDiv.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Masthead" style="max-width:${maxW}px;width:100%;height:auto;display:block;margin:0 auto;transition:max-width 0.35s ease;${isDark ? 'filter:invert(1);' : ''}">`;
-          scrollArea.appendChild(mastheadDiv);
+          if (page.mastheadType === 'title') {
+            if (page.mastheadTitle && page.mastheadTitle.trim()) {
+              const titleDiv = document.createElement('div');
+              titleDiv.id = 'nb-mobile-masthead';
+              titleDiv.className = 'masthead-page-title';
+              titleDiv.style.cssText = `padding:20px 16px 16px;background:${isDark ? '#1a1a1a' : '#fff'};`;
+              titleDiv.textContent = page.mastheadTitle;
+              scrollArea.appendChild(titleDiv);
+            }
+          } else {
+            const mastheadDiv = document.createElement('div');
+            const maxW = Math.round(mobilePx * 0.55);
+            const minW = Math.round(mobilePx * 0.30);
+            mastheadDiv.id = 'nb-mobile-masthead';
+            mastheadDiv.style.cssText = `background:${isDark ? '#1a1a1a' : '#fff'};padding:20px 16px 16px;width:${mobilePx}px;position:sticky;top:0;z-index:10;border-bottom:1px solid transparent;transition:padding 0.35s ease,border-color 0.35s ease;`;
+            mastheadDiv.innerHTML = `<img src="${escapeHtml(page.mastheadUrl)}" alt="Masthead" style="max-width:${maxW}px;width:100%;height:auto;display:block;margin:0 auto;transition:max-width 0.35s ease;${isDark ? 'filter:invert(1);' : ''}">`;
+            scrollArea.appendChild(mastheadDiv);
 
-          // Compact transition on scroll
-          scrollArea.addEventListener('scroll', () => {
-            const stuck = scrollArea.scrollTop > 8;
-            mastheadDiv.style.padding = stuck ? '8px 16px' : '20px 16px 16px';
-            mastheadDiv.style.borderBottomColor = stuck ? (isDark ? 'rgba(255,255,255,0.1)' : '#e0e0e0') : 'transparent';
-            mastheadDiv.querySelector('img').style.maxWidth = stuck ? minW + 'px' : maxW + 'px';
-          });
+            // Compact transition on scroll
+            scrollArea.addEventListener('scroll', () => {
+              const stuck = scrollArea.scrollTop > 8;
+              mastheadDiv.style.padding = stuck ? '8px 16px' : '20px 16px 16px';
+              mastheadDiv.style.borderBottomColor = stuck ? (isDark ? 'rgba(255,255,255,0.1)' : '#e0e0e0') : 'transparent';
+              mastheadDiv.querySelector('img').style.maxWidth = stuck ? minW + 'px' : maxW + 'px';
+            });
+          }
         }
 
         // Inject breaking news bar — independent of masthead visibility
@@ -3592,49 +3632,94 @@
     function buildMastheadPanel() {
       const section = document.getElementById('controls-panel-body');
       if (!section || !appState.currentPage) return;
-      const { mastheadUrl, showMasthead, showWeatherBar } = appState.currentPage;
+      const { mastheadUrl, showWeatherBar, mastheadType, mastheadTitle, showDate } = appState.currentPage;
       const DEFAULT_MASTHEAD = '/logo-times-of-reston-trans.png';
       const hasCustomImage = mastheadUrl && mastheadUrl !== DEFAULT_MASTHEAD;
+      const isTitle = mastheadType === 'title';
       section.innerHTML = `
         <div class="panel-section" style="border-top:none;">
-          <div class="panel-section-title">Masthead image</div>
-          <div class="control-row" style="display:flex;gap:6px;">
-            <button class="btn-primary" id="masthead-upload-btn" style="flex:1;height:30px;font-size:12px;border-radius:2px;background:#111;color:#fff;border:none;cursor:pointer;font-family:inherit;font-weight:600;">Upload image</button>
-            ${hasCustomImage ? `<button id="masthead-restore-btn" style="flex:0 0 auto;height:30px;padding:0 10px;font-size:12px;border-radius:2px;background:transparent;color:#555;border:1px solid #ccc;cursor:pointer;font-family:inherit;font-weight:600;" title="Restore the default logo">Restore default</button>` : ''}
+          <div class="panel-section-title">Masthead type</div>
+          <div class="control-row" style="display:flex;gap:16px;margin-bottom:12px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#333;">
+              <input type="radio" name="masthead-type" value="logo" ${!isTitle ? 'checked' : ''}>
+              Logo
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#333;">
+              <input type="radio" name="masthead-type" value="title" ${isTitle ? 'checked' : ''}>
+              Page Title
+            </label>
           </div>
-          <div class="control-row" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+
+          ${!isTitle ? `
+          <div id="masthead-logo-section">
+            <div class="panel-section-title">Masthead image</div>
+            <div class="control-row" style="display:flex;gap:6px;">
+              <button class="btn-primary" id="masthead-upload-btn" style="flex:1;height:30px;font-size:12px;border-radius:2px;background:#111;color:#fff;border:none;cursor:pointer;font-family:inherit;font-weight:600;">Upload image</button>
+              ${hasCustomImage ? `<button id="masthead-restore-btn" style="flex:0 0 auto;height:30px;padding:0 10px;font-size:12px;border-radius:2px;background:transparent;color:#555;border:1px solid #ccc;cursor:pointer;font-family:inherit;font-weight:600;" title="Restore the default logo">Restore default</button>` : ''}
+            </div>
+            <div class="control-row" style="margin-top:12px;padding:10px;background:#f5f5f5;border-radius:4px;">
+              <p style="font-size:11px;line-height:16px;color:#666;margin:0;">
+                <strong style="color:#444;">Tips:</strong> Use a monochromatic (black or very dark) image — it will be automatically inverted in dark mode. Recommended: PNG or SVG with a transparent background, maximum 600 px wide × 120 px tall.
+              </p>
+            </div>
+          </div>
+          ` : `
+          <div id="masthead-title-section">
+            <div class="panel-section-title">Page title</div>
+            <div class="control-row">
+              <input type="text" id="masthead-title-input" value="${escapeHtml(mastheadTitle || '')}" placeholder="e.g. Politics" style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;font-size:13px;border:1px solid #ccc;border-radius:2px;font-family:inherit;">
+            </div>
+          </div>
+          `}
+
+          <div class="control-row" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#333;">
-              <input type="checkbox" id="masthead-show-cb" ${showMasthead !== false ? 'checked' : ''}>
-              Show masthead
+              <input type="checkbox" id="masthead-date-cb" ${showDate !== false ? 'checked' : ''}>
+              Show date
             </label>
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#333;">
               <input type="checkbox" id="masthead-weather-cb" ${showWeatherBar !== false ? 'checked' : ''}>
-              Show date &amp; weather
+              Show weather
             </label>
           </div>
-          <div class="control-row" style="margin-top:12px;padding:10px;background:#f5f5f5;border-radius:4px;">
-            <p style="font-size:11px;line-height:16px;color:#666;margin:0;">
-              <strong style="color:#444;">Tips:</strong> Use a monochromatic (black or very dark) image — it will be automatically inverted in dark mode. Recommended: PNG or SVG with a transparent background, maximum 600 px wide × 120 px tall.
-            </p>
-          </div>
         </div>`;
-      document.getElementById('masthead-upload-btn').addEventListener('click', () => {
-        document.getElementById('masthead-file-input').click();
-      });
-      if (hasCustomImage) {
-        document.getElementById('masthead-restore-btn').addEventListener('click', () => {
-          appState.currentPage.mastheadUrl = DEFAULT_MASTHEAD;
+
+      // Radio: type toggle
+      section.querySelectorAll('input[name="masthead-type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+          appState.currentPage.mastheadType = this.value;
+          scheduleSave();
           renderMasthead();
           if (appState.currentPage.width === '1u') renderAllCards();
           buildMastheadPanel();
-          savePage();
+        });
+      });
+
+      if (!isTitle) {
+        document.getElementById('masthead-upload-btn').addEventListener('click', () => {
+          document.getElementById('masthead-file-input').click();
+        });
+        if (hasCustomImage) {
+          document.getElementById('masthead-restore-btn').addEventListener('click', () => {
+            appState.currentPage.mastheadUrl = DEFAULT_MASTHEAD;
+            renderMasthead();
+            if (appState.currentPage.width === '1u') renderAllCards();
+            buildMastheadPanel();
+            savePage();
+          });
+        }
+      } else {
+        document.getElementById('masthead-title-input').addEventListener('input', function() {
+          appState.currentPage.mastheadTitle = this.value;
+          scheduleSave();
+          renderMasthead();
         });
       }
-      document.getElementById('masthead-show-cb').addEventListener('change', function() {
-        appState.currentPage.showMasthead = this.checked;
+
+      document.getElementById('masthead-date-cb').addEventListener('change', function() {
+        appState.currentPage.showDate = this.checked;
         scheduleSave();
         renderMasthead();
-        if (appState.currentPage.width === '1u') renderAllCards();
       });
       document.getElementById('masthead-weather-cb').addEventListener('change', function() {
         appState.currentPage.showWeatherBar = this.checked;

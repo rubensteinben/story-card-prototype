@@ -118,6 +118,17 @@
       }
     }
 
+    .masthead-page-title {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 700;
+      font-size: 48px;
+      line-height: 60px;
+      color: #111111;
+    }
+    @media (max-width: 600px) {
+      .masthead-page-title { font-size: 28px; line-height: 36px; }
+    }
+
     #page-container {
       display: flex;
       flex-direction: column;
@@ -397,17 +408,29 @@
       // Render masthead and/or breaking news bar at top of page
       const mastheadArea  = document.getElementById('masthead-area');
       const stickyWrap    = document.getElementById('masthead-sticky-wrap');
-      const hasMasthead   = page.masthead_url && page.show_masthead !== false;
-      const hasBnBar      = page.show_breaking_news;
+      const isTitle     = page.masthead_type === 'title';
+      const hasMasthead = page.show_masthead !== false && (isTitle || page.masthead_url);
+      const hasBnBar    = page.show_breaking_news;
 
       if (hasMasthead && mastheadArea) {
-        const img = document.createElement('img');
-        img.src = page.masthead_url;
-        img.alt = page.name || 'Masthead';
-        mastheadArea.appendChild(img);
+        if (isTitle) {
+          if (page.masthead_title && page.masthead_title.trim()) {
+            const titleEl = document.createElement('div');
+            titleEl.className = 'masthead-page-title';
+            titleEl.textContent = page.masthead_title;
+            mastheadArea.appendChild(titleEl);
+          }
+        } else {
+          const img = document.createElement('img');
+          img.src = page.masthead_url;
+          img.alt = page.name || 'Masthead';
+          mastheadArea.appendChild(img);
+        }
         mastheadArea.style.display = '';
 
-        if (page.show_weather_bar !== false) renderWeatherBar(mastheadArea);
+        const showDate    = page.show_date !== false;
+        const showWeather = page.show_weather_bar !== false;
+        if (showDate || showWeather) renderWeatherBar(mastheadArea, { showDate, showWeather });
 
         // Shrink logo on scroll
         window.addEventListener('scroll', () => {
