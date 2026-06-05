@@ -938,57 +938,13 @@
       background: #fff;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      overflow-y: auto;
     }
 
     .stack-section {
       display: flex;
       flex-direction: column;
-      flex: 1;
-      overflow-y: auto;
-      min-height: 0;
     }
-
-    /* ── Controls panel ── */
-    #controls-panel {
-      display: none;
-      flex-direction: column;
-      flex: 1;
-      overflow: hidden;
-      min-height: 0;
-      border-top: 4px solid #5566ff;
-    }
-    #controls-panel.open { display: flex; }
-    .cp-header {
-      height: 44px;
-      padding: 0 14px;
-      border-bottom: 1px solid #f0f0f0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    .cp-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: #333;
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .cp-back {
-      width: 28px; height: 28px;
-      background: none; border: none; cursor: pointer;
-      color: #bbb;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 3px;
-      transition: background 0.1s, color 0.1s;
-      flex-shrink: 0; padding: 0;
-    }
-    .cp-back:hover { background: #f0f0f0; color: #555; }
-    .cp-back .material-symbols-outlined { font-size: 18px; }
-    .cp-body { flex: 1; overflow-y: auto; min-height: 0; }
 
     .stack-header {
       display: flex;
@@ -1196,8 +1152,7 @@
     }
 
     #card-controls-section,
-    #masthead-controls-section,
-    #controls-panel-body {
+    #masthead-controls-section {
       padding: 0 16px 24px;
     }
 
@@ -1504,10 +1459,6 @@
       background: #1e1e1e;
       border-left-color: #2a2a2a;
     }
-    body.dark-mode .cp-header { background: #1e1e1e; border-bottom-color: #2a2a2a; }
-    body.dark-mode .cp-title { color: #d0d0d0; }
-    body.dark-mode .cp-back { color: #555; }
-    body.dark-mode .cp-back:hover { background: #2a2a2a; color: #aaa; }
     body.dark-mode #pinned-stack-section {
       background: transparent;
       border-bottom-color: #2a2a2a;
@@ -1995,18 +1946,6 @@
         </div>
       </div>
       <div class="editor-right" id="panel">
-
-        <!-- Controls panel — replaces card list when a card is selected -->
-        <div id="controls-panel">
-          <div class="cp-header">
-            <button class="cp-back" id="cp-back">
-              <span class="material-symbols-outlined">close</span>
-            </button>
-            <span class="cp-title" id="cp-title"></span>
-          </div>
-          <div class="cp-body" id="controls-panel-body"></div>
-        </div>
-
         <div class="stack-section">
           <div class="stack-header stack-header-pinned" id="pinned-section-header">
             <span class="stack-header-collapse-btn" id="pinned-collapse-btn">▾</span>
@@ -2748,12 +2687,22 @@
             <div class="pinned-icon"><span class="material-symbols-outlined">image</span></div>
             <span class="pinned-label">Masthead</span>
           </div>
+          <div class="accordion-body-wrap">
+            <div class="accordion-body-inner">
+              ${mastheadIsOpen ? '<div id="masthead-controls-section"></div>' : ''}
+            </div>
+          </div>
         </div>
         <div class="accordion-item bn-stack-item${bnIsOpen ? ' open' : ''}${bnLiveClosed ? ' bn-live-closed' : ''}" data-breaking-news="true">
           <div class="accordion-header">
             <div class="pinned-icon red"><span class="material-symbols-outlined">crisis_alert</span></div>
             <span class="pinned-label">Breaking News Bar</span>
             ${bnIsLive ? `<span class="bn-stack-live-chip${bnIsOpen ? ' hidden' : ''}">LIVE</span>` : ''}
+          </div>
+          <div class="accordion-body-wrap">
+            <div class="accordion-body-inner">
+              ${bnIsOpen ? '<div id="breaking-news-controls-section"></div>' : ''}
+            </div>
           </div>
         </div>`;
 
@@ -2784,6 +2733,11 @@
               <div class="stack-item-actions">
                 <button class="stack-action-btn" data-action="dup" data-index="${i}" title="Duplicate"><span class="material-symbols-outlined">content_copy</span></button>
                 <button class="stack-action-btn remove" data-action="remove" data-index="${i}" title="Remove"><span class="material-symbols-outlined">delete</span></button>
+              </div>
+            </div>
+            <div class="accordion-body-wrap">
+              <div class="accordion-body-inner">
+                ${isOpen ? '<div id="card-controls-section"></div>' : ''}
               </div>
             </div>
           </div>`;
@@ -3354,11 +3308,10 @@
       renderCardStack();
       renderMasthead();
       buildBreakingNewsPanel();
-      openControlsPanel('Breaking News Bar');
     }
 
     function buildBreakingNewsPanel() {
-      const section = document.getElementById('controls-panel-body');
+      const section = document.getElementById('breaking-news-controls-section');
       if (!section || !appState.currentPage) return;
       const page = appState.currentPage;
       const isLive = page.showBreakingNews;
@@ -3582,7 +3535,6 @@
       renderCardStack();
       renderMasthead();
       buildMastheadPanel();
-      openControlsPanel('Masthead');
       requestAnimationFrame(() => {
         const el = document.getElementById('masthead-placeholder');
         if (el && el.style.display !== 'none') el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -3590,7 +3542,7 @@
     }
 
     function buildMastheadPanel() {
-      const section = document.getElementById('controls-panel-body');
+      const section = document.getElementById('masthead-controls-section');
       if (!section || !appState.currentPage) return;
       const { mastheadUrl, showMasthead, showWeatherBar } = appState.currentPage;
       const DEFAULT_MASTHEAD = '/logo-times-of-reston-trans.png';
@@ -3643,42 +3595,35 @@
       });
     }
 
-    function openControlsPanel(title) {
-      document.getElementById('cp-title').textContent = title || '';
-      document.querySelector('.stack-section').style.display = 'none';
-      document.getElementById('controls-panel').classList.add('open');
-      document.getElementById('controls-panel-body').scrollTop = 0;
-    }
-
-    function closeControlsPanel() {
-      document.querySelector('.stack-section').style.display = '';
-      document.getElementById('controls-panel').classList.remove('open');
-    }
-
     function selectCard(index) {
       appState.selectedCardIndex = index;
       editUndoStack.length = 0;
       importingText = false;
       importingImage = false;
       renderAllCards();
-      renderCardStack();
-      buildPanel();
+      renderCardStack(); // creates #card-controls-section inside open accordion item
+      buildPanel();      // populates it
       syncPresets();
 
-      // Open controls panel with card headline as title
-      const card = appState.currentPage.cards[index];
-      const label = card?.headline || card?.headlinePlus || 'Untitled card';
-      openControlsPanel(label);
+      // Animate open: render closed, then trigger transition on next two frames
+      const openItem = document.querySelector(`#card-stack-list .accordion-item[data-index="${index}"]`);
+      if (openItem) {
+        openItem.classList.remove('open');
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            openItem.classList.add('open');
+          });
+        });
+      }
 
       // Scroll selected card into view in the preview
       requestAnimationFrame(() => {
         const el = document.querySelector('.card-wrapper.selected, .phone-card-slot.selected');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
     }
 
     function clearCardEditor() {
-      closeControlsPanel();
       appState.selectedCardIndex = null;
       _renderTarget = null;
       renderAllCards();
@@ -3802,7 +3747,6 @@
     });
 
     document.getElementById('add-card-btn').addEventListener('click', addCard);
-    document.getElementById('cp-back').addEventListener('click', clearCardEditor);
 
     // ── Pinned section collapse toggle ───────────────────────────────────────
     (function () {
@@ -4112,7 +4056,7 @@
 
     /* ── Story Card Engine ───────────────────────────────────────────────
        Copied from index.html with News Builder adaptations:
-       • buildPanel() targets #controls-panel-body
+       • buildPanel() targets #card-controls-section
        • Width controls suppressed (page-level setting)
        • stateToHash / hashToState no-oped
        • render() calls _syncCardStateBack() to persist state
@@ -4312,8 +4256,8 @@
     }
 
     function buildPanel() {
-      document.getElementById('controls-panel-body').innerHTML = `
-        <div class="panel-section" style="border-top:none;">
+      document.getElementById('card-controls-section').innerHTML = `
+        <div class="panel-section">
           <div class="panel-section-title">Import Article</div>
           <div class="control-row" style="margin-bottom:6px;">
             <input class="control-input" id="import-url" type="text" placeholder="Paste article URL…" value="${state.articleUrl || ''}">

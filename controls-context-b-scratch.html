@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option B — Top Accent Stripe (In Context)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: #ebebeb;
+      color: #111;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Sandbox header ── */
+    .sandbox-header {
+      height: 40px; background: #111;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 16px; flex-shrink: 0;
+    }
+    .sandbox-header-back { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.45); text-decoration: none; }
+    .sandbox-header-back:hover { color: #fff; }
+    .sandbox-header-name { font-size: 13px; font-weight: 600; color: #fff; flex: 1; }
+    .sandbox-header-options { display: flex; gap: 6px; }
+    .option-pill {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+      padding: 3px 10px; border-radius: 20px; text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.5);
+      transition: all 0.15s;
+    }
+    .option-pill:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+    .option-pill.active { background: #fff; color: #111; border-color: #fff; }
+    .sandbox-header-tag {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 3px; padding: 3px 8px;
+    }
+
+    /* ── Editor chrome ── */
+    .editor-root { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .editor-header {
+      height: 52px; background: #1c1c1c;
+      display: flex; align-items: center; padding: 0 16px;
+      flex-shrink: 0; position: relative; z-index: 50;
+    }
+    .eh-left  { flex: 1; display: flex; align-items: center; }
+    .eh-right { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+    .eh-back  { font-size: 12px; color: rgba(255,255,255,0.32); font-weight: 600; }
+    .eh-title-wrap { flex: 0 0 auto; display: flex; align-items: center; }
+    .eh-title { font-size: 14px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 3px; }
+    .eh-chevron { font-size: 10px; color: rgba(255,255,255,0.35); }
+    .eh-save { font-size: 11px; color: rgba(255,255,255,0.28); }
+    .eh-preview { height: 28px; padding: 0 12px; border-radius: 3px; background: transparent; border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 600; font-family: inherit; text-decoration: none; display: flex; align-items: center; }
+    .eh-publish { height: 28px; padding: 0 16px; border-radius: 3px; background: #fff; border: none; color: #111; font-size: 12px; font-weight: 600; cursor: default; font-family: inherit; }
+
+    .canvas-toolbar {
+      height: 52px; background: #fff; border-bottom: 1px solid #e0e0e0;
+      display: flex; align-items: center; padding: 0 16px; flex-shrink: 0;
+    }
+    .ct-left { display: flex; align-items: center; gap: 3px; }
+    .ct-right { display: flex; align-items: center; gap: 3px; margin-left: auto; }
+    .ct-divider { width: 1px; height: 20px; background: #e0e0e0; margin: 0 8px; }
+    .ct-width-btn { height: 28px; padding: 0 10px; border-radius: 3px; font-size: 12px; font-weight: 600; cursor: default; font-family: inherit; border: 1px solid transparent; color: #888; background: transparent; }
+    .ct-width-btn.active { background: #111; color: #fff; }
+    .ct-tool-btn { height: 28px; padding: 0 10px; border-radius: 3px; font-size: 12px; font-weight: 600; cursor: default; font-family: inherit; border: 1px solid #d0d0d0; color: #666; background: transparent; display: flex; align-items: center; gap: 5px; }
+    .ct-tool-btn .material-symbols-outlined { font-size: 16px; }
+    .ct-ai-btn { height: 28px; padding: 0 12px; border-radius: 3px; font-size: 12px; font-weight: 600; cursor: default; font-family: inherit; border: 1px solid #c8ccff; background: #f0f2ff; color: #3344cc; display: flex; align-items: center; gap: 6px; }
+    .ct-ai-btn .material-symbols-outlined { font-size: 15px; }
+
+    .editor-body { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+
+    /* ── Canvas ── */
+    .editor-canvas {
+      flex: 1; overflow-y: auto; background: #e8e8e8; padding: 24px 24px 48px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .page-card { width: 100%; max-width: 990px; background: #fff; border-radius: 6px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .page-masthead { padding: 20px 24px 14px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+    .masthead-logo { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: #111; letter-spacing: -0.02em; }
+    .masthead-strip { font-size: 11px; color: #aaa; margin-top: 5px; letter-spacing: 0.03em; }
+
+    .story-card { display: flex; border-bottom: 1px solid #f0f0f0; min-height: 160px; }
+    .story-card:last-child { border-bottom: none; }
+    .story-card.selected { outline: 2px solid #5566ff; outline-offset: -2px; }
+    .sc-body { padding: 18px 16px 18px 20px; flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
+    .sc-kicker { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #c00; margin-bottom: 8px; }
+    .sc-hed { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #111; line-height: 1.25; margin-bottom: 10px; }
+    .sc-blurb { font-size: 13px; color: #555; line-height: 1.6; }
+    .sc-photo-wrap { width: 44%; flex-shrink: 0; display: flex; flex-direction: column; padding: 16px 16px 0 0; }
+    .sc-photo { aspect-ratio: 3/2; width: 100%; object-fit: cover; display: block; border-radius: 2px; }
+    .sc-credit { font-size: 10px; color: #aaa; padding: 4px 0; }
+
+    /* ── Right rail ── */
+    .editor-right {
+      width: 300px; flex-shrink: 0;
+      border-left: 1px solid #e8e8e8; background: #fff;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* ── Controls panel ── */
+    #controls-panel {
+      display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0;
+      /* OPTION B: top accent stripe */
+      border-top: 4px solid #5566ff;
+    }
+    .cp-header {
+      height: 44px; padding: 0 14px; border-bottom: 1px solid #f0f0f0;
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .cp-close {
+      width: 28px; height: 28px; background: none; border: none; cursor: default;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 3px; flex-shrink: 0; padding: 0;
+      color: #bbb;
+    }
+    .cp-close .material-symbols-outlined { font-size: 18px; }
+    .cp-title {
+      font-size: 12px; font-weight: 700; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      color: #333;
+    }
+    .cp-body { flex: 1; overflow-y: auto; min-height: 0; }
+
+    .panel-section { border-top: 1px solid #e8e8e8; padding: 14px 14px; }
+    .panel-section.no-border { border-top: none; }
+    .panel-section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-bottom: 10px; }
+
+    .fake-input { width: 100%; height: 30px; background: #f5f5f5; border: 1.5px solid #e8e8e8; border-radius: 3px; margin-bottom: 8px; }
+    .fake-input:last-child { margin-bottom: 0; }
+    .fake-textarea { width: 100%; height: 52px; background: #f5f5f5; border: 1.5px solid #e8e8e8; border-radius: 3px; margin-bottom: 8px; }
+    .fake-textarea:last-child { margin-bottom: 0; }
+    .fake-row { display: flex; gap: 6px; margin-bottom: 8px; }
+    .fake-btn { height: 28px; padding: 0 12px; border-radius: 3px; background: #f0f0f0; border: 1.5px solid #e0e0e0; font-size: 12px; color: #666; display: flex; align-items: center; cursor: default; font-family: inherit; font-weight: 600; white-space: nowrap; }
+    .fake-toggle { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .fake-toggle-track { width: 32px; height: 18px; border-radius: 9px; background: #5566ff; flex-shrink: 0; position: relative; }
+    .fake-toggle-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; position: absolute; right: 2px; top: 2px; }
+    .fake-toggle-label { font-size: 12px; font-weight: 600; color: #333; }
+  </style>
+</head>
+<body>
+
+  <header class="sandbox-header">
+    <a class="sandbox-header-back" href="/sandbox.html">← Sandbox</a>
+    <span class="sandbox-header-name">Controls Panel in Context</span>
+    <div class="sandbox-header-options">
+      <a class="option-pill" href="/controls-context-a-scratch.html">A</a>
+      <a class="option-pill active" href="/controls-context-b-scratch.html">B</a>
+      <a class="option-pill" href="/controls-context-c-scratch.html">C</a>
+    </div>
+    <span class="sandbox-header-tag">Sandbox</span>
+  </header>
+
+  <div class="editor-root">
+
+    <div class="editor-header">
+      <div class="eh-left"><span class="eh-back">← Back</span></div>
+      <div class="eh-title-wrap">
+        <span class="eh-title">Memorial Day Page <span class="eh-chevron">▾</span></span>
+      </div>
+      <div class="eh-right">
+        <span class="eh-save">Saved</span>
+        <a class="eh-preview">Preview ↗</a>
+        <button class="eh-publish">Publish →</button>
+      </div>
+    </div>
+
+    <div class="canvas-toolbar">
+      <div class="ct-left">
+        <button class="ct-width-btn active">Desktop</button>
+        <button class="ct-width-btn">Laptop</button>
+        <button class="ct-width-btn">Tablet</button>
+        <button class="ct-width-btn">Mobile</button>
+      </div>
+      <div class="ct-right">
+        <button class="ct-tool-btn"><span class="material-symbols-outlined">dark_mode</span> Dark</button>
+        <div class="ct-divider"></div>
+        <button class="ct-ai-btn"><span class="material-symbols-outlined">auto_awesome</span> AI review</button>
+      </div>
+    </div>
+
+    <div class="editor-body">
+
+      <div class="editor-canvas">
+        <div class="page-card">
+          <div class="page-masthead">
+            <div class="masthead-logo">The Times of Reston</div>
+            <div class="masthead-strip">Wednesday, June 4, 2026 &nbsp;·&nbsp; ☀ 72°F in Reston, VA</div>
+          </div>
+
+          <div class="story-card">
+            <div class="sc-body">
+              <div class="sc-kicker">Local Government</div>
+              <div class="sc-hed">Council approves $42M budget with new parks funding</div>
+              <div class="sc-blurb">After three hours of public testimony, the Reston Town Council passed its fiscal year budget Tuesday night.</div>
+            </div>
+            <div class="sc-photo-wrap">
+              <img class="sc-photo" src="https://picsum.photos/id/1029/880/587" alt="">
+              <div class="sc-credit">Photo: Lorem Picsum</div>
+            </div>
+          </div>
+
+          <div class="story-card selected">
+            <div class="sc-body">
+              <div class="sc-kicker">Sports</div>
+              <div class="sc-hed">Reston FC advances to regional finals after stunning comeback win</div>
+              <div class="sc-blurb">A second-half hat trick from midfielder Dani Reyes sealed a 4–3 victory over rivals Springfield United.</div>
+            </div>
+            <div class="sc-photo-wrap">
+              <img class="sc-photo" src="https://picsum.photos/id/355/880/587" alt="">
+              <div class="sc-credit">Photo: Lorem Picsum</div>
+            </div>
+          </div>
+
+          <div class="story-card">
+            <div class="sc-body">
+              <div class="sc-kicker">Education</div>
+              <div class="sc-hed">School board approves new STEM curriculum for fall semester</div>
+              <div class="sc-blurb">The 7–2 vote paves the way for updated science and coding courses across all middle schools.</div>
+            </div>
+            <div class="sc-photo-wrap">
+              <img class="sc-photo" src="https://picsum.photos/id/167/880/587" alt="">
+              <div class="sc-credit">Photo: Lorem Picsum</div>
+            </div>
+          </div>
+
+          <div class="story-card">
+            <div class="sc-body">
+              <div class="sc-kicker">Business</div>
+              <div class="sc-hed">Local tech startup secures $12M in Series A funding round</div>
+            </div>
+            <div class="sc-photo-wrap">
+              <img class="sc-photo" src="https://picsum.photos/id/180/880/587" alt="">
+              <div class="sc-credit">Photo: Lorem Picsum</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right rail — controls panel open (Option A) -->
+      <div class="editor-right">
+        <div id="controls-panel">
+          <div class="cp-header">
+            <button class="cp-close"><span class="material-symbols-outlined">close</span></button>
+            <span class="cp-title">Reston FC advances to regional finals…</span>
+          </div>
+          <div class="cp-body">
+            <div class="panel-section no-border">
+              <div class="panel-section-title">Import Article</div>
+              <div class="fake-row">
+                <div class="fake-input" style="margin-bottom:0; flex:1;"></div>
+                <div class="fake-btn">Import</div>
+              </div>
+            </div>
+            <div class="panel-section">
+              <div class="panel-section-title">Headline</div>
+              <div class="fake-textarea"></div>
+            </div>
+            <div class="panel-section">
+              <div class="panel-section-title">Summary</div>
+              <div class="fake-textarea"></div>
+            </div>
+            <div class="panel-section">
+              <div class="panel-section-title">Kicker</div>
+              <div class="fake-input"></div>
+            </div>
+            <div class="panel-section">
+              <div class="panel-section-title">Art</div>
+              <div class="fake-input"></div>
+              <div class="fake-toggle">
+                <div class="fake-toggle-track"><div class="fake-toggle-thumb"></div></div>
+                <span class="fake-toggle-label">Show image</span>
+              </div>
+            </div>
+            <div class="panel-section">
+              <div class="panel-section-title">Link</div>
+              <div class="fake-input"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

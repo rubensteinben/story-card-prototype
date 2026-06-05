@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WF 03 — State 1: Default</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f0f0f0; font-family: 'Courier New', Courier, monospace; padding: 2rem; }
+  .wf-wrap { background: #f0f0f0; padding: 1.5rem; border-radius: 8px; max-width: 1100px; margin: 0 auto; }
+  .wf-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .wf-title { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.08em; }
+  .wf-badge { font-size: 11px; color: #aaa; border: 1px dashed #ccc; padding: 2px 8px; border-radius: 3px; }
+  .state-label { font-size: 11px; color: #888; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.06em; background: #e0e0e0; padding: 6px 10px; border-radius: 3px; }
+  .btn { font-size: 11px; border: 1px solid #ccc; padding: 3px 10px; border-radius: 3px; color: #666; background: transparent; font-family: inherit; display: inline-flex; align-items: center; gap: 4px; }
+  .btn-active { border-color: #888; background: #e8e8e8; color: #222; font-weight: 500; }
+  .annotation { border-left: 2px solid #ccc; padding-left: 12px; margin-top: 1rem; display: flex; flex-direction: column; gap: 4px; }
+  .annotation p { font-size: 11px; color: #888; margin: 0; }
+  .masthead { text-align: center; padding: 16px 0 10px 0; border-bottom: 1px solid #eee; }
+  .masthead-title { font-size: 26px; font-family: 'Times New Roman', Georgia, serif; font-weight: 900; color: #111; letter-spacing: 1px; }
+  .masthead-sub { font-size: 10px; color: #888; margin-top: 4px; }
+  .story-card { display: flex; gap: 0; padding-bottom: 12px; border-bottom: 1px solid #eee; margin-bottom: 12px; }
+  .story-card:last-child { border-bottom: none; margin-bottom: 0; }
+  .card-text { flex: 1; padding-right: 16px; }
+  .card-text h2 { font-size: 14px; font-weight: 700; color: #111; margin: 0 0 6px 0; line-height: 1.3; font-family: Georgia, serif; }
+  .card-text h3 { font-size: 13px; font-weight: 700; color: #111; margin: 0 0 6px 0; line-height: 1.3; font-family: Georgia, serif; }
+  .card-text p { font-size: 11px; color: #555; margin: 0; line-height: 1.5; }
+  .card-photo { width: 45%; }
+  .photo-box { background: #e0e0e0; border-radius: 2px; display: flex; align-items: center; justify-content: center; }
+  .photo-credit { font-size: 9px; color: #aaa; margin: 3px 0 0 0; }
+  .rail-card { background: #fff; border: 1px solid #ddd; border-radius: 3px; padding: 7px 8px; display: flex; align-items: center; justify-content: space-between; }
+  .rail-card span { font-size: 11px; color: #333; }
+</style>
+</head>
+<body>
+<div class="wf-wrap">
+  <div class="wf-header">
+    <span class="wf-title">Wireframe 03 — State 1: Default</span>
+    <span class="wf-badge">Lo-fi / not visual design</span>
+  </div>
+
+  <p class="state-label">State 1 &mdash; Default: editor working normally</p>
+  <div style="border:1px solid #bbb;border-radius:4px;overflow:hidden;">
+
+    <div style="background:#1a1a1a;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="color:#aaa;font-size:12px;">&#8592; Back</span>
+        <span style="color:#fff;font-size:12px;font-weight:500;">CNN &middot; Homepage &#x2304;</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:11px;color:#888;">Saved</span>
+        <span class="btn" style="color:#ccc;border-color:#555;">Preview &#8599;</span>
+        <span class="btn" style="background:#fff;border-color:#888;color:#111;font-weight:500;">Publish &rarr;</span>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-bottom:1px solid #ddd;padding:7px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;gap:4px;">
+        <span class="btn">Mobile</span>
+        <span class="btn">Tablet</span>
+        <span class="btn">Laptop</span>
+        <span class="btn btn-active">Desktop</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="btn"><i class="ti ti-grid-3x3"></i> Grid</span>
+        <span class="btn"><i class="ti ti-moon"></i> Dark</span>
+        <span style="width:1px;height:16px;background:#ddd;display:inline-block;"></span>
+        <span class="btn"><i class="ti ti-sparkles"></i> AI review</span>
+      </div>
+    </div>
+
+    <div style="display:flex;min-height:480px;">
+      <div style="flex:1;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column;">
+        <div class="masthead">
+          <div class="masthead-title">The Times of Reston</div>
+          <div class="masthead-sub">Sunday, May 31, 2026 &nbsp;&middot;&nbsp; &#9728; 75&deg;F in Reston, VA</div>
+        </div>
+        <div style="padding:12px 16px;">
+          <div class="story-card">
+            <div class="card-text"><h2>Iran's reopened missile sites show limits of US bombing plan</h2><p>Satellite imagery reviewed by analysts shows reconstruction efforts already underway at three key facilities.</p></div>
+            <div class="card-photo"><div class="photo-box" style="height:110px;"><span style="font-size:10px;color:#999;">[photo]</span></div><p class="photo-credit">Photographer name and photo credit go here.</p></div>
+          </div>
+          <div class="story-card">
+            <div class="card-text"><h3>Power struggles inside FEMA as storm season approaches</h3><p>Internal memos reveal deep divisions over emergency response protocols.</p></div>
+            <div class="card-photo"><div class="photo-box" style="height:90px;"><span style="font-size:10px;color:#999;">[photo]</span></div><p class="photo-credit">Photographer name and photo credit go here.</p></div>
+          </div>
+          <div class="story-card">
+            <div class="card-text"><h3>Knicks advance to NBA Finals after Game 7 thriller</h3><p>New York ends a 25-year drought with a stunning overtime victory in Boston.</p></div>
+            <div class="card-photo"><div class="photo-box" style="height:90px;"><span style="font-size:10px;color:#999;">[photo]</span></div><p class="photo-credit">Photographer name and photo credit go here.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width:210px;background:#f5f5f5;display:flex;flex-direction:column;flex-shrink:0;">
+        <div style="padding:10px 12px;border-bottom:1px solid #ddd;background:#eee;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:11px;font-weight:500;color:#333;">Story cards</span>
+          <span class="btn" style="background:#fff;border-color:#888;color:#333;">+ Add</span>
+        </div>
+        <div style="padding:8px;display:flex;flex-direction:column;gap:6px;">
+          <div class="rail-card"><span>Iran's reopened missile...</span><div style="display:flex;gap:4px;"><i class="ti ti-copy" style="font-size:13px;color:#aaa;"></i><i class="ti ti-trash" style="font-size:13px;color:#aaa;"></i></div></div>
+          <div class="rail-card"><span>Power struggles inside...</span><div style="display:flex;gap:4px;"><i class="ti ti-copy" style="font-size:13px;color:#aaa;"></i><i class="ti ti-trash" style="font-size:13px;color:#aaa;"></i></div></div>
+          <div class="rail-card"><span>Knicks advance to NBA...</span><div style="display:flex;gap:4px;"><i class="ti ti-copy" style="font-size:13px;color:#aaa;"></i><i class="ti ti-trash" style="font-size:13px;color:#aaa;"></i></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="annotation">
+    <p>Editor working normally. Right rail shows card list. AI review button available in canvas toolbar but not yet active.</p>
+  </div>
+</div>
+</body>
+</html>

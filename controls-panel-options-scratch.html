@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controls Panel Options — Sandbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: #ebebeb;
+      color: #111;
+      min-height: 100vh;
+      padding: 32px 24px 64px;
+    }
+
+    /* Sandbox header */
+    .sandbox-header {
+      height: 48px; background: #111;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 16px; margin: -32px -24px 32px;
+    }
+    .sandbox-header-back {
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .sandbox-header-back:hover { color: #fff; }
+    .sandbox-header-name { font-size: 14px; font-weight: 600; color: #fff; flex: 1; }
+    .sandbox-header-tag {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 3px; padding: 3px 8px;
+    }
+
+    h2 {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #888; margin-bottom: 12px;
+    }
+
+    /* Layout */
+    .panels-row {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+    }
+
+    .option-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #888;
+    }
+
+    /* ── Base panel shell (shared by all 3) ── */
+    .panel {
+      width: 300px;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .cp-header {
+      height: 44px;
+      padding: 0 14px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .cp-close {
+      width: 28px; height: 28px;
+      background: none; border: none;
+      color: #bbb;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 3px;
+      flex-shrink: 0;
+      cursor: default;
+    }
+    .cp-close .material-symbols-outlined { font-size: 18px; }
+    .cp-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #333;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cp-thumb {
+      width: 28px; height: 28px;
+      border-radius: 3px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .panel-section {
+      border-top: 1px solid #e8e8e8;
+      padding: 14px 14px;
+    }
+    .panel-section:first-child { border-top: none; }
+    .panel-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    /* Fake form fields */
+    .fake-input {
+      width: 100%;
+      height: 30px;
+      background: #f5f5f5;
+      border: 1.5px solid #e8e8e8;
+      border-radius: 3px;
+      margin-bottom: 8px;
+    }
+    .fake-input:last-child { margin-bottom: 0; }
+    .fake-textarea {
+      width: 100%;
+      height: 52px;
+      background: #f5f5f5;
+      border: 1.5px solid #e8e8e8;
+      border-radius: 3px;
+      margin-bottom: 8px;
+    }
+    .fake-textarea:last-child { margin-bottom: 0; }
+
+    /* ── Option A: tinted header ── */
+    .option-a .cp-header {
+      background: #f0f2ff;
+      border-bottom-color: #e0e3ff;
+    }
+    .option-a .cp-close { color: #7788ff; }
+    .option-a .cp-title { color: #3344cc; }
+
+    /* ── Option B: top accent stripe ── */
+    .option-b {
+      border-top: 4px solid #5566ff;
+    }
+
+    /* ── Option C: thumbnail + tinted header ── */
+    .option-c .cp-header {
+      background: #f0f2ff;
+      border-bottom-color: #e0e3ff;
+    }
+    .option-c .cp-close { color: #7788ff; }
+    .option-c .cp-title { color: #3344cc; }
+  </style>
+</head>
+<body>
+
+  <header class="sandbox-header">
+    <a class="sandbox-header-back" href="/sandbox.html">← Sandbox</a>
+    <span class="sandbox-header-name">Controls Panel Visual Options</span>
+    <span class="sandbox-header-tag">Sandbox</span>
+  </header>
+
+  <h2>Controls Panel — Visual Distinction Options</h2>
+
+  <div class="panels-row">
+
+    <!-- Option A: Tinted header -->
+    <div class="option-wrap">
+      <div class="option-label">Option A — Tinted header</div>
+      <div class="panel option-a">
+        <div class="cp-header">
+          <button class="cp-close"><span class="material-symbols-outlined">close</span></button>
+          <span class="cp-title">Reston FC advances to regional…</span>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Import Article</div>
+          <div class="fake-input"></div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Headline</div>
+          <div class="fake-textarea"></div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Blurb</div>
+          <div class="fake-textarea"></div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Photo</div>
+          <div class="fake-input"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option B: Top accent stripe -->
+    <div class="option-wrap">
+      <div class="option-label">Option B — Top accent stripe</div>
+      <div class="panel option-b">
+        <div class="cp-header">
+          <button class="cp-close"><span class="material-symbols-outlined">close</span></button>
+          <span class="cp-title">Reston FC advances to regional…</span>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Import Article</div>
+          <div class="fake-input"></div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Headline</div>
+          <div class="fake-textarea"></div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Blurb</div>
+          <div class="fake-textarea"></div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Photo</div>
+          <div class="fake-input"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option C: Thumbnail + tinted header -->
+    <div class="option-wrap">
+      <div class="option-label">Option C — Thumbnail + tinted header</div>
+      <div class="panel option-c">
+        <div class="cp-header">
+          <button class="cp-close"><span class="material-symbols-outlined">close</span></button>
+          <img class="cp-thumb" src="https://picsum.photos/id/355/56/56" alt="">
+          <span class="cp-title">Reston FC advances to regional…</span>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Import Article</div>
+          <div class="fake-input"></div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Headline</div>
+          <div class="fake-textarea"></div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Blurb</div>
+          <div class="fake-textarea"></div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">Photo</div>
+          <div class="fake-input"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
